@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/* Siphon Interface Theme */
+@theme {
+  /* Dark theme colors */
+  --color-siphon-bg: #0a0a0f;
+  --color-siphon-surface: #12121a;
+  --color-siphon-border: #1f1f2e;
+
+  /* Astral turquoise accent (from Echo Manifold description) */
+  --color-siphon-accent: #00d4aa;
+  --color-siphon-accent-dim: #00a080;
+
+  /* EP states */
+  --color-ep-positive: #00d4aa;
+  --color-ep-negative: #ff4466;
+  --color-ep-drain: #ff2244;
+
+  /* Focus */
+  --color-focus: #9966ff;
+  --color-focus-warning: #ff6600;
+
+  /* Warp effect */
+  --color-warp: #ff00ff;
+
+  /* Card colors */
+  --color-card-bg: #1a1a24;
+  --color-card-border: #2a2a3a;
+  --color-card-selected: #00d4aa;
+
+  /* Text */
+  --color-text-primary: #f0f0f5;
+  --color-text-secondary: #a0a0b0;
+  --color-text-muted: #606070;
+}
+
+/* Base styles */
+:root {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  color: var(--color-text-primary);
+  background-color: var(--color-siphon-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Subtle glitch effect for buttons - only on hover */
+@keyframes glitch {
+  0%, 100% {
+    transform: translate(0);
+    text-shadow: none;
+  }
+  50% {
+    transform: translate(0.5px, 0);
+    text-shadow: 0.5px 0 rgba(0, 212, 170, 0.3), -0.5px 0 rgba(255, 0, 255, 0.3);
+  }
+}
+
+.glitch-hover:hover {
+  animation: glitch 0.8s ease-in-out infinite;
+}
+
+/* Subtle chromatic aberration effect for negative EP - only on hover */
+@keyframes chromatic-aberration {
+  0%, 100% {
+    text-shadow: none;
+    filter: none;
+  }
+  50% {
+    text-shadow: -0.3px 0 rgba(255, 0, 0, 0.2), 0.3px 0 rgba(0, 255, 255, 0.2);
+    filter: hue-rotate(1deg);
+  }
+}
+
+.chromatic-aberration:hover {
+  animation: chromatic-aberration 2s ease-in-out infinite;
+}
+
+.warp-active:hover {
+  animation: chromatic-aberration 1s ease-in-out infinite;
+}
+
+/* Pulse animation for Focus counter */
+@keyframes focus-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.focus-pulse {
+  animation: focus-pulse 0.3s ease-out;
+}
+
+/* Weavers watching effect (high Focus) - very subtle */
+@keyframes weavers-watch {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.05;
+  }
+}
+
+.weavers-watch {
+  box-shadow: inset 0 0 30px rgba(255, 0, 255, 0.05);
+}

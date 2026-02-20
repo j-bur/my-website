@@ -1,0 +1,529 @@
+import type { SiphonFeature } from '../types';
+
+export const SIPHON_FEATURES: SiphonFeature[] = [
+  // Page 1
+  {
+    id: 'subtle-luck',
+    name: 'Subtle Luck',
+    cost: 1,
+    isSpecialCost: false,
+    focusDice: '1d4',
+    duration: '1 hour',
+    activation: 'None',
+    description: 'The whims of fortune shift slightly in your favor. Add 1 to the result of any attack roll or ability check you make.',
+    warpEffect: 'You roll on the Wild Echo Surge table.',
+    tags: ['buff', 'utility']
+  },
+  {
+    id: 'echo-relocation',
+    name: 'Echo-Relocation',
+    cost: 5,
+    isSpecialCost: false,
+    focusDice: '2d6',
+    duration: '10 minutes',
+    activation: 'None',
+    description: 'You can use 5 feet of movement once per turn to teleport to a spot you previously occupied during the duration of this effect. This location cannot be further than 60 feet away from you, and it cannot be currently occupied by another creature or object.',
+    warpEffect: 'The teleportation instead requires a bonus action, and it deals 1d8 force damage to all adjacent creatures.',
+    tags: ['movement', 'teleportation']
+  },
+  {
+    id: 'temporal-surge',
+    name: 'Temporal Surge',
+    cost: 5,
+    isSpecialCost: false,
+    focusDice: '2d8',
+    duration: '10 minutes',
+    activation: 'None',
+    description: 'You gain an extra action on each of your turns as time slows for you. This action can be used only to take the Attack (one weapon attack only), Dash, Disengage, Hide, or Use an Object action.',
+    warpEffect: 'On the start of your turn, roll a d4. On a 4, you gain an additional bonus action.',
+    tags: ['combat', 'action-economy']
+  },
+  {
+    id: 'borrowed-future',
+    name: 'Borrowed Future',
+    cost: 3,
+    isSpecialCost: false,
+    focusDice: '1d8',
+    duration: '10 minutes',
+    activation: 'None',
+    description: 'Once during the duration of this effect, choose one action or bonus action you can take. You borrow that possible moment from your own future, allowing you to take that action or bonus action as a reaction at any point. Once you take that reaction, at the start of your next turn, you become Incapacitated until the start of your following turn.',
+    warpEffect: null,
+    tags: ['utility', 'reaction']
+  },
+  {
+    id: 'paracasting',
+    name: 'Paracasting',
+    cost: 5,
+    isSpecialCost: false,
+    focusDice: '2d6',
+    duration: '1 hour',
+    activation: 'None',
+    description: 'You offset your spellcasting to partially use the Weave within an adjacent universe. If you cast a leveled spell as a bonus action, you may also cast a leveled spell as an action.',
+    warpEffect: 'When you cast a spell, you take 1d4 force damage.',
+    tags: ['spellcasting', 'action-economy']
+  },
+  {
+    id: 'echos-of-lethality',
+    name: 'Echos of Lethality',
+    cost: 5,
+    isSpecialCost: false,
+    focusDice: '2d6',
+    duration: '1 minute',
+    activation: 'None',
+    description: 'Your weapon attacks score a critical hit on a roll of 19 or 20. If you land a critical hit, you may roll another attack with the same weapon against the same creature.',
+    warpEffect: 'Whenever you land a critical hit, you roll on the Wild Echo Surge table.',
+    tags: ['combat', 'damage']
+  },
+  {
+    id: 'gravity-well',
+    name: 'Gravity Well',
+    cost: 4,
+    isSpecialCost: false,
+    focusDice: '2d4',
+    duration: '10 minutes',
+    activation: 'Bonus Action',
+    description: 'You cause space to curve heavily toward a point you can see within 30 feet of you. All creatures within a 20-foot radius of that point must make a DC 15 Strength saving throw. On a failure, they are pulled 10 feet toward the center and take 1d6 bludgeoning damage if they collide with anything. Loose objects fall inward toward the center.',
+    warpEffect: null,
+    tags: ['control', 'area']
+  },
+  {
+    id: 'demi-gate',
+    name: 'Demi-Gate',
+    cost: 12,
+    isSpecialCost: false,
+    focusDice: '4d10',
+    duration: '1 minute',
+    activation: 'Action',
+    description: 'You can teleport yourself and up to one willing creature you touch to any location you have visited within the last 24 hours.',
+    warpEffect: 'Any creature involved with this teleportation takes 5d10 force damage. This extends through openings leading to extradimensional spaces, such as a bag of holding.',
+    tags: ['teleportation', 'utility']
+  },
+  // Page 3
+  {
+    id: 'time-sap',
+    name: 'Time Sap',
+    cost: 10,
+    isSpecialCost: false,
+    focusDice: '4d8',
+    duration: '10 minutes',
+    activation: 'Action',
+    description: 'You release a burst of temporal energy. All creatures within 30 feet of you must make a DC 16 Constitution saving throw. On a failed save, a creature is slowed, as per the slow spell, for 1 minute. On a successful save, the creature is unaffected.',
+    warpEffect: 'You are included as a target in this effect.',
+    tags: ['control', 'area', 'debuff']
+  },
+  {
+    id: 'echo-scapegoat',
+    name: 'Echo-Scapegoat',
+    cost: 5,
+    isSpecialCost: false,
+    focusDice: '2d4',
+    duration: '10 minutes',
+    activation: 'None',
+    description: 'Some of the damage you take can be sent to other universes. You can use your reaction to reduce any damage you take by an amount equal to your level.',
+    warpEffect: 'The duration is reduced to 1 minute. At the start of each of your turns, roll a d8. On a 1, you take force damage equal to your level.',
+    tags: ['defense', 'reaction']
+  },
+  {
+    id: 'temporal-intuition',
+    name: 'Temporal Intuition',
+    cost: 8,
+    isSpecialCost: false,
+    focusDice: '4d6',
+    duration: '10 minutes',
+    activation: 'None',
+    description: 'Your instincts briefly extend into the future, granting you efficient reactions. You can take two reactions per round, but they must occur on a different creature\'s turn.',
+    warpEffect: 'When you use this second reaction, you must succeed on a DC 14 Constitution saving throw or gain one level of Exhaustion.',
+    tags: ['combat', 'reaction']
+  },
+  {
+    id: 'superposition',
+    name: 'Superposition',
+    cost: 7,
+    isSpecialCost: false,
+    focusDice: '3d8',
+    duration: '10 minutes',
+    activation: 'None',
+    description: 'Whenever you hit a creature with a weapon attack, it must succeed on a DC 14 Wisdom saving throw or be Stunned until the end of your next turn as its mind is paralyzed by the perception of multiple realities. Once a creature passes this saving throw, it is immune to Superposition until the start of its next turn.',
+    warpEffect: null,
+    tags: ['combat', 'control']
+  },
+  {
+    id: 'temporal-shield',
+    name: 'Temporal Shield',
+    cost: 3,
+    isSpecialCost: false,
+    focusDice: '1d8',
+    duration: '10 minutes',
+    activation: 'None',
+    description: 'A field of temporal energy surrounds you, slowing incoming attacks and granting you a +2 bonus to AC and Dexterity saving throws.',
+    warpEffect: 'Dunamantic energy surges through you. This bonus instead becomes +4, but you must move at least 30 feet each round or take 1d8 force damage.',
+    tags: ['defense', 'buff']
+  },
+  {
+    id: 'temporal-exaltation',
+    name: 'Temporal Exaltation',
+    cost: 14,
+    isSpecialCost: false,
+    focusDice: '8d6',
+    duration: '1 hour',
+    activation: 'None',
+    description: 'Your mind elevates to perceive both the present and the near future. You cannot be surprised, and you have advantage on all attack rolls, saving throws, and ability checks.',
+    warpEffect: 'At the start of each of your turns, you take 1d4 psychic damage as this experience tears your mind apart. The effect ends once you drop to 0 hit points.',
+    tags: ['buff', 'ultimate']
+  },
+  {
+    id: 'harness-potential',
+    name: 'Harness Potential',
+    cost: 18,
+    isSpecialCost: true,
+    focusDice: '8d10',
+    duration: '1 minute',
+    activation: 'Action',
+    description: 'You can call upon the latent potential of the multiverse and manifest the effect of one spell that is 6th level or lower. The spell can be from any class\'s spell list, and you don\'t need to meet any requirements in that spell except concentration.',
+    warpEffect: 'Roll a d4. On a 1, you are instead targeted by the spell Magic Jar. The container is your body, which you cannot return to until the spell ends.',
+    tags: ['spellcasting', 'ultimate']
+  },
+  {
+    id: 'reject-fate',
+    name: 'Reject Fate',
+    cost: 'Twice PB',
+    isSpecialCost: true,
+    focusDice: '[PB]d8',
+    duration: '1 hour',
+    activation: 'Reaction',
+    description: 'When you fail a saving throw, you may choose to succeed instead.',
+    warpEffect: 'You roll on the Wild Echo Surge table.',
+    tags: ['defense', 'reaction']
+  },
+  // Page 5
+  {
+    id: 'discharge',
+    name: 'Discharge',
+    cost: 2,
+    isSpecialCost: false,
+    focusDice: '2d4',
+    duration: 'Triggered',
+    activation: 'Reaction',
+    description: 'When you touch an ally or when you hit with an attack and the Siphon Wielder has at least one charge of Siphon Capacitance, you may Activate Discharge to cause the target to roll on the Wild Echo Surge table. The Siphon Wielder then loses one charge of Siphon Capacitance.',
+    warpEffect: 'You roll on the Wild Echo Surge table.',
+    tags: ['utility', 'surge']
+  },
+  {
+    id: 'altered-form',
+    name: 'Altered Form',
+    cost: 7,
+    isSpecialCost: false,
+    focusDice: '4d6',
+    duration: '1 hour',
+    activation: 'Action',
+    description: 'You can reach through the multiverse and assume a related form of yourself, gaining the effect of the spell Polymorph.',
+    warpEffect: 'Roll a d6. On a 1, this no longer requires concentration, you fall under the Dungeon Master\'s control and are hostile to everyone during this effect.',
+    tags: ['transformation', 'utility']
+  },
+  {
+    id: 'resonant-weapon',
+    name: 'Resonant Weapon',
+    cost: 2,
+    isSpecialCost: false,
+    focusDice: '1d6',
+    duration: '10 minutes',
+    activation: 'None',
+    description: 'Your weapons resonate with Dunamantic energy. When you hit with a weapon attack, that weapon deals an additional 1d6 force damage.',
+    warpEffect: 'The weapon\'s weight shifts unpredictably with the infused Dunamantic energy, giving you a -2 to attack rolls.',
+    tags: ['combat', 'damage']
+  },
+  {
+    id: 'resonant-mind',
+    name: 'Resonant Mind',
+    cost: 8,
+    isSpecialCost: false,
+    focusDice: '4d6',
+    duration: '1 hour',
+    activation: 'None',
+    description: 'You share some of the knowledge of your alternate selves. You understand and can speak all languages, and you have advantage on Intelligence, Wisdom, and Charisma checks.',
+    warpEffect: 'Roll a d6. On a 1, you are insane until you finish a long rest (as per the insanity from Contact Other Plane).',
+    tags: ['utility', 'buff']
+  },
+  {
+    id: 'resonant-body',
+    name: 'Resonant Body',
+    cost: 7,
+    isSpecialCost: false,
+    focusDice: '3d8',
+    duration: '8 hours',
+    activation: 'None',
+    description: 'Your body is infused with the strength and prowess of your alternate selves. You have advantage on Strength, Dexterity, and Constitution ability checks and saving throws.',
+    warpEffect: 'At the start of each of your turns, roll a d6. On a 1, you vanish to a harmless demiplane and are Incapacitated until the start of your next turn.',
+    tags: ['buff', 'defense']
+  },
+  {
+    id: 'chronalelasticity',
+    name: 'Chronalelasticity',
+    cost: 3,
+    isSpecialCost: false,
+    focusDice: '2d4',
+    duration: '1 hour',
+    activation: 'Reaction',
+    description: 'You can choose to roll back time for a brief moment, allowing you to reroll any attack roll, saving throw, or ability check you just made. You must use the new roll.',
+    warpEffect: 'Roll a d20. You gain Focus equal to half the result of this roll, rounded down. All d20 rolls you make for the next 10 minutes instead use this roll.',
+    tags: ['utility', 'reaction']
+  },
+  {
+    id: 'doublecast',
+    name: 'Doublecast',
+    cost: 'Varies',
+    isSpecialCost: true,
+    focusDice: '[Cost]d8',
+    duration: '10 minutes',
+    activation: 'None',
+    description: 'You harness the Weave found in adjacent realities to cast your spells. When Doublecast is Bestowed, you choose a spell slot you possess. The Cost for this effect equals the level spell slot you chose. Whenever you cast a spell using a spell slot whose level is less than or equal to the level of spell slot you chose, you can immediately cast the spell a second time under the same limitation.',
+    warpEffect: null,
+    tags: ['spellcasting', 'action-economy']
+  },
+  {
+    id: 'siphon-flux',
+    name: 'Siphon Flux',
+    cost: 2,
+    isSpecialCost: true,
+    focusDice: '1d6',
+    duration: 'Triggered',
+    activation: 'None',
+    description: 'Whenever you determine the effect of rolling on the Wild Echo Surge table, you may Activate Siphon Flux and prevent that effect from occurring. You then gain a charge of Siphon Capacitance. Within the next 8 hours of gaining your first Siphon Capacitance charge, you must expend all charges of Siphon Capacitance to roll on the Wild Surge Table once for each charge.',
+    warpEffect: null,
+    tags: ['utility', 'surge']
+  },
+  // Page 7
+  {
+    id: 'rebound',
+    name: 'Rebound',
+    cost: 5,
+    isSpecialCost: false,
+    focusDice: '4d4',
+    duration: '1 hour',
+    activation: 'None',
+    description: 'You gain temporary hit points equal to the Focus held by the Siphon Wielder after receiving this effect. While you have these temporary hit points, you may remove all these temporary hit points and increase the damage dealt by a successful attack by the amount of temporary hit points you removed. This does not lower your total Focus.',
+    warpEffect: null,
+    tags: ['defense', 'damage']
+  },
+  {
+    id: 'chronoseer',
+    name: 'Chronoseer',
+    cost: 3,
+    isSpecialCost: true,
+    focusDice: '3d6',
+    duration: '1 hour',
+    activation: 'Action',
+    description: 'You receive glimpses of future events and gain the benefit of casting Augury.',
+    warpEffect: 'The cumulative 25% chance of a random reading is added before this spell takes effect. This stacks with the effect of Augury itself.',
+    tags: ['divination', 'utility']
+  },
+  {
+    id: 'entanglement',
+    name: 'Entanglement',
+    cost: 1,
+    isSpecialCost: true,
+    focusDice: '1d4',
+    duration: 'Triggered',
+    activation: 'None',
+    description: 'When you use your Unleash Incarnation feature, you may trigger this effect to magically swap places with your echo at a cost of 15 feet of your movement, regardless of the distance between the two of you.',
+    warpEffect: null,
+    tags: ['movement', 'echo']
+  },
+  {
+    id: 'coherence',
+    name: 'Coherence',
+    cost: 'PB',
+    isSpecialCost: true,
+    focusDice: '[Cost]d6',
+    duration: 'Triggered',
+    activation: 'None',
+    description: 'The manifestations of your Echos can become more real. When you use your Manifest Echo feature, you can Activate Coherence to gain a bonus to the echo\'s AC equal to your PB, and its attacks deal an additional number of d4s equal to half your PB (rounded down) as Force damage.',
+    warpEffect: 'When the echo is dismissed or destroyed, roll on the Wild Echo Surge table.',
+    tags: ['echo', 'buff']
+  },
+  {
+    id: 'sentience',
+    name: 'Sentience',
+    cost: 'Level/2',
+    isSpecialCost: true,
+    focusDice: '5d6',
+    duration: 'Triggered',
+    activation: 'None',
+    description: 'When you use your Manifest Echo feature, you can trigger this effect to give it the Creature type, and it is identical to you in every way, except all its gear is non-magical, it does not have any of your Class or Subclass features, and it has hit points equal to twice your Fighter level.',
+    warpEffect: 'If the Echo is dismissed, it instead persists and is no longer under your control.',
+    tags: ['echo', 'summon']
+  },
+  {
+    id: 'wound-reversal',
+    name: 'Wound Reversal',
+    cost: 'PB',
+    isSpecialCost: false,
+    focusDice: '[PB]d6',
+    duration: '1 hour',
+    activation: 'Bonus Action',
+    description: 'You cause a creature you touch to regain hit points equal to twice your level.',
+    warpEffect: 'The target instead gains temporary hit points equal to twice your level for one hour.',
+    tags: ['healing', 'support']
+  },
+  {
+    id: 'distort-reality',
+    name: 'Distort Reality',
+    cost: 4,
+    isSpecialCost: false,
+    focusDice: '2d8',
+    duration: '1 hour',
+    activation: 'Action',
+    description: 'You call upon the latent potential of the multiverse and manifest the effect of one spell that is 1st level or a cantrip. The spell can be from any class\'s spell list, and you don\'t need to meet any requirements in that spell except for concentration.',
+    warpEffect: 'Roll a die. If the number is odd, roll on the Wild Magic Surge table. If it is even, roll on it twice.',
+    tags: ['spellcasting', 'utility']
+  },
+  {
+    id: 'recursion',
+    name: 'Recursion',
+    cost: 4,
+    isSpecialCost: true,
+    focusDice: '2d6',
+    duration: '8 hours',
+    activation: 'None',
+    description: 'When you manifest the effect of rolling on the Wild Echo Surge table, roll a die. On an even number, you regain a use of your Unleash Incarnation feature as you harness a portion of the chaos you unleash.',
+    warpEffect: 'You roll on the Wild Echo Surge table whenever you use your Unleash Incarnation feature.',
+    tags: ['echo', 'utility']
+  },
+  // Page 9
+  {
+    id: 'supercapacitance',
+    name: 'Supercapacitance',
+    cost: 'Varies',
+    isSpecialCost: true,
+    focusDice: '[Cost]',
+    duration: 'While Selected',
+    activation: 'None',
+    description: 'You may Select any additional number of Siphon Features. The Cost for Supercapacitance is equal to the number of additional siphon features you select with this card, and Focus gain is equal to the Cost. They are applied at the end of every long rest while this is Selected. If you use Supercapacitance to Select a number of Siphon Features that is greater than your Proficiency Bonus, the Cost is doubled.',
+    warpEffect: null,
+    tags: ['meta', 'utility']
+  },
+  {
+    id: 'superconduction',
+    name: 'Superconduction',
+    cost: 'Varies',
+    isSpecialCost: true,
+    focusDice: '[Cost/2]d8',
+    duration: 'Triggered',
+    activation: 'Reaction',
+    description: 'At any time, you may Activate Superconduction and Bestow yourself or an ally within 60 feet of you another Siphon Feature you have Selected. If the target is yourself, you may immediately also Activate it. If an ally is targeted, they may expend their reaction to Activate it. The Cost for Superconduction equals half the Cost of the Siphon Feature you Bestow, rounded down (minimum of 1). Special Cost limitations still apply.',
+    warpEffect: 'You roll on the Wild Echo Surge table.',
+    tags: ['support', 'reaction']
+  },
+  {
+    id: 'manifestation',
+    name: 'Manifestation',
+    cost: 'Level',
+    isSpecialCost: true,
+    focusDice: '[Cost]d6',
+    duration: 'Triggered',
+    activation: 'None',
+    description: 'At any time, you may Activate Manifestation and replace it with another Siphon Feature, which you then have Selected.',
+    warpEffect: 'You roll on the Wild Echo Surge table.',
+    tags: ['meta', 'utility']
+  },
+  {
+    id: 'spatial-flux',
+    name: 'Spatial Flux',
+    cost: 7,
+    isSpecialCost: true,
+    focusDice: '3d8',
+    duration: '1 minute',
+    activation: 'Action',
+    description: 'You emanate an aura with a radius equal to five times your number of Static Capacitance charges. Allies in this aura may use five feet of their movement to teleport to another location in this aura which they can see.',
+    warpEffect: 'The radius is doubled, and all creatures benefit from Spatial Flux.',
+    tags: ['support', 'teleportation', 'area']
+  },
+  {
+    id: 'siphon-greed',
+    name: 'Siphon Greed',
+    cost: 0,
+    isSpecialCost: true,
+    focusDice: '1d4',
+    duration: 'While Selected',
+    activation: 'None',
+    description: 'If you are Echo Drained, the Cost for any Siphon Feature is halved, rounded down (minimum of 1). In addition, your Echo Point (EP) Recovery (EPR) is multiplied by every integer multiple you are over the Echo Drain threshold. (ex., Level = 5, EP = -10 ... -14 -> EPR = 6) (ex., Level = 5, EP = -15 ... -19 -> EPR = 9). The Focus for Siphon Greed is gained at the end of every long rest while this is Selected.',
+    warpEffect: null,
+    tags: ['meta', 'utility']
+  },
+  {
+    id: 'flux-capacitance',
+    name: 'Flux Capacitance',
+    cost: 5,
+    isSpecialCost: true,
+    focusDice: '1d8',
+    duration: 'Permanent',
+    activation: 'Action',
+    description: 'You delay the required expenditure of Siphon Capacitance charges gained from Siphon Flux by 8 hours.',
+    warpEffect: 'You roll on the Wild Echo Surge table.',
+    tags: ['utility', 'surge']
+  },
+  // Page 11 - Ultimate features
+  {
+    id: 'that-which-isnt',
+    name: 'That Which Isn\'t',
+    cost: 40,
+    isSpecialCost: true,
+    focusDice: '2d20',
+    duration: 'Special',
+    activation: 'Action',
+    description: 'In this soil, your roots can grow.',
+    warpEffect: 'Roll 1d20. You gain the result as Focus and take twenty times the result as force damage at the start of each turn while in this form.',
+    tags: ['ultimate', 'transformation']
+  },
+  {
+    id: 'apotheosis',
+    name: 'Apotheosis',
+    cost: 16,
+    isSpecialCost: true,
+    focusDice: '8d8',
+    duration: '1 minute',
+    activation: 'Action',
+    description: 'You can reach through the multiverse and assume a distantly related form of yourself. You gain the benefit of casting the spell Shapechange as if you are 15th level, or your level, whichever is higher.',
+    warpEffect: 'Roll a d4. On a 1, this no longer requires concentration, you fall under the Dungeon Master\'s control and are hostile to everyone during this effect.',
+    tags: ['ultimate', 'transformation']
+  },
+  {
+    id: 'transcendence',
+    name: 'Transcendence',
+    cost: 20,
+    isSpecialCost: true,
+    focusDice: '10d10',
+    duration: '1 Minute',
+    activation: 'Action',
+    description: 'You siphon incredible power from the multiverse, rewriting reality as you see fit. You gain the effect of casting Wish.',
+    warpEffect: 'Roll a d100. If the result is greater than or equal to your level, you are instantly killed before the effect manifests. Nothing less than the power of a greater deity can resurrect you.',
+    tags: ['ultimate', 'reality-warping']
+  },
+  {
+    id: 'longing',
+    name: 'Longing',
+    cost: 'Varies',
+    isSpecialCost: true,
+    focusDice: '2d8',
+    duration: 'Triggered',
+    activation: 'None',
+    description: 'Whenever you are targeted by or within the area of a magical effect that forces a saving throw or deals damage, you may Activate this feature after the roll succeeds or fails. The triggering roll must be made again, and you choose either outcome. The Cost for this feature is twice the level of the triggering effect (min 3).',
+    warpEffect: 'You roll on the Wild Echo Surge table. You may ignore any damage of the triggering effect. On a successful save, you ignore the triggering effect entirely.',
+    tags: ['defense', 'reaction']
+  },
+];
+
+// Helper function to get a feature by ID
+export function getFeatureById(id: string): SiphonFeature | undefined {
+  return SIPHON_FEATURES.find(f => f.id === id);
+}
+
+// Helper function to filter features by tags
+export function getFeaturesByTag(tag: string): SiphonFeature[] {
+  return SIPHON_FEATURES.filter(f => f.tags?.includes(tag));
+}
+
+// Helper function to get features by activation type
+export function getFeaturesByActivation(activation: SiphonFeature['activation']): SiphonFeature[] {
+  return SIPHON_FEATURES.filter(f => f.activation === activation);
+}
