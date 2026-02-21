@@ -56,7 +56,6 @@ function performFullLongRest(focusRollOverride?: number) {
  */
 function performFullShortRest(
   hdToSpend: number,
-  healingAmount: number,
   clearEffects: boolean
 ) {
   // 1. Spend hit dice
@@ -64,18 +63,10 @@ function performFullShortRest(
     useCharacterStore.getState().spendHitDice(hdToSpend);
   }
 
-  // 2. Heal
-  if (healingAmount > 0) {
-    const charState = useCharacterStore.getState();
-    useCharacterStore.getState().setCurrentHP(
-      Math.min(charState.reducedMaxHP, charState.currentHP + healingAmount)
-    );
-  }
-
-  // 3. Clear effects
+  // 2. Clear effects
   useSiphonStore.getState().shortRest(clearEffects);
 
-  // 4. Restore phase switch
+  // 3. Restore phase switch
   useManifoldStore.getState().resetPhaseSwitchOnShortRest();
 }
 
@@ -334,7 +325,7 @@ describe('Rest Mechanics (Integration)', () => {
     it('RULE-REST-004: restores free phase switch', () => {
       useManifoldStore.setState({ phaseSwitchAvailable: false });
 
-      performFullShortRest(0, 0, false);
+      performFullShortRest(0, false);
 
       expect(useManifoldStore.getState().phaseSwitchAvailable).toBe(true);
     });
@@ -343,7 +334,7 @@ describe('Rest Mechanics (Integration)', () => {
     it('RULE-REST-005: does not affect EP or Focus', () => {
       useSiphonStore.setState({ currentEP: -3, focus: 15 });
 
-      performFullShortRest(0, 0, false);
+      performFullShortRest(0, false);
 
       expect(useSiphonStore.getState().currentEP).toBe(-3);
       expect(useSiphonStore.getState().focus).toBe(15);
@@ -353,7 +344,7 @@ describe('Rest Mechanics (Integration)', () => {
     it('does not affect motes', () => {
       useManifoldStore.setState({ motes: 3 });
 
-      performFullShortRest(0, 0, false);
+      performFullShortRest(0, false);
 
       expect(useManifoldStore.getState().motes).toBe(3);
     });
@@ -373,7 +364,7 @@ describe('Rest Mechanics (Integration)', () => {
         ],
       });
 
-      performFullShortRest(0, 0, false);
+      performFullShortRest(0, false);
 
       expect(useSiphonStore.getState().handCardIds).toEqual(['a']);
       expect(useSiphonStore.getState().allyBestowments).toHaveLength(1);
@@ -411,7 +402,7 @@ describe('Rest Mechanics (Integration)', () => {
         ],
       });
 
-      performFullShortRest(0, 0, true);
+      performFullShortRest(0, true);
 
       const effects = useSiphonStore.getState().activeEffects;
       expect(effects).toHaveLength(1);
@@ -449,7 +440,7 @@ describe('Rest Mechanics (Integration)', () => {
         ],
       });
 
-      performFullShortRest(0, 0, true);
+      performFullShortRest(0, true);
 
       const effects = useSiphonStore.getState().activeEffects;
       expect(effects).toHaveLength(1);
@@ -475,33 +466,19 @@ describe('Rest Mechanics (Integration)', () => {
         ],
       });
 
-      performFullShortRest(0, 0, false);
+      performFullShortRest(0, false);
 
       expect(useSiphonStore.getState().activeEffects).toHaveLength(1);
     });
 
     // Hit dice spending on short rest
-    it('spends hit dice and heals', () => {
+    it('spends hit dice', () => {
       useCharacterStore.getState().setLevel(5);
       useCharacterStore.getState().restoreAllHitDice(); // hitDice = 5
-      useCharacterStore.getState().setMaxHP(40);
-      useCharacterStore.getState().setCurrentHP(20);
 
-      performFullShortRest(2, 15, false);
+      performFullShortRest(2, false);
 
       expect(useCharacterStore.getState().hitDice).toBe(3); // 5 - 2
-      expect(useCharacterStore.getState().currentHP).toBe(35); // 20 + 15
-    });
-
-    it('healing capped at reduced max HP', () => {
-      useCharacterStore.getState().setLevel(5);
-      useCharacterStore.getState().restoreAllHitDice();
-      useCharacterStore.getState().setMaxHP(40);
-      useCharacterStore.getState().setCurrentHP(35);
-
-      performFullShortRest(1, 100, false);
-
-      expect(useCharacterStore.getState().currentHP).toBe(40); // Capped at reducedMaxHP
     });
   });
 });

@@ -73,7 +73,6 @@ export function ManualOverrides() {
   const hitDice = useCharacterStore((s) => s.hitDice);
   const maxHP = useCharacterStore((s) => s.maxHP);
   const reducedMaxHP = useCharacterStore((s) => s.reducedMaxHP);
-  const currentHP = useCharacterStore((s) => s.currentHP);
 
   const maxHPReduction = maxHP - reducedMaxHP;
 
@@ -115,10 +114,7 @@ export function ManualOverrides() {
         onChange={(v) => {
           const reduction = Math.max(0, v);
           const newReducedMax = Math.max(0, maxHP - reduction);
-          useCharacterStore.setState({
-            reducedMaxHP: newReducedMax,
-            currentHP: Math.min(currentHP, newReducedMax),
-          });
+          useCharacterStore.setState({ reducedMaxHP: newReducedMax });
         }}
         min={0}
         notes={maxHPReduction > 0 ? `Current Max HP: ${reducedMaxHP}` : undefined}

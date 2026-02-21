@@ -3,7 +3,6 @@ export interface Character {
   level: number;                    // 1-20, determines max EP
   proficiencyBonus: number;         // 2-6, determines max selected cards
   maxHP: number;
-  currentHP: number;
   reducedMaxHP: number;             // Lowered by Echo Drain
   spellSaveDC: number;              // For surge table effects
 }

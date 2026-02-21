@@ -9,16 +9,12 @@ export function ShortRestDialog({ onClose }: ShortRestDialogProps) {
   const shortRestClearDefault = useSettingsStore((s) => s.shortRestClearEffects);
   const [clearEffects, setClearEffects] = useState(shortRestClearDefault);
   const [hdToSpend, setHdToSpend] = useState(0);
-  const [healingAmount, setHealingAmount] = useState('');
   const [isComplete, setIsComplete] = useState(false);
   const [phaseSwitchRestored, setPhaseSwitchRestored] = useState(false);
 
   // Character store
-  const currentHP = useCharacterStore((s) => s.currentHP);
-  const reducedMaxHP = useCharacterStore((s) => s.reducedMaxHP);
   const hitDice = useCharacterStore((s) => s.hitDice);
   const spendHitDice = useCharacterStore((s) => s.spendHitDice);
-  const setCurrentHP = useCharacterStore((s) => s.setCurrentHP);
 
   // Siphon store
   const activeEffects = useSiphonStore((s) => s.activeEffects);
@@ -40,16 +36,10 @@ export function ShortRestDialog({ onClose }: ShortRestDialogProps) {
       spendHitDice(hdToSpend);
     }
 
-    // 2. Heal
-    const healing = parseInt(healingAmount, 10);
-    if (!isNaN(healing) && healing > 0) {
-      setCurrentHP(Math.min(reducedMaxHP, currentHP + healing));
-    }
-
-    // 3. Clear effects
+    // 2. Clear effects
     shortRest(clearEffects);
 
-    // 4. Restore phase switch
+    // 3. Restore phase switch
     const wasUnavailable = !useManifoldStore.getState().phaseSwitchAvailable;
     resetPhaseSwitchOnShortRest();
     setPhaseSwitchRestored(wasUnavailable);
@@ -81,12 +71,6 @@ export function ShortRestDialog({ onClose }: ShortRestDialogProps) {
               <div className="flex justify-between">
                 <span className="text-text-muted">Hit Dice Spent</span>
                 <span className="text-text-secondary">{hdToSpend}</span>
-              </div>
-            )}
-            {!isNaN(parseInt(healingAmount, 10)) && parseInt(healingAmount, 10) > 0 && (
-              <div className="flex justify-between">
-                <span className="text-text-muted">HP Healed</span>
-                <span className="text-ep-positive">+{parseInt(healingAmount, 10)}</span>
               </div>
             )}
             {clearEffects && shortEffects.length > 0 && (
@@ -136,12 +120,6 @@ export function ShortRestDialog({ onClose }: ShortRestDialogProps) {
         </div>
 
         <div className="border-t border-siphon-border pt-3 mb-3 space-y-3">
-          {/* Current HP */}
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-text-muted">Current HP</span>
-            <span className="text-text-primary">{currentHP} / {reducedMaxHP}</span>
-          </div>
-
           {/* Hit Dice spending */}
           <div>
             <div className="flex items-center justify-between text-sm mb-1">
@@ -170,24 +148,6 @@ export function ShortRestDialog({ onClose }: ShortRestDialogProps) {
               </button>
             </div>
           </div>
-
-          {/* Healing amount (manual input — user rolls in Foundry) */}
-          {hdToSpend > 0 && (
-            <div>
-              <label className="text-sm text-text-muted block mb-1">
-                Healing roll result
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={healingAmount}
-                onChange={(e) => setHealingAmount(e.target.value)}
-                className="w-full px-2 py-1.5 text-sm bg-siphon-bg border border-siphon-border rounded text-text-primary tabular-nums focus:border-siphon-accent focus:outline-none"
-                placeholder="Enter healing total from Foundry"
-                aria-label="Healing roll result"
-              />
-            </div>
-          )}
 
           {/* Effect clearing toggle */}
           <div className="flex items-center justify-between">

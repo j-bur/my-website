@@ -21,7 +21,7 @@ function resetStores() {
     level: 5,
     proficiencyBonus: 3,
     maxHP: 45,
-    currentHP: 45,
+
     reducedMaxHP: 45,
     hitDice: 5,
     maxHitDice: 5,

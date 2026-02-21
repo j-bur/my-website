@@ -58,7 +58,7 @@ describe('DataManagement', () => {
     const exportData = JSON.stringify({
       version: 1,
       exportedAt: new Date().toISOString(),
-      character: { level: 15, proficiencyBonus: 5, maxHP: 10, currentHP: 10, reducedMaxHP: 10, hitDice: 15, maxHitDice: 15, name: '', spellSaveDC: 13 },
+      character: { level: 15, proficiencyBonus: 5, maxHP: 10, reducedMaxHP: 10, hitDice: 15, maxHitDice: 15, name: '', spellSaveDC: 13 },
     });
 
     render(<DataManagement />);

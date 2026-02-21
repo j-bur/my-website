@@ -28,7 +28,6 @@ function resetStores() {
     level: 5,
     proficiencyBonus: 3,
     maxHP: 40,
-    currentHP: 25,
     reducedMaxHP: 40,
     hitDice: 5,
     maxHitDice: 5,
@@ -59,12 +58,6 @@ describe('ShortRestDialog', () => {
 
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-label', 'Short Rest');
     expect(screen.getByText('Rest Options')).toBeInTheDocument();
-  });
-
-  it('shows current HP', () => {
-    render(<ShortRestDialog onClose={onClose} />);
-
-    expect(screen.getByText('25 / 40')).toBeInTheDocument();
   });
 
   it('shows available hit dice', () => {
@@ -104,17 +97,6 @@ describe('ShortRestDialog', () => {
 
     // Should show 1, not 2
     expect(incButton).toBeDisabled();
-  });
-
-  it('shows healing input when HD > 0', () => {
-    render(<ShortRestDialog onClose={onClose} />);
-
-    // Initially no healing input
-    expect(screen.queryByLabelText('Healing roll result')).toBeNull();
-
-    // After incrementing HD
-    fireEvent.click(screen.getByLabelText('Increase hit dice'));
-    expect(screen.getByLabelText('Healing roll result')).toBeInTheDocument();
   });
 
   it('effect clearing toggle defaults from settings', () => {
@@ -191,21 +173,16 @@ describe('ShortRestDialog', () => {
     expect(useManifoldStore.getState().phaseSwitchAvailable).toBe(true);
   });
 
-  it('spends hit dice and heals on confirm', () => {
+  it('spends hit dice on confirm', () => {
     render(<ShortRestDialog onClose={onClose} />);
 
     // Spend 2 HD
     fireEvent.click(screen.getByLabelText('Increase hit dice'));
     fireEvent.click(screen.getByLabelText('Increase hit dice'));
 
-    // Enter healing
-    const healInput = screen.getByLabelText('Healing roll result');
-    fireEvent.change(healInput, { target: { value: '12' } });
-
     fireEvent.click(screen.getByText('Confirm Short Rest'));
 
     expect(useCharacterStore.getState().hitDice).toBe(3); // 5 - 2
-    expect(useCharacterStore.getState().currentHP).toBe(37); // 25 + 12
   });
 
   it('RULE-REST-006: clears short-duration effects when toggle is on', () => {
@@ -253,10 +230,8 @@ describe('ShortRestDialog', () => {
 
     render(<ShortRestDialog onClose={onClose} />);
 
-    // Spend 1 HD with healing
+    // Spend 1 HD
     fireEvent.click(screen.getByLabelText('Increase hit dice'));
-    const healInput = screen.getByLabelText('Healing roll result');
-    fireEvent.change(healInput, { target: { value: '8' } });
 
     fireEvent.click(screen.getByText('Confirm Short Rest'));
 
@@ -264,7 +239,6 @@ describe('ShortRestDialog', () => {
     expect(screen.getByText('Short Rest Complete')).toBeInTheDocument();
     expect(screen.getByText('Rest Results')).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument(); // HD spent
-    expect(screen.getByText('+8')).toBeInTheDocument(); // HP healed
     expect(screen.getByText('Restored')).toBeInTheDocument(); // Phase switch
   });
 

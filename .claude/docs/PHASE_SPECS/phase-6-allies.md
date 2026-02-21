@@ -93,6 +93,15 @@ Implement named allies, bestowing features to allies, and the ally bestowment vi
 
 ---
 
+## Design Notes
+
+### Superconduction Self-Target UI
+Superconduction (feature ID: `superconduction`) can target self or an ally. When bestowed to self
+and activated, the UI must present a target picker: "Target: Self / [Ally Name]". If targeting an
+ally, the effect should appear in the ally's bestowment view rather than ActiveEffectsPanel. The
+activation cost and focus roll still apply to the player. This target picker is NOT needed for
+other features — only Superconduction has this dual-target behavior.
+
 ## Out of Scope
 - DO NOT implement drag-and-drop bestow (Phase 7 -- use click-based for now)
 - DO NOT implement silvery tendril animation (Phase 7)

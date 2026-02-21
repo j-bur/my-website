@@ -8,7 +8,7 @@ Full interface definitions and behavioral contracts for all Zustand stores.
 
 File: `src/store/characterStore.ts`
 Persist key: `siphon-character`
-Persist version: 2
+Persist version: 3
 
 ### State
 ```typescript
@@ -17,7 +17,6 @@ interface CharacterState {
   level: number;                 // 1-20
   proficiencyBonus: number;      // Auto-calculated: Math.ceil(level / 4) + 1
   maxHP: number;                 // Base max HP (set by user)
-  currentHP: number;             // Current HP (0 to reducedMaxHP)
   reducedMaxHP: number;          // maxHP - echo drain reductions
   spellSaveDC: number;           // Spell save DC
   hitDice: number;               // Current available (0 to maxHitDice)
@@ -35,13 +34,10 @@ setLevel(level: number): void
 // Updates maxHitDice = level. Clamps hitDice to maxHitDice.
 
 setMaxHP(hp: number): void
-// Sets maxHP and reducedMaxHP to hp. Clamps currentHP.
-
-setCurrentHP(hp: number): void
-// Clamps to 0..reducedMaxHP.
+// Sets maxHP and reducedMaxHP to hp.
 
 reduceMaxHP(amount: number): void
-// reducedMaxHP -= amount (min 0). Clamps currentHP.
+// reducedMaxHP -= amount (min 0).
 // Used by: Echo Drain HP reduction.
 
 restoreMaxHP(amount: number): void
@@ -62,16 +58,18 @@ restoreAllHitDice(): void
 
 resetCharacter(): void
 // Resets all fields to defaults.
-
-healToFull(): void
-// currentHP = reducedMaxHP.
 ```
 
-### Migration (v1 -> v2)
+### Migrations
 ```typescript
+// v1 -> v2
 if (version === 1) {
   state.hitDice = state.level;
   state.maxHitDice = state.level;
+}
+// v2 -> v3
+if (version <= 2) {
+  delete state.currentHP;
 }
 ```
 

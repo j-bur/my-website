@@ -67,6 +67,8 @@ interface SiphonStore {
   bestowToAlly: (featureId: string, allyId: string) => void;
 
   // Activate Actions (Combat)
+  /** @deprecated Low-level card zone transition only. Use performActivation() for the full
+   *  orchestrated flow (spendEP + addFocus + addActiveEffect + card return). */
   activateFromHand: (featureId: string) => void;
   returnCardToDeck: (featureId: string) => void;
   replaceSelectedCard: (oldFeatureId: string, newFeatureId: string) => void;
@@ -273,6 +275,7 @@ export const useSiphonStore = create<SiphonStore>()(
 
       // --- Activate Actions ---
 
+      /** @deprecated Use performActivation() instead. */
       activateFromHand: (featureId) => {
         const state = get();
         const newHand = state.handCardIds.filter((id) => id !== featureId);
