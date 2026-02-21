@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 4 Complete (Rest mechanics built, Phase 5 next)
+**Current Phase**: Phase 4 Complete (Phase 4.5 spec written, Deck Builder + Routing next)
 
 ---
 
@@ -15,7 +15,8 @@
 | Phase 2: Combat Layout | ✅ Complete | 24 component tests + 162 prior = 186 total |
 | Phase 3: Activation Flow | ✅ Complete | 41 new tests (18 util + 23 component) = 227 total |
 | Phase 4: Rest Mechanics | ✅ Complete | 59 new tests (24 integration + 15 + 20 component) = 300 total |
-| Phase 5: Settings & Polish | 🔴 Not Started | Blocked by Phase 4 |
+| Phase 4.5: Deck Builder + Routing | 🔴 Not Started | Blocked by Phase 4 |
+| Phase 5: Settings & Polish | 🔴 Not Started | Blocked by Phase 4.5 |
 | Phase 6: Ally System | 🔴 Not Started | Blocked by Phase 5 |
 | Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
 
@@ -23,10 +24,11 @@
 
 ## Next Session
 
-1. **Start with Phase 5**: Read `.claude/docs/PHASE_SPECS/phase-5-settings.md`
-2. Settings modal, manual overrides, data export/import
-3. DeckBuilder + routing still needed (see Discovered Issues)
-4. All stores, combat layout, activation flow, and rest mechanics are ready
+1. **Start with Phase 4.5**: Read `.claude/docs/PHASE_SPECS/phase-4.5-deckbuilder.md`
+2. Hash router setup: `/#/` = HomeRedirect (→ `/#/combat` if deck exists, → `/#/deck-builder` if empty), `/#/combat` = CombatHUD, `/#/deck-builder` = DeckBuilder
+3. DeckBuilder view: CharacterHeader, CollectionGrid (filter + search), SelectedPanel
+4. Click-to-select cards, PB limit, Supercapacitance overflow, rest buttons, Enter Combat nav
+5. All stores already have the methods needed — no new store work required
 
 ---
 
@@ -41,7 +43,8 @@ Each phase has a detailed spec in `.claude/docs/PHASE_SPECS/`. Read the spec bef
 | 2 | `phase-2-combat-layout.md` | 2 | Spatial layout, Deck, Hand, Effects panel |
 | 3 | `phase-3-activation.md` | 2 | Activation Panel, warp, macro |
 | 4 | `phase-4-rest.md` | 1 | Long Rest, Short Rest dialogs |
-| 5 | `phase-5-settings.md` | 2 | Settings modal, overrides, export |
+| 4.5 | `phase-4.5-deckbuilder.md` | 2 | Deck Builder view, React Router, card selection |
+| 5 | `phase-5-settings.md` | 3 | Settings modal, overrides, export, While Selected mechanics |
 | 6 | `phase-6-allies.md` | 2 | Allies panel, bestowment overlay |
 | 7 | `phase-7-polish.md` | 2-3 | Animations, drag-drop, VFX |
 
@@ -52,15 +55,15 @@ Each phase has a detailed spec in `.claude/docs/PHASE_SPECS/`. Read the spec bef
 _(Issues found during sessions that belong to a different phase. Format: `[DISCOVERY] description (found during Phase N, relevant to Phase M)`)_
 
 - `[FIXED]` activateFromHand/returnCardToDeck could append duplicate IDs to selectedCardIds if called twice. Added dedup guard. (found during Phase 2, fixed in siphonStore.ts)
-- `[DISCOVERY]` Phases 4 and 5 reference `DeckBuilder.tsx` (rest buttons, gear icon) but no phase spec creates the Deck Builder component or sets up React Router routing. Need a dedicated phase or pre-task for this. (found during Phase 2, relevant to Phase 4+)
-- `[DEFERRED]` Rest buttons in DeckBuilder deferred — DeckBuilder.tsx doesn't exist yet. LongRestDialog and ShortRestDialog are reusable and can be wired in when DeckBuilder is created. (Phase 4, deferred by user choice)
+- `[RESOLVED]` Phases 4 and 5 reference `DeckBuilder.tsx` but no phase spec creates it. → Phase 4.5 spec created. (found during Phase 2, resolved during Phase 4.5 spec writing)
+- `[RESOLVED]` Rest buttons in DeckBuilder deferred. → Phase 4.5 spec includes rest buttons in SelectedPanel. (Phase 4, resolved during Phase 4.5 spec writing)
 - `[FIXED]` Siphon Greed EPR formula was wrong — used flat `pb * 2` instead of scaling by `floor(abs(EP) / level)`. Fixed in siphonStore.ts, added RULE-GREED-005 to RULES.md. (found during Phase 4)
 - `[FIXED]` Short rest effect clearing threshold was `< 1 hour` instead of `<= 1 hour`. Fixed in siphonStore.ts and ShortRestDialog.tsx. Updated RULE-REST-006. (found during Phase 4)
 - `[DISCOVERY]` `characterStore.setLevel()` does not auto-restore hitDice — future UI should offer long rest option when leveling up. (found during Phase 4, relevant to DeckBuilder)
 - `[DISCOVERY]` Rest coordination is spread across 3 stores with no single orchestrator — consider extracting `performLongRest()` / `performShortRest()` utility functions to avoid duplication when DeckBuilder gets rest buttons. (found during Phase 4, relevant to DeckBuilder)
 - `[DISCOVERY]` Store methods that roll dice internally (`longRest`'s d4) are hard to test deterministically. Future store methods should accept roll results as parameters. (found during Phase 4)
-- `[DISCOVERY]` Siphon Greed: "The Focus for Siphon Greed is gained at the end of every long rest while this is Selected." This While Selected focus gain is NOT yet implemented (Phase 4 spec marks it out of scope as "Phase 4.5"). (found during Phase 4)
-- `[DISCOVERY]` No phase spec creates DeckBuilder.tsx or sets up React Router routing. DeckBuilder is needed soon — it handles card selection, character setup, and rest buttons. (confirmed during Phase 4)
+- `[RESOLVED]` Siphon Greed While Selected focus gain not implemented. → Added as Phase 5C. (found during Phase 4, resolved during Phase 4.5 spec writing)
+- `[DISCOVERY]` `siphonStore.selectCard(cardId, maxCards)` puts PB limit logic on the caller — every call site must know about Supercapacitance to compute `maxCards`. If future code calls `selectCard` (e.g., data import in Phase 5B, or a "restore deck" feature), it needs the same Supercapacitance-aware logic. Consider refactoring the store to own this internally by reading `proficiencyBonus` from characterStore + checking if `supercapacitance` is selected. Not urgent but a latent coupling. (found during Phase 4.5 spec writing, relevant to Phase 5B data import)
 
 ---
 

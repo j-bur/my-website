@@ -25,6 +25,12 @@ src/
 ├── components/
 │   ├── cards/
 │   │   └── SiphonCard.tsx         # Reusable card component for features
+│   ├── deck-builder/                # Phase 4.5: Deck Builder view
+│   │   ├── DeckBuilder.tsx          # Main view (CharacterHeader + CollectionGrid + SelectedPanel)
+│   │   ├── CharacterHeader.tsx      # Level/MaxHP/PB/EP inputs
+│   │   ├── CollectionGrid.tsx       # All 42 features, filterable
+│   │   ├── SelectedPanel.tsx        # Selected cards + rest/nav buttons
+│   │   └── index.ts                 # Barrel export
 │   ├── combat-hud/
 │   │   ├── CombatHUD.tsx          # CSS Grid layout container
 │   │   ├── EchoManifoldDeck.tsx   # Phase card + mote pips (top-left)
@@ -54,8 +60,8 @@ src/
 │   ├── settingsStore.ts           # User preferences, dice modes
 │   ├── manifoldStore.ts           # Echo Manifold phase system
 │   └── index.ts                   # Store re-exports
-├── App.tsx                        # Root component (renders CombatHUD)
-├── main.tsx                       # Entry point
+├── App.tsx                        # Layout wrapper with <Outlet /> (Phase 4.5)
+├── main.tsx                       # Entry point with createHashRouter (Phase 4.5)
 ├── index.css                      # Global styles and Tailwind
 └── setupTests.ts                  # Vitest setup for jest-dom matchers
 ```
@@ -175,18 +181,18 @@ App
     └── ShortRestDialog (overlay) — HD spending + effect clearing
 ```
 
-### Target Structure (per DESIGN.md)
+### Target Structure (per DESIGN.md + Phase 4.5)
 
 ```
-App
-├── LandingPage
-├── DeckBuilder
-│   ├── CharacterSetup
-│   ├── FilterControls
-│   ├── CardGallery
-│   │   └── SiphonCard (×42)
-│   └── SelectionSummary
-└── CombatHUD
+App (layout wrapper with <Outlet />)
+├── HomeRedirect (/ → /combat or /deck-builder)
+├── DeckBuilder (/deck-builder)
+│   ├── CharacterHeader (Level, Max HP, PB, EP Max inputs)
+│   ├── CollectionGrid (42 cards, filter + search)
+│   ├── SelectedPanel (selected cards, rest buttons, Enter Combat)
+│   ├── LongRestDialog (overlay, reused from combat-hud)
+│   └── ShortRestDialog (overlay, reused from combat-hud)
+└── CombatHUD (/combat)
     ├── Header (character info, settings gear)
     ├── TableArea
     │   ├── EchoManifoldDeck (top-left)
@@ -214,10 +220,16 @@ App
 
 ## Routing
 
-> Routing not yet implemented. Phase 2 renders CombatHUD directly in App.
+> Phase 4.5 implements routing. Uses `createHashRouter` (hash-based URLs) for Cloudflare Pages static SPA deployment.
 
-Target navigation flow:
-1. Landing → "Open Siphon" → Deck Builder (if no session) or Combat (if session exists)
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/#/` | `HomeRedirect` | Redirects to `/#/combat` if `selectedCardIds` has cards, otherwise `/#/deck-builder` |
+| `/#/combat` | `CombatHUD` | Combat view (main gameplay) |
+| `/#/deck-builder` | `DeckBuilder` | Character setup + card selection |
+
+Navigation flow:
+1. App loads → `HomeRedirect` → Deck Builder (if no deck) or Combat (if deck exists)
 2. Deck Builder → "Enter Combat" → Combat
 3. Combat → "Deck Builder" button → Deck Builder
 
