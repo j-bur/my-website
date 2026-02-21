@@ -113,7 +113,7 @@ interface SiphonStore {
   setEchoIntuitionActive: (active: boolean) => void;
 
   // Rest Actions
-  longRest: (pb: number, maxEP: number, focusRollOverride?: number) => { epRecovered: number; focusReduced: number; maxHPRestored: number };
+  longRest: (pb: number, maxEP: number, focusRollOverride?: number, whileSelectedEffects?: Array<{ featureId: string; epCost: number; focusGain: number }>) => { epRecovered: number; focusReduced: number; maxHPRestored: number; whileSelectedEPCost: number; whileSelectedFocusGain: number };
   shortRest: (clearShortEffects: boolean) => void;
 
   // Full Reset
@@ -461,7 +461,7 @@ export const useSiphonStore = create<SiphonStore>()(
 
       // --- Rest Actions ---
 
-      longRest: (pb, maxEP, focusRollOverride?) => {
+      longRest: (pb, maxEP, focusRollOverride?, whileSelectedEffects?) => {
         const state = get();
 
         // 1. EP recovery. Siphon Greed scales EPR by integer multiples over Echo Drain threshold.
@@ -472,21 +472,36 @@ export const useSiphonStore = create<SiphonStore>()(
           ? Math.floor(Math.abs(state.currentEP) / maxEP)
           : 1;
         const epRecoveryBase = pb * greedMultiplier;
-        const newEP = Math.min(maxEP, state.currentEP + epRecoveryBase);
+        let newEP = Math.min(maxEP, state.currentEP + epRecoveryBase);
         const epRecovered = newEP - state.currentEP;
 
         // 2. Focus reduction: d4 (min 0) — use override if provided (macro mode)
         const focusRoll = focusRollOverride ?? rollD(4);
-        const newFocus = Math.max(0, state.focus - focusRoll);
+        let newFocus = Math.max(0, state.focus - focusRoll);
         const focusReduced = state.focus - newFocus;
 
-        // 3. Max HP restoration = amount of EP recovered (caller applies to characterStore)
+        // 3. While Selected effects (applied after EP recovery and focus reduction)
+        // Order matters: EP costs deducted before focus gains to determine doubling
+        let whileSelectedEPCost = 0;
+        let whileSelectedFocusGain = 0;
+        if (whileSelectedEffects) {
+          for (const effect of whileSelectedEffects) {
+            newEP -= effect.epCost;
+            whileSelectedEPCost += effect.epCost;
+            // Focus gain follows normal rules: doubles when EP is negative
+            const actual = newEP < 0 ? effect.focusGain * 2 : effect.focusGain;
+            newFocus += actual;
+            whileSelectedFocusGain += actual;
+          }
+        }
+
+        // 4. Max HP restoration = amount of EP recovered (caller applies to characterStore)
         const maxHPRestored = Math.max(0, epRecovered);
 
-        // 4. Hand cards return to selected deck
+        // 5. Hand cards return to selected deck
         const newSelectedCardIds = [...state.selectedCardIds, ...state.handCardIds];
 
-        // 5-7. Clear ally bestowments, short-duration effects, capacitance
+        // 6-8. Clear ally bestowments, short-duration effects, capacitance
         const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
         const remainingEffects = state.activeEffects.filter(
           (e) => e.durationMs === null || e.durationMs > EIGHT_HOURS_MS
@@ -505,7 +520,7 @@ export const useSiphonStore = create<SiphonStore>()(
           capacitanceExpiresAt: null,
         });
 
-        return { epRecovered, focusReduced, maxHPRestored };
+        return { epRecovered, focusReduced, maxHPRestored, whileSelectedEPCost, whileSelectedFocusGain };
       },
 
       resetSiphon: () => set(DEFAULT_STATE),

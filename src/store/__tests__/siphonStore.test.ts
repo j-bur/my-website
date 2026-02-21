@@ -791,6 +791,88 @@ describe('siphonStore', () => {
       expect(useSiphonStore.getState().currentEP).toBe(-4);
       vi.restoreAllMocks();
     });
+
+    // --- While Selected Effects ---
+
+    it('applies Siphon Greed focus gain at long rest', () => {
+      useSiphonStore.setState({
+        currentEP: 0,
+        focus: 5,
+        selectedCardIds: ['siphon-greed'],
+        handCardIds: [],
+      });
+      // focusRollOverride=1 (d4 focus reduction), greedRoll=3
+      const result = useSiphonStore.getState().longRest(3, 5, 1, [
+        { featureId: 'siphon-greed', epCost: 0, focusGain: 3 },
+      ]);
+      // Focus: 5 - 1 (d4) + 3 (greed) = 7. EP positive, no doubling.
+      expect(useSiphonStore.getState().focus).toBe(7);
+      expect(result.whileSelectedFocusGain).toBe(3);
+      expect(result.whileSelectedEPCost).toBe(0);
+    });
+
+    it('doubles Siphon Greed focus when EP is negative after recovery', () => {
+      useSiphonStore.setState({
+        currentEP: -8,
+        focus: 0,
+        selectedCardIds: ['siphon-greed'],
+        handCardIds: [],
+      });
+      // EP recovers: -8 + 3 = -5. Still negative. Greed focus=2 → doubled to 4.
+      const result = useSiphonStore.getState().longRest(3, 5, 0, [
+        { featureId: 'siphon-greed', epCost: 0, focusGain: 2 },
+      ]);
+      expect(useSiphonStore.getState().currentEP).toBe(-5);
+      expect(useSiphonStore.getState().focus).toBe(4); // 0 - 0 + 2*2
+      expect(result.whileSelectedFocusGain).toBe(4);
+    });
+
+    it('applies Supercapacitance EP cost and focus gain at long rest', () => {
+      useSiphonStore.setState({
+        currentEP: 0,
+        focus: 0,
+        selectedCardIds: ['supercapacitance', 'a', 'b', 'c', 'd'], // 5 selected, PB=3, 2 extra
+        handCardIds: [],
+      });
+      // EP: 0 + 3 (recovery) = 3, then -4 (supercap cost) = -1
+      // Focus: 0 - 0 (d4=0). Supercap focus=2, EP=-1 (negative) → doubled to 4.
+      const result = useSiphonStore.getState().longRest(3, 5, 0, [
+        { featureId: 'supercapacitance', epCost: 4, focusGain: 2 },
+      ]);
+      expect(useSiphonStore.getState().currentEP).toBe(-1);
+      expect(useSiphonStore.getState().focus).toBe(4);
+      expect(result.whileSelectedEPCost).toBe(4);
+      expect(result.whileSelectedFocusGain).toBe(4); // doubled
+    });
+
+    it('applies both Supercapacitance and Siphon Greed together', () => {
+      useSiphonStore.setState({
+        currentEP: 2,
+        focus: 0,
+        selectedCardIds: ['supercapacitance', 'siphon-greed', 'a', 'b', 'c'], // 5 selected, PB=3, 2 extra
+        handCardIds: [],
+      });
+      // EP: 2 + 3 = 5. Supercap cost=4 → 5-4=1. EP=1 (positive).
+      // Supercap focus=2, not doubled (EP=1 >= 0). Greed focus=3, not doubled.
+      // Focus: 0 - 0 + 2 + 3 = 5
+      const result = useSiphonStore.getState().longRest(3, 5, 0, [
+        { featureId: 'supercapacitance', epCost: 4, focusGain: 2 },
+        { featureId: 'siphon-greed', epCost: 0, focusGain: 3 },
+      ]);
+      expect(useSiphonStore.getState().currentEP).toBe(1);
+      expect(useSiphonStore.getState().focus).toBe(5);
+      expect(result.whileSelectedEPCost).toBe(4);
+      expect(result.whileSelectedFocusGain).toBe(5);
+    });
+
+    it('returns zero While Selected values when no effects passed', () => {
+      useSiphonStore.setState({ currentEP: 0, focus: 0, selectedCardIds: [], handCardIds: [] });
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+      const result = useSiphonStore.getState().longRest(3, 5);
+      expect(result.whileSelectedEPCost).toBe(0);
+      expect(result.whileSelectedFocusGain).toBe(0);
+      vi.restoreAllMocks();
+    });
   });
 
   describe('shortRest', () => {

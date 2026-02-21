@@ -141,12 +141,15 @@ Four Zustand stores manage application state. All stores persist to localStorage
 **Long Rest**:
 1. EP regains PB (up to max, which = Level)
 2. Focus reduced by d4 roll (min 0)
-3. Max HP restored by amount of EP regained (if reduced by Echo Drain)
-4. All motes return to 8
-5. Hit Dice fully restored
-6. Free phase switch restored
-7. All bestowments cleared → cards return to Selected deck
-8. Active effects with duration < 8 hours removed
+3. While Selected effects applied (after EP recovery):
+   - Supercapacitance: EP cost = extra features beyond PB × 2; Focus gain = extra count (doubles if EP negative)
+   - Siphon Greed: +1d4 Focus (doubles if EP negative)
+4. Max HP restored by amount of EP regained (if reduced by Echo Drain)
+5. All motes return to 8
+6. Hit Dice fully restored
+7. Free phase switch restored
+8. All bestowments cleared → cards return to Selected deck
+9. Active effects with duration < 8 hours removed
 
 **Short Rest**:
 1. Free phase switch restored
@@ -158,7 +161,7 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 5B Complete)
+### Current Structure (Phase 5C Complete)
 
 ```
 App (layout wrapper with <Outlet />)

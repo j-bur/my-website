@@ -234,4 +234,128 @@ describe('LongRestDialog', () => {
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  // --- While Selected Effects ---
+
+  it('shows Siphon Greed preview when selected', () => {
+    useSiphonStore.setState({ selectedCardIds: ['siphon-greed', 'discharge'] });
+    render(<LongRestDialog onClose={onClose} />);
+
+    expect(screen.getByText('While Selected')).toBeInTheDocument();
+    expect(screen.getByText('Siphon Greed')).toBeInTheDocument();
+    expect(screen.getByText('+1d4 Focus')).toBeInTheDocument();
+  });
+
+  it('shows Supercapacitance preview when over PB', () => {
+    // PB=3, 5 features selected (2 extra) → cost=4, focus=2
+    useSiphonStore.setState({
+      selectedCardIds: ['supercapacitance', 'a', 'b', 'c', 'd'],
+    });
+    render(<LongRestDialog onClose={onClose} />);
+
+    expect(screen.getByText('While Selected')).toBeInTheDocument();
+    expect(screen.getByText('Supercapacitance')).toBeInTheDocument();
+    expect(screen.getByText('-4 EP')).toBeInTheDocument();
+    expect(screen.getByText('+2 Focus')).toBeInTheDocument();
+  });
+
+  it('does not show While Selected section when neither feature is selected', () => {
+    useSiphonStore.setState({ selectedCardIds: ['discharge', 'temporal-surge'] });
+    render(<LongRestDialog onClose={onClose} />);
+
+    expect(screen.queryByText('While Selected')).toBeNull();
+  });
+
+  it('shows warning when Supercapacitance cost would push EP negative', () => {
+    // EP=0, PB=3, recovery=3 → EP becomes 3. Supercap cost=4. 3-4=-1 (negative)
+    useSiphonStore.setState({
+      currentEP: 0,
+      selectedCardIds: ['supercapacitance', 'a', 'b', 'c', 'd'],
+    });
+    render(<LongRestDialog onClose={onClose} />);
+
+    expect(screen.getByText(/Warning.*Supercapacitance.*negative/i)).toBeInTheDocument();
+  });
+
+  it('applies Siphon Greed focus in dice3d mode', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.5); // rollD(4) = 3 for both rolls
+    useSiphonStore.setState({
+      currentEP: 3,
+      focus: 5,
+      selectedCardIds: ['siphon-greed', 'discharge'],
+      handCardIds: [],
+    });
+    useSettingsStore.setState({
+      diceMode: { wildSurge: 'dice3d', siphonFeature: 'macro', phaseAbility: 'macro', longRestFocus: 'dice3d' },
+    });
+
+    render(<LongRestDialog onClose={onClose} />);
+    fireEvent.click(screen.getByText('Confirm Long Rest'));
+
+    // Focus: 5 - 3 (d4) + 3 (greed roll) = 5. EP=5 (positive), no doubling.
+    expect(screen.getByText('Rest Results')).toBeInTheDocument();
+    expect(useSiphonStore.getState().focus).toBe(5);
+    vi.restoreAllMocks();
+  });
+
+  it('shows Siphon Greed macro input in macro mode', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['siphon-greed', 'discharge'],
+      handCardIds: [],
+    });
+    useSettingsStore.setState({
+      diceMode: { wildSurge: 'dice3d', siphonFeature: 'macro', phaseAbility: 'macro', longRestFocus: 'macro' },
+    });
+
+    render(<LongRestDialog onClose={onClose} />);
+    fireEvent.click(screen.getByText('Roll in Foundry'));
+
+    expect(screen.getByLabelText('Focus roll result')).toBeInTheDocument();
+    expect(screen.getByLabelText('Siphon Greed roll result')).toBeInTheDocument();
+    expect(screen.getByText(/Siphon Greed Focus/)).toBeInTheDocument();
+  });
+
+  it('applies both rolls in macro mode when submitted', () => {
+    useSiphonStore.setState({
+      currentEP: 3,
+      focus: 5,
+      selectedCardIds: ['siphon-greed', 'discharge'],
+      handCardIds: [],
+    });
+    useSettingsStore.setState({
+      diceMode: { wildSurge: 'dice3d', siphonFeature: 'macro', phaseAbility: 'macro', longRestFocus: 'macro' },
+    });
+
+    render(<LongRestDialog onClose={onClose} />);
+    fireEvent.click(screen.getByText('Roll in Foundry'));
+
+    // Enter focus reduction = 2, greed roll = 4
+    fireEvent.change(screen.getByLabelText('Focus roll result'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Siphon Greed roll result'), { target: { value: '4' } });
+    fireEvent.click(screen.getByText('Apply'));
+
+    // Focus: 5 - 2 (d4) + 4 (greed) = 7. EP=5 (positive), no doubling.
+    expect(screen.getByText('Rest Results')).toBeInTheDocument();
+    expect(useSiphonStore.getState().focus).toBe(7);
+  });
+
+  it('shows While Selected results in completion summary', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0); // rollD(4)=1 for both
+    useSiphonStore.setState({
+      currentEP: 0,
+      focus: 5,
+      selectedCardIds: ['supercapacitance', 'siphon-greed', 'a', 'b', 'c'],
+      handCardIds: [],
+    });
+    useSettingsStore.setState({
+      diceMode: { wildSurge: 'dice3d', siphonFeature: 'macro', phaseAbility: 'macro', longRestFocus: 'dice3d' },
+    });
+
+    render(<LongRestDialog onClose={onClose} />);
+    fireEvent.click(screen.getByText('Confirm Long Rest'));
+
+    expect(screen.getByText('Supercapacitance EP Cost')).toBeInTheDocument();
+    expect(screen.getByText('While Selected Focus')).toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
 });

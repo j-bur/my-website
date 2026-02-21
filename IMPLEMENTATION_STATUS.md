@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 5B Complete (Phase 5C: While Selected mechanics next)
+**Current Phase**: Phase 5C Complete (Phase 6: Ally System next)
 
 ---
 
@@ -18,6 +18,7 @@
 | Phase 4.5: Deck Builder + Routing | ✅ Complete | 32 new tests (8+10+8+4+2) = 332 total |
 | Phase 5A: Settings Modal | ✅ Complete | 15 new tests, 347 total |
 | Phase 5B: Timer + Overrides + Data | ✅ Complete | 36 new tests, 383 total |
+| Phase 5C: While Selected Mechanics | ✅ Complete | 20 new tests, 403 total |
 | Phase 6: Ally System | 🔴 Not Started | Blocked by Phase 5 |
 | Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
 
@@ -25,12 +26,9 @@
 
 ## Next Session
 
-1. **Start with Phase 5C**: Read `.claude/docs/PHASE_SPECS/phase-5-settings.md` (Session 5C section)
-2. While Selected mechanics: Siphon Greed focus gain at long rest, Supercapacitance EP cost at long rest
-3. Create `whileSelectedCalculator.ts` utility
-4. Extend `siphonStore.longRest()` to accept While Selected effects
-5. Update `LongRestDialog` with While Selected preview section
-6. Then Phase 6: Ally System
+1. **Start with Phase 6**: Read `.claude/docs/PHASE_SPECS/phase-6-allies.md`
+2. Ally System: AlliesPanel, bestowment overlay, ally management
+3. All Phase 5 exit conditions met (settings, overrides, data, While Selected mechanics)
 
 ---
 
@@ -72,6 +70,9 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - `[FIXED]` `resetSession()` cleared `handCardIds` without returning them to `selectedCardIds`, causing bestowed cards to vanish. Fixed to merge hand cards back into selected (same pattern as `longRest()`). (found during Phase 5B self-review, fixed in dataExport.ts)
 - `[DISCOVERY]` `capacitanceTimerStart` stores `Date.now()` (real-world ms) in `addCapacitance()`, while the new `capacitanceInGameTime`/`capacitanceExpiresAt` fields store in-game minutes since midnight. These coexist as independent timer systems — `capacitanceTimerStart` is vestigial (no UI reads it). Consider removing it in a future cleanup pass. (found during Phase 5B self-review)
 - `[DISCOVERY]` `importAllState()` uses raw `useSiphonStore.setState()` which bypasses action-level validation (e.g., `setSelectedCards()` would also clear hand/ally data). Round-trip export/import is self-consistent, but manually-edited JSON could produce inconsistent state. Consider adding a post-import validation pass if this becomes a user-facing feature. (found during Phase 5B self-review)
+- `[DISCOVERY]` `LongRestDialog` no longer uses `MacroDisplay` — replaced with inline macro UI to support dual roll inputs (Focus d4 + Siphon Greed 1d4). `ActivationPanel` still uses `MacroDisplay`. If updating the macro UI pattern globally, LongRestDialog must be updated separately. (found during Phase 5C)
+- `[DISCOVERY]` `siphonStore.longRest()` processes `whileSelectedEffects` array sequentially — each effect's EP cost is deducted before its focus gain is calculated (doubling depends on EP sign at that moment). The calculator returns Supercapacitance first (has EP cost that can push EP negative) then Siphon Greed (no EP cost). **This ordering is load-bearing**: if a future caller passes effects in a different order, focus doubling results will differ. Consider enforcing order in the store or documenting the contract. (found during Phase 5C, relevant to any future `longRest()` caller)
+- `[DISCOVERY]` `whileSelectedCalculator` returns `focusGain: 0` for Siphon Greed because it's dice-based — the caller (LongRestDialog) must roll dice and fill in the actual value before passing to `longRest()`. If a future caller forgets this step, Siphon Greed silently contributes 0 focus with no runtime error. (found during Phase 5C, relevant to any future `longRest()` caller)
 
 ---
 
@@ -133,6 +134,15 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - [x] 6 DataManagement tests: renders buttons, export download, import file, reset session, clear confirmation, blur cancels confirmation
 - [x] 9 SiphonCapacitanceTracker tests: charge pips, no timer when empty, preset picker, preset click, arrow adjust, extend, timer expired, clear, action buttons
 - [x] All exit conditions met: build passes, lint passes, 383 tests green
+
+### Phase 5C: While Selected Mechanics
+- [x] `whileSelectedCalculator.ts` — `calculateWhileSelectedEffects()` handles Supercapacitance (EP cost = extras × 2, focus = extras) and Siphon Greed (1d4 focus dice)
+- [x] `siphonStore.longRest()` — Extended with `whileSelectedEffects` parameter; EP costs deducted then focus gains added (with doubling when EP negative)
+- [x] `LongRestDialog.tsx` — While Selected preview section, Supercapacitance negative EP warning, Siphon Greed dice roll (dice3d auto-roll / macro input), completion summary
+- [x] 7 whileSelectedCalculator tests: no effects, at/under PB, 1 extra, 2 extra (DESIGN.md example), Siphon Greed dice info, combined ordering, singular description
+- [x] 5 siphonStore tests: Siphon Greed focus gain, focus doubling when EP negative, Supercapacitance cost+focus, combined effects, zero defaults
+- [x] 8 LongRestDialog tests: Siphon Greed preview, Supercapacitance preview, no preview when unselected, negative EP warning, dice3d execution, macro inputs, macro apply, completion summary
+- [x] All exit conditions met: build passes, lint passes, 403 tests green
 
 ### Phase 5A: Settings Modal
 - [x] `DiceModeToggle.tsx` — Reusable [3D] [Macro] toggle pair with accent color active state, `aria-pressed` accessibility
@@ -221,6 +231,16 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### 2026-02-21 — Phase 5C: While Selected Long Rest Mechanics
+- Created `whileSelectedCalculator.ts`: `calculateWhileSelectedEffects(selectedCardIds, pb)` returns ordered effects for Supercapacitance (EP cost doubled when total > PB, focus = undoubled cost) and Siphon Greed (1d4 focus dice)
+- Extended `siphonStore.longRest()` with optional `whileSelectedEffects` parameter: applies EP costs and focus gains after recovery, with focus doubling when EP is negative at time of gain
+- Updated `LongRestDialog.tsx`: While Selected preview section shows Supercapacitance cost/focus and Siphon Greed dice; warning when Supercapacitance would push EP negative; completion summary shows While Selected EP cost and focus gained; macro mode supports both Focus d4 and Siphon Greed 1d4 inputs simultaneously
+- Replaced MacroDisplay usage in LongRestDialog with inline macro UI to support multiple roll inputs (Focus d4 + Siphon Greed 1d4)
+- 20 new tests: 7 whileSelectedCalculator utility, 5 siphonStore longRest While Selected, 8 LongRestDialog While Selected UI
+- Total: 403 tests passing across 28 test files
+- All exit conditions met: build passes, lint passes, 403 tests green
+- **Next**: Phase 6 (Ally System)
 
 ### 2026-02-21 — Phase 5B: Timer + Overrides + Data
 - Created `ManualOverrides.tsx`: number inputs with +/− buttons for EP, Focus, Motes, Hit Dice, Max HP Reduction; each calls appropriate store setter with clamping validation
