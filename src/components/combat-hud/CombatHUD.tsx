@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import type { SurgeResult } from '../../types';
+import { SIPHON_FEATURES } from '../../data/siphonFeatures';
 import { EchoManifoldDeck } from './EchoManifoldDeck';
 import { WildSurgeDeck } from './WildSurgeDeck';
 import { PhaseAbilities } from './PhaseAbilities';
@@ -5,8 +8,36 @@ import { ActiveEffectsPanel } from './ActiveEffectsPanel';
 import { ResourceDisplay } from './ResourceDisplay';
 import { SelectedDeck } from './SelectedDeck';
 import { HandArea } from './HandArea';
+import { ActivationPanel } from './ActivationPanel';
+import { SurgeResultModal } from './SurgeResultModal';
+
+const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
 export function CombatHUD() {
+  const [stagedCardId, setStagedCardId] = useState<string | null>(null);
+  const [surgeResult, setSurgeResult] = useState<SurgeResult | null>(null);
+
+  const stagedFeature = stagedCardId ? featureMap.get(stagedCardId) ?? null : null;
+
+  const handleActivateCard = (featureId: string) => {
+    setStagedCardId(featureId);
+  };
+
+  const handleActivationComplete = (surge: SurgeResult | null) => {
+    setStagedCardId(null);
+    if (surge) {
+      setSurgeResult(surge);
+    }
+  };
+
+  const handleActivationCancel = () => {
+    setStagedCardId(null);
+  };
+
+  const handleDismissSurge = () => {
+    setSurgeResult(null);
+  };
+
   return (
     <div
       className="grid gap-3 p-4 min-h-screen w-full max-w-5xl mx-auto"
@@ -63,13 +94,30 @@ export function CombatHUD() {
 
       {/* Bottom Left: Selected Deck */}
       <div style={{ gridArea: 'deck' }} className="flex items-end">
-        <SelectedDeck />
+        <SelectedDeck onActivateCard={handleActivateCard} />
       </div>
 
       {/* Bottom: Hand */}
       <div style={{ gridArea: 'hand' }}>
-        <HandArea />
+        <HandArea onActivateCard={handleActivateCard} />
       </div>
+
+      {/* Activation Panel overlay */}
+      {stagedFeature && (
+        <ActivationPanel
+          feature={stagedFeature}
+          onComplete={handleActivationComplete}
+          onCancel={handleActivationCancel}
+        />
+      )}
+
+      {/* Surge Result Modal (shown after activation with warp, when autoSurge is off) */}
+      {surgeResult && (
+        <SurgeResultModal
+          result={surgeResult}
+          onDismiss={handleDismissSurge}
+        />
+      )}
     </div>
   );
 }

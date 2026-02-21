@@ -10,3 +10,6 @@ export { SiphonCapacitanceTracker } from './SiphonCapacitanceTracker';
 export { EchoManifoldDeck } from './EchoManifoldDeck';
 export { WildSurgeDeck } from './WildSurgeDeck';
 export { PhaseAbilities } from './PhaseAbilities';
+export { ActivationPanel } from './ActivationPanel';
+export { MacroDisplay } from './MacroDisplay';
+export { SurgeResultModal } from './SurgeResultModal';

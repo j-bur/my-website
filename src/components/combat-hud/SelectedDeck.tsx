@@ -9,7 +9,11 @@ const TRIGGERED_FEATURE_IDS = new Set(
 
 const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
-export function SelectedDeck() {
+interface SelectedDeckProps {
+  onActivateCard?: (featureId: string) => void;
+}
+
+export function SelectedDeck({ onActivateCard }: SelectedDeckProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const selectedCardIds = useSiphonStore((s) => s.selectedCardIds);
   const handCardIds = useSiphonStore((s) => s.handCardIds);
@@ -58,6 +62,12 @@ export function SelectedDeck() {
     // If no more deck cards after bestow, collapse
     if (deckCards.length <= 1) {
       setIsExpanded(false);
+    }
+
+    // Activation:None features auto-open the activation panel after bestow
+    const feature = featureMap.get(featureId);
+    if (feature?.activation === 'None' && onActivateCard) {
+      onActivateCard(featureId);
     }
   };
 

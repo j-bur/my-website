@@ -9,7 +9,11 @@ const TRIGGERED_FEATURE_IDS = new Set(
 
 const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
-export function HandArea() {
+interface HandAreaProps {
+  onActivateCard?: (featureId: string) => void;
+}
+
+export function HandArea({ onActivateCard }: HandAreaProps) {
   const handCardIds = useSiphonStore((s) => s.handCardIds);
   const selectedCardIds = useSiphonStore((s) => s.selectedCardIds);
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
@@ -67,9 +71,7 @@ export function HandArea() {
               feature={feature}
               isRaised={isHovered}
               compact={isLargeHand && !isHovered}
-              onDoubleClick={() => {
-                // Placeholder: Phase 3 activation
-              }}
+              onDoubleClick={() => onActivateCard?.(cardId)}
             />
           </div>
         );

@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 2 Complete (Combat layout built, Phase 3 next)
+**Current Phase**: Phase 3 Complete (Activation flow built, Phase 4 next)
 
 ---
 
@@ -13,7 +13,7 @@
 | Phase 0: Testing Infrastructure | ✅ Complete | 68 tests passing across 5 utility files |
 | Phase 1: Store Redesign | ✅ Complete | 94 store tests + 68 utility tests = 162 total |
 | Phase 2: Combat Layout | ✅ Complete | 24 component tests + 162 prior = 186 total |
-| Phase 3: Activation Flow | 🔴 Not Started | Blocked by Phase 2 |
+| Phase 3: Activation Flow | ✅ Complete | 41 new tests (18 util + 23 component) = 227 total |
 | Phase 4: Rest Mechanics | 🔴 Not Started | Blocked by Phase 3 |
 | Phase 5: Settings & Polish | 🔴 Not Started | Blocked by Phase 4 |
 | Phase 6: Ally System | 🔴 Not Started | Blocked by Phase 5 |
@@ -23,10 +23,10 @@
 
 ## Next Session
 
-1. **Start with Phase 3**: Read `.claude/docs/PHASE_SPECS/phase-3-activation.md`
-2. Implement the Activation Panel overlay (EP deduction, Focus rolling, warp triggers)
-3. Implement FoundryVTT macro generation
-4. All stores and combat layout are ready to use
+1. **Start with Phase 4**: Read `.claude/docs/PHASE_SPECS/phase-4-rest.md`
+2. Implement Long Rest and Short Rest dialogs
+3. Note: Phase 4 references DeckBuilder.tsx which doesn't exist yet (see Discovered Issues)
+4. All stores, combat layout, and activation flow are ready to use
 
 ---
 
@@ -102,6 +102,19 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - [x] 100 Wild Echo Surge entries (3 severity columns)
 - [x] All type definitions
 
+### Phase 3: Activation Flow
+- [x] `macroGenerator.ts` — resolveFocusDice, generateActivationMacro, resolveBaseCost utilities
+- [x] `MacroDisplay.tsx` — Copyable FoundryVTT macro text with manual result input
+- [x] `ActivationPanel.tsx` — Full activation overlay: cost preview (with Echo Intuition / Siphon Greed modifiers), EP change preview, focus dice, warp warning, macro mode, dice3d mode, warp result display
+- [x] `SurgeResultModal.tsx` — Standalone surge result modal (d100, d20, severity, effect)
+- [x] `CombatHUD.tsx` — Added activation state management (staged card, surge result, callbacks)
+- [x] `HandArea.tsx` — Wired double-click to trigger activation via onActivateCard prop
+- [x] `SelectedDeck.tsx` — Activation:None features auto-open activation panel after bestow
+- [x] Updated barrel export (`index.ts`) with 3 new components
+- [x] 18 macro generator tests: resolveFocusDice (7), generateActivationMacro (3), resolveBaseCost (8)
+- [x] 23 ActivationPanel component tests: display, cost preview, warp warning, modifiers, macro mode, dice3d mode, warp handling (auto/manual), active effects, card lifecycle
+- [x] All exit conditions met: build passes, lint passes, 227 tests green
+
 ### Phase 2: Combat Layout
 - [x] `SiphonCard.tsx` — Reusable card component (name, cost, focus, duration, activation, description, warp)
 - [x] `CombatHUD.tsx` — CSS Grid layout matching DESIGN.md wireframe (4-column, 4-row grid)
@@ -132,10 +145,24 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 | ~~No test infrastructure~~ | ~~Cannot verify behavior~~ | ✅ Phase 0 complete |
 | ~~No characterStore or siphonStore~~ | ~~Stores pruned for clean-slate rework~~ | ✅ Phase 1 complete |
 | ~~No components~~ | ~~Components pruned for clean-slate rework~~ | ✅ Phase 2 complete |
+| ~~No activation flow~~ | ~~Cannot activate features~~ | ✅ Phase 3 complete |
 
 ---
 
 ## Session Log
+
+### 2026-02-21 — Phase 3: Activation Flow
+- Created macroGenerator.ts utility (resolveFocusDice, generateActivationMacro, resolveBaseCost)
+- Created MacroDisplay.tsx: copyable macro text block + manual focus result input
+- Created ActivationPanel.tsx: full overlay with cost/EP/focus preview, modifier badges (Echo Intuition, Siphon Greed), warp warning, macro mode (transitions to awaiting-result), dice3d mode (simple random roll), inline warp result display when autoSurge is on
+- Created SurgeResultModal.tsx: standalone modal for surge results (used when autoSurge is off)
+- Wired CombatHUD with activation state management (stagedCardId, surgeResult, ActivationPanel + SurgeResultModal overlays)
+- Wired HandArea double-click → onActivateCard callback to parent
+- Wired SelectedDeck Activation:None detection: after bestowToSelf, auto-opens activation panel
+- Fixed ActivationPanel CJS require() → ES import for diceRoller
+- 41 new tests (18 macroGenerator + 23 ActivationPanel), total 227 tests passing
+- All exit conditions met: build passes, lint passes, 227 tests green
+- **Next**: Phase 4 (Rest Mechanics)
 
 ### 2026-02-21 — Phase 2: Combat Layout
 - Created 13 components across `src/components/cards/` and `src/components/combat-hud/`
