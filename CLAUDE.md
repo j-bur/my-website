@@ -4,6 +4,8 @@
 **Tech Stack**: React 19 + TypeScript + Vite + Tailwind CSS v4 + Zustand + React Router 7
 **Aesthetic**: Dark, atmospheric card game. No bright colors. Cards have no illustrations — typography and iconography only.
 
+**Current State**: Only `src/data/`, `src/types/`, `src/utils/`, and `src/store/manifoldStore.ts` exist. Components and other stores were pruned for clean-slate rework. Check `IMPLEMENTATION_STATUS.md` for the current phase and next steps.
+
 ---
 
 ## Before You Start

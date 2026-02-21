@@ -21,6 +21,17 @@
 
 ---
 
+## Next Session
+
+1. **Start with Phase 0**: Read `.claude/docs/PHASE_SPECS/phase-0-testing.md`
+2. Install: `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`
+3. Create `vitest.config.ts`
+4. Write utility tests referencing `.claude/docs/RULES.md` for expected behaviors
+5. Target: 15+ test cases across 5 utility files
+6. Do NOT modify any existing source code in Phase 0
+
+---
+
 ## Phase Specs
 
 Each phase has a detailed spec in `.claude/docs/PHASE_SPECS/`. Read the spec before starting a phase.
@@ -50,7 +61,6 @@ _(none yet)_
 
 ### Documentation (Pre-Phase 0)
 - [x] DESIGN.md — Comprehensive UI/UX specification (65KB)
-- [x] GAP_ANALYSIS.md — Current vs target comparison (to be deprecated after Phase 1)
 - [x] ARCHITECTURE.md — Technical overview
 - [x] CLAUDE.md — Lean AI session guidance (~72 lines)
 - [x] `.claude/docs/SESSION_PROTOCOL.md` — Mandatory session procedures
@@ -125,14 +135,3 @@ All 17 components were deleted for clean-slate rework. They contradicted DESIGN.
 ### 2026-02-19 — Initial Planning Session
 - Created DESIGN.md, GAP_ANALYSIS.md, ARCHITECTURE.md, CLAUDE.md
 
----
-
-## Notes for Next Session
-
-1. **Start with Phase 0**: Read `.claude/docs/PHASE_SPECS/phase-0-testing.md`
-2. Install: `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`
-3. Create `vitest.config.ts`
-4. Write utility tests referencing `.claude/docs/RULES.md` for expected behaviors
-5. Target: 15+ test cases across 5 utility files
-6. Do NOT modify any existing source code in Phase 0
-7. **Codebase was pruned on 2026-02-20** — only data, types, utils, and manifoldStore remain in src/. See session log below.

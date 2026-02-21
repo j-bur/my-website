@@ -53,17 +53,6 @@ See `.claude/docs/STORE_CONTRACTS.md` for target interface. Key additions over p
 
 See `.claude/docs/STORE_CONTRACTS.md` for target interface. Key changes: Hand/Deck card zones, ally management, card-return-after-activate flow.
 
-**EP Flow** (preserved here for quick reference):
-```
-spendEP(cost, level)
-  ├─ newEP = currentEP - cost
-  ├─ isNowNegative = newEP < 0
-  ├─ warpTriggered = newEP < 0          // EP is negative AFTER deducting cost
-  ├─ focusDoubled = newEP < 0           // Same condition as warp
-  └─ if newEP <= -level: Echo Drain state
-```
-Note: Warp triggers ANY time EP is negative after cost deduction — not only when crossing from positive to negative. If EP was already -2 and you spend 3 more, Warp triggers because -5 < 0.
-
 ---
 
 ### manifoldStore
@@ -230,105 +219,13 @@ Defined in `src/index.css`:
 - `.focus-pulse` — Pulse animation for Focus changes
 - `.weavers-watch` — Subtle effect at high Focus (50+)
 
-### Component Patterns
-
-```tsx
-// Standard component structure
-export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
-  const { storeValue } = useRelevantStore();
-  const [localState, setLocalState] = useState(initialValue);
-
-  const handleAction = () => {
-    // Logic
-  };
-
-  return (
-    <div className="bg-siphon-surface border border-siphon-border rounded-lg p-4">
-      {/* Content */}
-    </div>
-  );
-}
-```
-
----
-
-## Utilities
-
-### diceRoller.ts
-- `rollFromNotation(notation, context)` — Parse and roll dice notation like "2d8", "[PB]d8"
-- Returns `{ rolls: number[], total: number }`
-
-### costCalculator.ts
-- `resolveCost(cost, context)` — Convert CostType to actual number
-- Handles PB, Level, Level/2, Twice PB, Varies
-
-### focusCalculator.ts
-- `calculateFocusGain(rollResult, isNegativeEP)` — Apply doubling if negative EP
-- `rollLongRestFocusReduction()` — Roll d4 for long rest
-
-### echoPointUtils.ts
-- `calculateEPSpend(currentEP, cost, level)` — Calculate new EP and warp trigger
-- `calculateLongRestRecovery(...)` — Calculate EP recovery
-- `getEPStatus(currentEP, maxEP)` — Get status (positive, negative, drained)
-
-### durationParser.ts
-- Parse duration strings like "10 minutes", "1 hour"
-- Convert to milliseconds for expiration tracking
-
 ---
 
 ## Persistence
 
-All stores use Zustand's `persist` middleware with localStorage:
-
-```typescript
-export const useStore = create<Store>()(
-  persist(
-    (set, get) => ({
-      // Store implementation
-    }),
-    {
-      name: 'storage-key',
-      version: 1,
-    }
-  )
-);
-```
+All stores use Zustand `persist` middleware with localStorage.
 
 Storage keys:
 - `siphon-character` — Character data
 - `siphon-state` — Siphon mechanics
 - `siphon-manifold` — Manifold state
-
----
-
-## External Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `zustand` | State management |
-| `react-router-dom` | Client-side routing |
-| `@3d-dice/dice-box` | 3D dice rolling (for Wild Surge) |
-
----
-
-## Future Considerations
-
-### 3D Dice Integration
-The `@3d-dice/dice-box` library is planned for Wild Surge rolls. It renders WebGL dice with physics. Integration will require:
-- Canvas element for rendering
-- Async roll handling
-- Result callback processing
-
-### Sound Design
-Audio is planned but disabled by default. Will need:
-- Audio file loading
-- Volume controls
-- Mute toggle
-- Event-based playback triggers
-
-### Export/Import
-JSON export/import for session backup:
-- All store state
-- Previous surge results (for entry #34)
-- Settings preferences
