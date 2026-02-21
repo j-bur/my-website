@@ -103,7 +103,7 @@ interface SiphonStore {
   setEchoIntuitionActive: (active: boolean) => void;
 
   // Rest Actions
-  longRest: (pb: number, maxEP: number) => { epRecovered: number; focusReduced: number; maxHPRestored: number };
+  longRest: (pb: number, maxEP: number, focusRollOverride?: number) => { epRecovered: number; focusReduced: number; maxHPRestored: number };
   shortRest: (clearShortEffects: boolean) => void;
 }
 
@@ -431,7 +431,7 @@ export const useSiphonStore = create<SiphonStore>()(
 
       // --- Rest Actions ---
 
-      longRest: (pb, maxEP) => {
+      longRest: (pb, maxEP, focusRollOverride?) => {
         const state = get();
 
         // 1. EP recovery. Siphon Greed 2x if applicable.
@@ -441,8 +441,8 @@ export const useSiphonStore = create<SiphonStore>()(
         const newEP = Math.min(maxEP, state.currentEP + epRecoveryBase);
         const epRecovered = newEP - state.currentEP;
 
-        // 2. Focus reduction: d4 (min 0)
-        const focusRoll = rollD(4);
+        // 2. Focus reduction: d4 (min 0) — use override if provided (macro mode)
+        const focusRoll = focusRollOverride ?? rollD(4);
         const newFocus = Math.max(0, state.focus - focusRoll);
         const focusReduced = state.focus - newFocus;
 

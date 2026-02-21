@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 3 Complete (Activation flow built, Phase 4 next)
+**Current Phase**: Phase 4 Complete (Rest mechanics built, Phase 5 next)
 
 ---
 
@@ -14,7 +14,7 @@
 | Phase 1: Store Redesign | ✅ Complete | 94 store tests + 68 utility tests = 162 total |
 | Phase 2: Combat Layout | ✅ Complete | 24 component tests + 162 prior = 186 total |
 | Phase 3: Activation Flow | ✅ Complete | 41 new tests (18 util + 23 component) = 227 total |
-| Phase 4: Rest Mechanics | 🔴 Not Started | Blocked by Phase 3 |
+| Phase 4: Rest Mechanics | ✅ Complete | 54 new tests (19 integration + 15 + 20 component) = 295 total |
 | Phase 5: Settings & Polish | 🔴 Not Started | Blocked by Phase 4 |
 | Phase 6: Ally System | 🔴 Not Started | Blocked by Phase 5 |
 | Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
@@ -23,10 +23,10 @@
 
 ## Next Session
 
-1. **Start with Phase 4**: Read `.claude/docs/PHASE_SPECS/phase-4-rest.md`
-2. Implement Long Rest and Short Rest dialogs
-3. Note: Phase 4 references DeckBuilder.tsx which doesn't exist yet (see Discovered Issues)
-4. All stores, combat layout, and activation flow are ready to use
+1. **Start with Phase 5**: Read `.claude/docs/PHASE_SPECS/phase-5-settings.md`
+2. Settings modal, manual overrides, data export/import
+3. DeckBuilder + routing still needed (see Discovered Issues)
+4. All stores, combat layout, activation flow, and rest mechanics are ready
 
 ---
 
@@ -53,6 +53,7 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 
 - `[FIXED]` activateFromHand/returnCardToDeck could append duplicate IDs to selectedCardIds if called twice. Added dedup guard. (found during Phase 2, fixed in siphonStore.ts)
 - `[DISCOVERY]` Phases 4 and 5 reference `DeckBuilder.tsx` (rest buttons, gear icon) but no phase spec creates the Deck Builder component or sets up React Router routing. Need a dedicated phase or pre-task for this. (found during Phase 2, relevant to Phase 4+)
+- `[DEFERRED]` Rest buttons in DeckBuilder deferred — DeckBuilder.tsx doesn't exist yet. LongRestDialog and ShortRestDialog are reusable and can be wired in when DeckBuilder is created. (Phase 4, deferred by user choice)
 
 ---
 
@@ -102,6 +103,17 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - [x] 100 Wild Echo Surge entries (3 severity columns)
 - [x] All type definitions
 
+### Phase 4: Rest Mechanics
+- [x] `LongRestDialog.tsx` — Modal with EP recovery preview, Focus d4 reduction (macro/dice3d modes), motes/HD/bestowment/effect/capacitance clearing preview, cross-store coordination, completion summary
+- [x] `ShortRestDialog.tsx` — Modal with HD spending (+/- controls), healing amount input, effect clearing toggle (defaults from settings), phase switch restoration, completion summary
+- [x] `CombatHUD.tsx` — Added header row with Short Rest / Long Rest buttons, dialog state management
+- [x] `siphonStore.ts` — Added `focusRollOverride` parameter to `longRest()` for macro mode support
+- [x] Updated barrel export (`index.ts`) with 2 new components
+- [x] 19 rest mechanics integration tests: cross-store Long Rest (REST-001/002/003, EP-007/008, FOCUS-003, CAP-002, phase switch, effects, max HP) + Short Rest (REST-004/005/006, motes, bestowments, HD spending, healing cap)
+- [x] 15 LongRestDialog component tests: preview display, EP/Focus/motes/HD/bestowments/capacitance info, dice3d confirm, macro mode flow, store state updates, close/cancel behavior
+- [x] 20 ShortRestDialog component tests: preview display, HP/HD info, HD +/- controls, healing input, effect toggle (defaults/toggling), phase switch, REST-005 (no EP/Focus change), bestowment preservation, motes preservation, REST-004, REST-006, completion summary, close/cancel
+- [x] All exit conditions met: build passes, lint passes, 295 tests green
+
 ### Phase 3: Activation Flow
 - [x] `macroGenerator.ts` — resolveFocusDice, generateActivationMacro, resolveBaseCost utilities
 - [x] `MacroDisplay.tsx` — Copyable FoundryVTT macro text with manual result input
@@ -146,10 +158,23 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 | ~~No characterStore or siphonStore~~ | ~~Stores pruned for clean-slate rework~~ | ✅ Phase 1 complete |
 | ~~No components~~ | ~~Components pruned for clean-slate rework~~ | ✅ Phase 2 complete |
 | ~~No activation flow~~ | ~~Cannot activate features~~ | ✅ Phase 3 complete |
+| ~~No rest mechanics~~ | ~~Cannot long/short rest~~ | ✅ Phase 4 complete |
 
 ---
 
 ## Session Log
+
+### 2026-02-21 — Phase 4: Rest Mechanics
+- Created LongRestDialog.tsx: preview dialog showing EP recovery (+PB), Focus d4 reduction, motes/HD restoration, bestowment/effect/capacitance clearing; supports both dice3d (auto-roll) and macro (Roll in Foundry + manual entry) modes via settings; cross-store coordination (siphonStore.longRest + characterStore.restoreAllHitDice/restoreMaxHP + manifoldStore.resetMotesOnLongRest); completion summary
+- Created ShortRestDialog.tsx: HD spending with +/- controls, healing amount input (user enters Foundry roll result), effect clearing toggle (defaults from shortRestClearEffects setting), phase switch restoration; completion summary with pre-rest state tracking
+- Added header row to CombatHUD CSS Grid with Short Rest and Long Rest buttons
+- Modified siphonStore.longRest() to accept optional focusRollOverride parameter for macro mode
+- Updated barrel export (index.ts) with 2 new components
+- Updated ARCHITECTURE.md component hierarchy
+- DeckBuilder rest buttons deferred by user choice (DeckBuilder.tsx doesn't exist yet)
+- 54 new tests (19 integration + 15 LongRestDialog + 20 ShortRestDialog), total 295 tests passing
+- All exit conditions met: build passes, lint passes, 295 tests green
+- **Next**: Phase 5 (Settings & Polish)
 
 ### 2026-02-21 — Phase 3: Activation Flow
 - Created macroGenerator.ts utility (resolveFocusDice, generateActivationMacro, resolveBaseCost)

@@ -13,3 +13,5 @@ export { PhaseAbilities } from './PhaseAbilities';
 export { ActivationPanel } from './ActivationPanel';
 export { MacroDisplay } from './MacroDisplay';
 export { SurgeResultModal } from './SurgeResultModal';
+export { LongRestDialog } from './LongRestDialog';
+export { ShortRestDialog } from './ShortRestDialog';

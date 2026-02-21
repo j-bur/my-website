@@ -38,6 +38,11 @@ src/
 │   │   ├── SiphonCapacitanceTracker.tsx # Capacitance pips
 │   │   ├── SelectedDeck.tsx       # Deck with expand/collapse (bottom-left)
 │   │   ├── HandArea.tsx           # Fanned hand cards (bottom)
+│   │   ├── ActivationPanel.tsx    # Feature activation overlay
+│   │   ├── MacroDisplay.tsx       # Copyable macro + result input
+│   │   ├── SurgeResultModal.tsx   # Wild surge result display
+│   │   ├── LongRestDialog.tsx     # Long rest preview + execution
+│   │   ├── ShortRestDialog.tsx    # Short rest with HD spending
 │   │   └── index.ts              # Barrel export
 │   └── __tests__/                 # Component tests
 ├── data/                          # Static game data (verified 2026-02-20)
@@ -141,11 +146,12 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 2 Complete)
+### Current Structure (Phase 4 Complete)
 
 ```
 App
 └── CombatHUD (CSS Grid layout)
+    ├── Header (grid: header) — rest buttons
     ├── EchoManifoldDeck (grid: manifold)
     │   └── Mote pips (8 interactive dots)
     ├── WildSurgeDeck (grid: surge)
@@ -161,8 +167,12 @@ App
     ├── Allies placeholder (grid: allies)
     ├── SelectedDeck (grid: deck)
     │   └── SiphonCard (×N, when expanded)
-    └── HandArea (grid: hand)
-        └── SiphonCard (×N, fanned)
+    ├── HandArea (grid: hand)
+    │   └── SiphonCard (×N, fanned)
+    ├── ActivationPanel (overlay)
+    ├── SurgeResultModal (overlay)
+    ├── LongRestDialog (overlay) — preview + cross-store rest
+    └── ShortRestDialog (overlay) — HD spending + effect clearing
 ```
 
 ### Target Structure (per DESIGN.md)
