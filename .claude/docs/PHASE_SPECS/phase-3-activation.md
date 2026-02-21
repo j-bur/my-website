@@ -92,6 +92,12 @@ Implement the full activation flow: card staging, Activation Panel overlay, cost
      - After `bestowToSelf()`, immediately open the Activation Panel
      - This makes bestow + activate one step for the player
    - The card still moves to hand briefly, then returns to deck on confirm
+   - **IMPORTANT**: The Phase 2 SelectedDeck click handler currently just calls
+     `bestowToSelf()` with no awareness of activation type. This task must wrap
+     that call: check `feature.activation === 'None'`, and if so, trigger the
+     full activation flow (EP cost, warp check, Focus roll) inline after the
+     bestow. This is the main integration point between SelectedDeck and the
+     new ActivationPanel.
 
 5. **Write tests**:
    - `src/utils/__tests__/macroGenerator.test.ts`

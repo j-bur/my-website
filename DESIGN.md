@@ -59,16 +59,16 @@ The main gameplay screen. Everything happens on one table: the Selected deck, ca
 │  ╰─────────╯                                  ╰─────────╯      │
 │   ○○○●●●●● (motes)                                             │
 │                                                                │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐      ┌─────┐┌─────┐┌─────┐│
-│  │ Phase   │ │ Phase   │ │ Phase   │      │Focus││ EP  ││Capac││
-│  │ Ability │ │ Ability │ │ Ability │      └─────┘└─────┘└─────┘│
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐                           │
+│  │ Phase   │ │ Phase   │ │ Phase   │                           │
+│  │ Ability │ │ Ability │ │ Ability │                           │
 │  │    1    │ │    2    │ │    3    │                           │
 │  └─────────┘ └─────────┘ └─────────┘                           │
 │                                                                │
-│  ┌──────────────── ACTIVE EFFECTS ─────────────────┐           │
-│  │ ⚡ Temporal Surge (Self)              10 min    │           │
-│  │ ◎ Starlight Veil (Constellation)  ●CONC  1 min │           │
-│  │                                                 │           │
+│  ┌──────────────── ACTIVE EFFECTS ─────────────────┐  [Focus]  │
+│  │ ⚡ Temporal Surge (Self)              10 min    │  [EP Bar] │
+│  │ ◎ Starlight Veil (Constellation)  ●CONC  1 min │  [HD]     │
+│  │                                                 │  [Capac]  │
 │  │          (drag cards here to activate)          │           │
 │  └─────────────────────────────────────────────────┘           │
 │                                                                │

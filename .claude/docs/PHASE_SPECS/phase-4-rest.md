@@ -69,6 +69,12 @@ On Confirm:
 ### 4. Add rest buttons to DeckBuilder
 - Both buttons available in Deck Builder as well
 - Same dialog components reused
+- **NOTE**: No phase spec creates DeckBuilder.tsx or sets up React Router routing.
+  This task requires either (a) creating a minimal DeckBuilder + routing as a
+  pre-task within this phase, or (b) deferring DeckBuilder rest buttons to a
+  later phase. At minimum, the DeckBuilder needs: card selection (click to
+  add/remove from selectedCardIds), character stat inputs, and navigation to
+  Combat View. See DESIGN.md "Deck Builder View" section for full spec.
 
 ### 5. Write integration tests
 File: `src/store/__tests__/restMechanics.test.ts`

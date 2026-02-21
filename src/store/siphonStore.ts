@@ -227,18 +227,20 @@ export const useSiphonStore = create<SiphonStore>()(
 
       activateFromHand: (featureId) => {
         const state = get();
-        set({
-          handCardIds: state.handCardIds.filter((id) => id !== featureId),
-          selectedCardIds: [...state.selectedCardIds, featureId],
-        });
+        const newHand = state.handCardIds.filter((id) => id !== featureId);
+        const newSelected = state.selectedCardIds.includes(featureId)
+          ? state.selectedCardIds
+          : [...state.selectedCardIds, featureId];
+        set({ handCardIds: newHand, selectedCardIds: newSelected });
       },
 
       returnCardToDeck: (featureId) => {
         const state = get();
-        set({
-          handCardIds: state.handCardIds.filter((id) => id !== featureId),
-          selectedCardIds: [...state.selectedCardIds, featureId],
-        });
+        const newHand = state.handCardIds.filter((id) => id !== featureId);
+        const newSelected = state.selectedCardIds.includes(featureId)
+          ? state.selectedCardIds
+          : [...state.selectedCardIds, featureId];
+        set({ handCardIds: newHand, selectedCardIds: newSelected });
       },
 
       replaceSelectedCard: (oldFeatureId, newFeatureId) => {
@@ -319,6 +321,10 @@ export const useSiphonStore = create<SiphonStore>()(
       },
 
       // --- Computed Helpers ---
+      // WARNING: These methods return new arrays on every call. Do NOT use them
+      // directly as Zustand selectors (e.g. useSiphonStore(s => s.getDeckCards()))
+      // — this causes infinite re-renders with React 19's useSyncExternalStore.
+      // Instead, select raw state (selectedCardIds, handCardIds) and derive with useMemo.
 
       getDeckCards: () => {
         const state = get();

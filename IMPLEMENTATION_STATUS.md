@@ -51,7 +51,8 @@ Each phase has a detailed spec in `.claude/docs/PHASE_SPECS/`. Read the spec bef
 
 _(Issues found during sessions that belong to a different phase. Format: `[DISCOVERY] description (found during Phase N, relevant to Phase M)`)_
 
-_(none yet)_
+- `[FIXED]` activateFromHand/returnCardToDeck could append duplicate IDs to selectedCardIds if called twice. Added dedup guard. (found during Phase 2, fixed in siphonStore.ts)
+- `[DISCOVERY]` Phases 4 and 5 reference `DeckBuilder.tsx` (rest buttons, gear icon) but no phase spec creates the Deck Builder component or sets up React Router routing. Need a dedicated phase or pre-task for this. (found during Phase 2, relevant to Phase 4+)
 
 ---
 
