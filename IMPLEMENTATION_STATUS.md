@@ -1,7 +1,7 @@
 # Implementation Status
 
-**Last Updated**: 2026-02-20
-**Current Phase**: Phase 1 Complete (All stores built, Phase 2 next)
+**Last Updated**: 2026-02-21
+**Current Phase**: Phase 2 Complete (Combat layout built, Phase 3 next)
 
 ---
 
@@ -12,7 +12,7 @@
 | Documentation Restructure | ✅ Complete | CLAUDE.md lean, .claude/docs/ populated |
 | Phase 0: Testing Infrastructure | ✅ Complete | 68 tests passing across 5 utility files |
 | Phase 1: Store Redesign | ✅ Complete | 94 store tests + 68 utility tests = 162 total |
-| Phase 2: Combat Layout | 🔴 Not Started | Blocked by Phase 1 |
+| Phase 2: Combat Layout | ✅ Complete | 24 component tests + 162 prior = 186 total |
 | Phase 3: Activation Flow | 🔴 Not Started | Blocked by Phase 2 |
 | Phase 4: Rest Mechanics | 🔴 Not Started | Blocked by Phase 3 |
 | Phase 5: Settings & Polish | 🔴 Not Started | Blocked by Phase 4 |
@@ -23,10 +23,10 @@
 
 ## Next Session
 
-1. **Start with Phase 2**: Read `.claude/docs/PHASE_SPECS/phase-2-combat-layout.md`
-2. Build spatial layout components from DESIGN.md
-3. Implement Deck, Hand, and Effects panel components
-4. All 3 stores (character, settings, siphon) are ready to use
+1. **Start with Phase 3**: Read `.claude/docs/PHASE_SPECS/phase-3-activation.md`
+2. Implement the Activation Panel overlay (EP deduction, Focus rolling, warp triggers)
+3. Implement FoundryVTT macro generation
+4. All stores and combat layout are ready to use
 
 ---
 
@@ -101,8 +101,26 @@ _(none yet)_
 - [x] 100 Wild Echo Surge entries (3 severity columns)
 - [x] All type definitions
 
-### Components — PRUNED (2026-02-20)
-All 17 components were deleted for clean-slate rework. They contradicted DESIGN.md layout and would cause AI agents to anchor to incorrect patterns. Phase 2+ rebuilds all components from DESIGN.md.
+### Phase 2: Combat Layout
+- [x] `SiphonCard.tsx` — Reusable card component (name, cost, focus, duration, activation, description, warp)
+- [x] `CombatHUD.tsx` — CSS Grid layout matching DESIGN.md wireframe (4-column, 4-row grid)
+- [x] `EchoManifoldDeck.tsx` — Phase card (face-up) with interactive mote pips
+- [x] `WildSurgeDeck.tsx` — Surge deck placeholder
+- [x] `PhaseAbilities.tsx` — 3 ability cards for current phase
+- [x] `ActiveEffectsPanel.tsx` — Active effects list with source icons, duration, CONC/warp indicators
+- [x] `ResourceDisplay.tsx` — Right column wrapper (Focus, EP, HD, Capacitance)
+- [x] `EchoPointsBar.tsx` — Bidirectional EP bar (center-zero, extends left/right)
+- [x] `FocusCounter.tsx` — Focus value with dynamic glow, high-focus warning
+- [x] `HitDiceDisplay.tsx` — Hit dice current/max
+- [x] `SiphonCapacitanceTracker.tsx` — Capacitance charge pips (max = PB)
+- [x] `SelectedDeck.tsx` — Deck with expand/collapse, click-to-bestow
+- [x] `HandArea.tsx` — Fanned cards with hover-raise, overlap compression for large hands
+- [x] `setupTests.ts` — Vitest setup for jest-dom matchers
+- [x] 24 component tests across 4 test files:
+  - SelectedDeck (8 tests): expand/collapse, escape, exclude hand cards, bestow click, count
+  - HandArea (4 tests): empty state, card display, triggered features, aria labels
+  - ActiveEffectsPanel (5 tests): placeholder, effects display, CONC/warp indicators, multiple effects
+  - ResourceDisplay (7 tests): all resources render, EP/Focus values, HD/Capacitance ratios, high focus warning
 
 ---
 
@@ -112,11 +130,27 @@ All 17 components were deleted for clean-slate rework. They contradicted DESIGN.
 |-------|--------|------------|
 | ~~No test infrastructure~~ | ~~Cannot verify behavior~~ | ✅ Phase 0 complete |
 | ~~No characterStore or siphonStore~~ | ~~Stores pruned for clean-slate rework~~ | ✅ Phase 1 complete |
-| No components | Components pruned for clean-slate rework | Phase 2+ (create from DESIGN.md) |
+| ~~No components~~ | ~~Components pruned for clean-slate rework~~ | ✅ Phase 2 complete |
 
 ---
 
 ## Session Log
+
+### 2026-02-21 — Phase 2: Combat Layout
+- Created 13 components across `src/components/cards/` and `src/components/combat-hud/`
+- CombatHUD uses CSS Grid with 4 areas: manifold/surge (top), abilities/effects/resources (middle), allies (row), deck/hand (bottom)
+- SiphonCard is reusable: name, cost, focus dice, duration, activation, description, warp effect, compact mode
+- SelectedDeck: expand/collapse with click, Escape, click-outside; shows only getDeckCards results; click card to bestowToSelf
+- HandArea: fanned cards with hover-raise; overlap compression for 8+ cards; triggered features auto-appear in hand
+- ResourceDisplay: Focus (glow scales with value), EP (bidirectional bar), HD (current/max), Capacitance (charge pips)
+- ActiveEffectsPanel: effect rows with source icons (⚡/◎/✦), duration, CONC/warp indicators; empty placeholder
+- EchoManifoldDeck: phase card face-up with passive text, interactive mote pips (click to add/remove)
+- PhaseAbilities: 3 ability cards for current phase with mote cost and activation type
+- Added `setupTests.ts` for jest-dom matchers, updated `vitest.config.ts` with setupFiles
+- Fixed Zustand selector issue: getDeckCards()/getHandCards() create new arrays per call → infinite re-renders with useSyncExternalStore; switched to useMemo with raw state selectors
+- 24 component tests across 4 test files (total: 186 tests)
+- All exit conditions met: build passes, lint passes, 186 tests green
+- **Next**: Phase 3 (Activation Flow)
 
 ### 2026-02-20 — Phase 1: Store Redesign
 - Added new types: `Ally`, `AllyBestowment`, `SelfActiveEffect`, `SpendResult` to `types/siphonFeature.ts`

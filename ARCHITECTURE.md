@@ -10,7 +10,7 @@ This document describes the technical architecture of The Siphon Interface.
 |-------|------------|---------|
 | Framework | React | 19.x |
 | Language | TypeScript | 5.x |
-| Build Tool | Vite | 6.x |
+| Build Tool | Vite | 7.x |
 | Styling | Tailwind CSS | 4.x |
 | State Management | Zustand | 5.x |
 | Routing | React Router | 7.x |
@@ -20,62 +20,62 @@ This document describes the technical architecture of The Siphon Interface.
 
 ## Directory Structure
 
-> **Note**: Components and most stores were pruned on 2026-02-20 for clean-slate rework.
-> Phase 1 creates characterStore + siphonStore from STORE_CONTRACTS.md.
-> Phase 2+ creates components from DESIGN.md.
-
 ```
 src/
-├── data/                 # Static game data (verified 2026-02-20)
-├── types/                # TypeScript interfaces
-├── utils/                # Helper functions
-├── store/                # Zustand state stores
-│   ├── manifoldStore.ts  # Echo Manifold state (kept — largely correct)
-│   └── index.ts          # Store re-exports
-├── App.tsx               # Minimal stub (placeholder until Phase 2)
-├── main.tsx              # Entry point
-└── index.css             # Global styles and Tailwind
+├── components/
+│   ├── cards/
+│   │   └── SiphonCard.tsx         # Reusable card component for features
+│   ├── combat-hud/
+│   │   ├── CombatHUD.tsx          # CSS Grid layout container
+│   │   ├── EchoManifoldDeck.tsx   # Phase card + mote pips (top-left)
+│   │   ├── WildSurgeDeck.tsx      # Surge deck placeholder (top-right)
+│   │   ├── PhaseAbilities.tsx     # Current phase's 3 abilities
+│   │   ├── ActiveEffectsPanel.tsx # Active effects on self (center)
+│   │   ├── ResourceDisplay.tsx    # Right column wrapper
+│   │   ├── EchoPointsBar.tsx      # EP bar (center-zero bidirectional)
+│   │   ├── FocusCounter.tsx       # Focus value with glow
+│   │   ├── HitDiceDisplay.tsx     # Hit dice current/max
+│   │   ├── SiphonCapacitanceTracker.tsx # Capacitance pips
+│   │   ├── SelectedDeck.tsx       # Deck with expand/collapse (bottom-left)
+│   │   ├── HandArea.tsx           # Fanned hand cards (bottom)
+│   │   └── index.ts              # Barrel export
+│   └── __tests__/                 # Component tests
+├── data/                          # Static game data (verified 2026-02-20)
+├── types/                         # TypeScript interfaces
+├── utils/                         # Helper functions
+├── store/                         # Zustand state stores
+│   ├── characterStore.ts          # Character stats, HP, hit dice
+│   ├── siphonStore.ts             # EP, Focus, card zones, allies, effects
+│   ├── settingsStore.ts           # User preferences, dice modes
+│   ├── manifoldStore.ts           # Echo Manifold phase system
+│   └── index.ts                   # Store re-exports
+├── App.tsx                        # Root component (renders CombatHUD)
+├── main.tsx                       # Entry point
+├── index.css                      # Global styles and Tailwind
+└── setupTests.ts                  # Vitest setup for jest-dom matchers
 ```
 
 ---
 
 ## State Management
 
-Three Zustand stores manage application state. All stores persist to localStorage.
+Four Zustand stores manage application state. All stores persist to localStorage.
 
-### characterStore — PRUNED (Phase 1A creates from scratch)
+### characterStore
+**Purpose**: Character stats (level, HP, hit dice, proficiency bonus, spell save DC)
+**Storage key**: `siphon-character` (version 2)
 
-See `.claude/docs/STORE_CONTRACTS.md` for target interface. Key additions over previous version: Hit Dice tracking, persist version migration.
+### siphonStore
+**Purpose**: EP, Focus, Capacitance, card zones (Selected Deck / Hand), allies, active effects, cost modifiers
+**Storage key**: `siphon-state` (version 2)
 
----
-
-### siphonStore — PRUNED (Phase 1B creates from scratch)
-
-See `.claude/docs/STORE_CONTRACTS.md` for target interface. Key changes: Hand/Deck card zones, ally management, card-return-after-activate flow.
-
----
+### settingsStore
+**Purpose**: User preferences (dice modes, sound, animations, confirmations)
+**Storage key**: `siphon-settings` (version 1)
 
 ### manifoldStore
-
-**Purpose**: Echo Manifold phase system
-
-```typescript
-interface ManifoldStore {
-  currentPhase: 'Constellation' | 'Revelation' | 'Oblivion';
-  motes: number;                  // 0-8
-  maxMotes: number;               // Always 8
-  phaseSwitchAvailable: boolean;  // Free switch (resets on short rest)
-  hitDiceSpentOnSwitch: number;   // Tracking
-  activeAbilities: ActiveManifoldAbility[];
-}
-```
-
-**Key Behaviors**:
-- One free phase switch per short rest
-- Additional switches cost 2 Hit Dice each
-- Motes regain on: crit hit, enemy failed save, Echo destroyed (max 1/turn)
-- All motes return on long rest
-- Overdrive doubles mote cost but removes usage limitations
+**Purpose**: Echo Manifold phase system (phase, motes, abilities)
+**Storage key**: `siphon-manifold` (version 1)
 
 ---
 
@@ -141,9 +141,29 @@ interface ManifoldStore {
 
 ## Component Hierarchy
 
-### Current Structure
+### Current Structure (Phase 2 Complete)
 
-> All components were pruned on 2026-02-20. Phase 2+ rebuilds from DESIGN.md.
+```
+App
+└── CombatHUD (CSS Grid layout)
+    ├── EchoManifoldDeck (grid: manifold)
+    │   └── Mote pips (8 interactive dots)
+    ├── WildSurgeDeck (grid: surge)
+    ├── PhaseAbilities (grid: abilities)
+    │   └── 3 ability cards for current phase
+    ├── ActiveEffectsPanel (grid: effects)
+    │   └── Effect rows or "(drag cards here)" placeholder
+    ├── ResourceDisplay (grid: resources)
+    │   ├── FocusCounter
+    │   ├── EchoPointsBar
+    │   ├── HitDiceDisplay
+    │   └── SiphonCapacitanceTracker
+    ├── Allies placeholder (grid: allies)
+    ├── SelectedDeck (grid: deck)
+    │   └── SiphonCard (×N, when expanded)
+    └── HandArea (grid: hand)
+        └── SiphonCard (×N, fanned)
+```
 
 ### Target Structure (per DESIGN.md)
 
@@ -184,7 +204,7 @@ App
 
 ## Routing
 
-> Routing was pruned with components. Phase 2 will restore routes per DESIGN.md.
+> Routing not yet implemented. Phase 2 renders CombatHUD directly in App.
 
 Target navigation flow:
 1. Landing → "Open Siphon" → Deck Builder (if no session) or Combat (if session exists)
@@ -197,10 +217,9 @@ Target navigation flow:
 
 ### Tailwind Configuration
 
-Custom colors defined in `tailwind.config.js` or `index.css`:
+Custom colors defined in `src/index.css` via `@theme`:
 
 ```css
-/* Color tokens */
 --color-ep-positive: #00d4aa;
 --color-ep-negative: #ff4466;
 --color-focus: #7a42e0;
@@ -225,7 +244,9 @@ Defined in `src/index.css`:
 
 All stores use Zustand `persist` middleware with localStorage.
 
-Storage keys:
-- `siphon-character` — Character data
-- `siphon-state` — Siphon mechanics
-- `siphon-manifold` — Manifold state
+| Store | Key | Version |
+|-------|-----|---------|
+| characterStore | `siphon-character` | 2 |
+| siphonStore | `siphon-state` | 2 |
+| settingsStore | `siphon-settings` | 1 |
+| manifoldStore | `siphon-manifold` | 1 |
