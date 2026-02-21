@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { SurgeResult } from '../../types';
+import { useSiphonStore } from '../../store';
 import { SIPHON_FEATURES } from '../../data/siphonFeatures';
 import { EchoManifoldDeck } from './EchoManifoldDeck';
 import { WildSurgeDeck } from './WildSurgeDeck';
@@ -14,6 +15,7 @@ import { SurgeResultModal } from './SurgeResultModal';
 import { LongRestDialog } from './LongRestDialog';
 import { ShortRestDialog } from './ShortRestDialog';
 import { AlliesPanel } from './AlliesPanel';
+import { AllyBestowmentView } from './AllyBestowmentView';
 import { SettingsModal } from '../settings';
 
 const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
@@ -26,6 +28,13 @@ export function CombatHUD() {
   const [showShortRest, setShowShortRest] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedAllyId, setSelectedAllyId] = useState<string | null>(null);
+  const [hoveredAllyId, setHoveredAllyId] = useState<string | null>(null);
+
+  const allies = useSiphonStore((s) => s.allies);
+  const hoveredAlly = useMemo(
+    () => (hoveredAllyId ? allies.find((a) => a.id === hoveredAllyId) ?? null : null),
+    [hoveredAllyId, allies]
+  );
 
   const stagedFeature = stagedCardId ? featureMap.get(stagedCardId) ?? null : null;
 
@@ -128,6 +137,7 @@ export function CombatHUD() {
         <AlliesPanel
           selectedAllyId={selectedAllyId}
           onSelectAlly={setSelectedAllyId}
+          onHoverAlly={setHoveredAllyId}
         />
       </div>
 
@@ -173,6 +183,15 @@ export function CombatHUD() {
       {/* Settings Modal */}
       {showSettings && (
         <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
+
+      {/* Ally Bestowment View overlay */}
+      {hoveredAlly && (
+        <AllyBestowmentView
+          allyId={hoveredAlly.id}
+          allyName={hoveredAlly.name}
+          onDismiss={() => setHoveredAllyId(null)}
+        />
       )}
     </div>
   );

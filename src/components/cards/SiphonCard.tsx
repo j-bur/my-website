@@ -7,6 +7,7 @@ interface SiphonCardProps {
   isRaised?: boolean;
   isUnplayable?: boolean;
   compact?: boolean;
+  allyName?: string;
 }
 
 export function SiphonCard({
@@ -16,6 +17,7 @@ export function SiphonCard({
   isRaised = false,
   isUnplayable = false,
   compact = false,
+  allyName,
 }: SiphonCardProps) {
   const costDisplay =
     typeof feature.cost === 'number' ? `${feature.cost} EP` : `${feature.cost}`;
@@ -85,6 +87,15 @@ export function SiphonCard({
           <p className="text-[10px] leading-tight text-warp/80 line-clamp-2">
             <span className="font-bold">WARP:</span> {feature.warpEffect}
           </p>
+        </div>
+      )}
+
+      {/* Ally bestowed badge */}
+      {allyName && (
+        <div className="px-2 py-0.5 border-t border-siphon-border/30 bg-siphon-surface/20">
+          <span className="text-[9px] text-text-muted">
+            &rarr; {allyName}
+          </span>
         </div>
       )}
 

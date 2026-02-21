@@ -55,7 +55,8 @@ src/
 │   │   ├── SurgeResultModal.tsx   # Wild surge result display
 │   │   ├── LongRestDialog.tsx     # Long rest preview + execution
 │   │   ├── ShortRestDialog.tsx    # Short rest with HD spending
-│   │   ├── AlliesPanel.tsx        # Ally chips, add/rename/remove, bestow target
+│   │   ├── AlliesPanel.tsx        # Ally chips, add/rename/remove, bestow target, hover trigger
+│   │   ├── AllyBestowmentView.tsx # Overlay showing ally's bestowed cards with remove
 │   │   └── index.ts              # Barrel export
 │   └── __tests__/                 # Component tests
 ├── data/                          # Static game data (verified 2026-02-20)
@@ -162,7 +163,7 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 6A Complete)
+### Current Structure (Phase 6 Complete)
 
 ```
 App (layout wrapper with <Outlet />)
@@ -191,13 +192,14 @@ App (layout wrapper with <Outlet />)
 │   │   ├── EchoPointsBar
 │   │   ├── HitDiceDisplay
 │   │   │   └── SiphonCapacitanceTracker (with in-game timer)
-│   ├── AlliesPanel (grid: allies) — ally chips, add/rename/remove, bestow target selection
+│   ├── AlliesPanel (grid: allies) — ally chips, add/rename/remove, bestow target, hover→overlay
 │   ├── SelectedDeck (grid: deck) — bestow to self or ally
 │   │   └── SiphonCard (×N, when expanded)
 │   ├── HandArea (grid: hand)
 │   │   └── SiphonCard (×N, fanned)
 │   ├── ActivationPanel (overlay)
 │   ├── SurgeResultModal (overlay)
+│   ├── AllyBestowmentView (overlay) — ally bestowed cards view with remove
 │   ├── LongRestDialog (overlay) — preview + cross-store rest
 │   ├── ShortRestDialog (overlay) — HD spending + effect clearing
 │   └── SettingsModal (overlay, gear icon in header)

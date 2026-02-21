@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 6A Complete (Phase 6B: AllyBestowmentView next)
+**Current Phase**: Phase 6 Complete (Phase 7: Animations next)
 
 ---
 
@@ -20,17 +20,16 @@
 | Phase 5B: Timer + Overrides + Data | ✅ Complete | 36 new tests, 383 total |
 | Phase 5C: While Selected Mechanics | ✅ Complete | 20 new tests, 403 total |
 | Phase 6A: Ally Panel + Bestow | ✅ Complete | 17 new tests (13 AlliesPanel + 4 SelectedDeck), 413 total |
-| Phase 6B: AllyBestowmentView | 🔴 Not Started | Blocked by Phase 6A |
+| Phase 6B: AllyBestowmentView | ✅ Complete | 10 new tests (8 AllyBestowmentView + 2 AlliesPanel hover), 423 total |
 | Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
 
 ---
 
 ## Next Session
 
-1. **Start with Phase 6B**: Read `.claude/docs/PHASE_SPECS/phase-6-allies.md` (Session 6B section)
-2. AllyBestowmentView overlay: hover ally (500ms delay) to see bestowed cards
-3. Update SiphonCard for ally context (optional badge)
-4. All Phase 6A exit conditions met (AlliesPanel, bestow-to-ally, special cost blocking)
+1. **Start with Phase 7**: Read `.claude/docs/PHASE_SPECS/phase-7-polish.md`
+2. Animations, drag-and-drop bestow, silvery tendril VFX
+3. All Phase 6 exit conditions met (AlliesPanel, bestow-to-ally, AllyBestowmentView overlay)
 
 ---
 
@@ -236,6 +235,16 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### Phase 6B: AllyBestowmentView Overlay
+- [x] `AllyBestowmentView.tsx` — Full-screen overlay showing ally's bestowed cards: "Viewing: AllyName" header, two groups (From Selected Deck / From All Features) based on whether card is still in selectedCardIds, compact SiphonCard components with ally name badge, × remove button per card, backdrop click to dismiss
+- [x] `AlliesPanel.tsx` — Added 500ms hover delay on ally chips via `onHoverAlly` prop; mouseEnter starts timer, mouseLeave cancels it; cleanup on unmount
+- [x] `SiphonCard.tsx` — Added optional `allyName` prop; renders `→ AllyName` badge at bottom of card when provided
+- [x] `CombatHUD.tsx` — Added `hoveredAllyId` state (independent from `selectedAllyId`), wired `onHoverAlly` to AlliesPanel, renders AllyBestowmentView overlay when hoveredAlly exists
+- [x] Barrel export updated: `AllyBestowmentView` added to `combat-hud/index.ts`
+- [x] 8 AllyBestowmentView tests: empty state, displays bestowed cards, groups into Selected/All Features sections, remove bestowment, only shows target ally, backdrop dismiss, ally name badge, From All Features only when no selected cards
+- [x] 2 AlliesPanel hover tests: 500ms delay fires onHoverAlly, mouse leave before 500ms cancels timer
+- [x] All Phase 6 exit conditions met: build passes, lint passes, 423 tests green
 
 ### Phase 6A: AlliesPanel + Bestow Flow
 - [x] `AlliesPanel.tsx` — Ally chips with name, bestowed count badge, [+] add button (inline name input), pencil icon for rename, × icon for remove; click chip to select as bestow target (highlighted state)

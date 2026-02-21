@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { AlliesPanel } from '../combat-hud/AlliesPanel';
 import { useSiphonStore } from '../../store';
 
@@ -210,5 +210,64 @@ describe('AlliesPanel', () => {
 
     const state = useSiphonStore.getState();
     expect(state.allies).toHaveLength(0);
+  });
+
+  it('calls onHoverAlly after 500ms hover on ally chip', () => {
+    vi.useFakeTimers();
+
+    useSiphonStore.setState({
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    const onHoverAlly = vi.fn();
+    render(
+      <AlliesPanel selectedAllyId={null} onSelectAlly={vi.fn()} onHoverAlly={onHoverAlly} />
+    );
+
+    const chip = screen.getByRole('button', { name: 'Briar' });
+    fireEvent.mouseEnter(chip);
+
+    // Should not fire immediately
+    expect(onHoverAlly).not.toHaveBeenCalled();
+
+    // Advance past 500ms delay
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(onHoverAlly).toHaveBeenCalledWith('a1');
+
+    vi.useRealTimers();
+  });
+
+  it('cancels hover timer on mouse leave before 500ms', () => {
+    vi.useFakeTimers();
+
+    useSiphonStore.setState({
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    const onHoverAlly = vi.fn();
+    render(
+      <AlliesPanel selectedAllyId={null} onSelectAlly={vi.fn()} onHoverAlly={onHoverAlly} />
+    );
+
+    const chip = screen.getByRole('button', { name: 'Briar' });
+    fireEvent.mouseEnter(chip);
+
+    // Leave before 500ms
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    fireEvent.mouseLeave(chip);
+
+    // Advance past when it would have fired
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(onHoverAlly).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
   });
 });

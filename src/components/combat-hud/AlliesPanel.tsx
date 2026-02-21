@@ -1,12 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSiphonStore } from '../../store';
 
 interface AlliesPanelProps {
   selectedAllyId: string | null;
   onSelectAlly: (allyId: string | null) => void;
+  onHoverAlly?: (allyId: string | null) => void;
 }
 
-export function AlliesPanel({ selectedAllyId, onSelectAlly }: AlliesPanelProps) {
+export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: AlliesPanelProps) {
   const allies = useSiphonStore((s) => s.allies);
   const allyBestowments = useSiphonStore((s) => s.allyBestowments);
   const addAlly = useSiphonStore((s) => s.addAlly);
@@ -20,6 +21,30 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly }: AlliesPanelProps) 
 
   const addInputRef = useRef<HTMLInputElement>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = useCallback((allyId: string) => {
+    if (!onHoverAlly) return;
+    hoverTimerRef.current = setTimeout(() => {
+      onHoverAlly(allyId);
+    }, 500);
+  }, [onHoverAlly]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (isAddingAlly && addInputRef.current) {
@@ -124,6 +149,8 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly }: AlliesPanelProps) 
             aria-label={`${ally.name}${count > 0 ? ` (${count} bestowed)` : ''}${isSelected ? ' (selected as bestow target)' : ''}`}
             aria-pressed={isSelected}
             onClick={() => handleAllyClick(ally.id)}
+            onMouseEnter={() => handleMouseEnter(ally.id)}
+            onMouseLeave={handleMouseLeave}
           >
             {isRenaming ? (
               <input
