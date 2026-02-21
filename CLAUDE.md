@@ -4,7 +4,7 @@
 **Tech Stack**: React 19 + TypeScript + Vite + Tailwind CSS v4 + Zustand + React Router 7
 **Aesthetic**: Dark, atmospheric card game. No bright colors. Cards have no illustrations — typography and iconography only.
 
-**Current State**: Phase 5C complete. All 4 stores, 43 components, and 403 tests operational. Combat HUD, Deck Builder, Settings, rest mechanics, and While Selected mechanics all implemented. Check `IMPLEMENTATION_STATUS.md` for the current phase and next steps.
+**Current State**: Phase 7B complete (Phase 7C next). All 4 stores, 445 tests passing across 30 files. Combat HUD, Deck Builder, Settings, rest mechanics, While Selected mechanics, allies, animations, and drag-and-drop all operational. Check `IMPLEMENTATION_STATUS.md` for the current phase and next steps.
 
 ---
 
