@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 7A Complete (Phase 7B: Drag-and-Drop next)
+**Current Phase**: Phase 7B Complete (Phase 7C: Visual Effects next)
 
 ---
 
@@ -23,17 +23,18 @@
 | Phase 6B: AllyBestowmentView | ✅ Complete | 10 new tests (8 AllyBestowmentView + 2 AlliesPanel hover), 425 total |
 | Post-Phase 6 Audit | ✅ Complete | 3 bugs fixed, dead code removed, constants consolidated |
 | Phase 7A: Core Animations | ✅ Complete | Card slide-in, animated counters, pip pulse, reduced motion |
-| Phase 7B: Drag-and-Drop | 🔴 Not Started | Ready to begin |
+| Phase 7B: Drag-and-Drop | ✅ Complete | DnD bestow/activate, dismiss gesture, drop zone highlights |
 
 ---
 
 ## Next Session
 
-1. **Phase 7B: Drag-and-Drop** — Read `.claude/docs/PHASE_SPECS/phase-7-polish.md` Session 7B section
-2. Drag cards from SelectedDeck to HandArea (bestow to self) or AlliesPanel (bestow to ally)
-3. Drag cards from HandArea to ActiveEffectsPanel (activate)
-4. Drag-to-dismiss effects from ActiveEffectsPanel
-5. All Phase 7A animations operational; 426 tests passing
+1. **Phase 7C: Visual Effects** — Read `.claude/docs/PHASE_SPECS/phase-7-polish.md` Session 7C section
+2. Warp visual effects (screen edge tint, chromatic aberration pulse)
+3. Echo Drain warning (persistent screen-edge darkening, EP bar pulse)
+4. Silvery tendril effect (ally bestowments)
+5. High Focus warning (weavers watching effect)
+6. All Phase 7B drag-and-drop operational; 445 tests passing
 
 ---
 
@@ -246,6 +247,20 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### Phase 7B: Drag-and-Drop
+- [x] `settingsStore.ts` — Added `highlightDropTargets` boolean (default: true) with setter
+- [x] `SettingsModal.tsx` — Added "Highlight drop targets when dragging" toggle in VISUAL section
+- [x] `src/types/dragData.ts` (new) — `CardDragData` type, `setCardDragData`/`getCardDragData`/`isCardDrag` helpers; dual MIME types (`application/json` + `text/x-card-type`) for dragover detection
+- [x] `SiphonCard.tsx` — Added optional `draggable`, `onDragStart`, `onDragEnd` props; `cursor-grab` when draggable, `opacity-50` while dragging
+- [x] `SelectedDeck.tsx` — Deck cards are now draggable (except While Selected and special cost when ally selected); sets drag data with `source: 'deck'`
+- [x] `HandArea.tsx` — Drop target for deck cards (bestowToSelf + Activation:None auto-activate); hand cards draggable with `source: 'hand'`; ambient + active ring highlights via global dragstart/dragend listeners; respects `highlightDropTargets` setting
+- [x] `ActiveEffectsPanel.tsx` — Drop target for hand cards (onActivateCard); border glow + `drop-zone-glow` CSS animation when card being dragged; extracted `EffectRow` sub-component with pointer-event-based horizontal dismiss gesture (grab → drag → release outside → strikethrough → remove); drag handle (⋮⋮) on hover; respects `useReducedMotion()` for dismiss delay
+- [x] `AlliesPanel.tsx` — Each ally chip is a drop target for deck cards; `bestowToAlly` on drop, rejects `isSpecialCost` cards; ambient + active ring highlights
+- [x] `CombatHUD.tsx` — Passes `onActivateCard={handleActivateCard}` to ActiveEffectsPanel
+- [x] `index.css` — Added `effect-dismiss` (strikethrough → fade → collapse) and `drop-zone-glow` (pulsing accent glow) keyframes; added both to `.reduce-motion` and `@media (prefers-reduced-motion)` blocks
+- [x] 19 new tests: 1 settingsStore, 1 SettingsModal, 4 SelectedDeck (draggable, While Selected blocked, special cost blocked, drag data), 5 HandArea (drop bestow, auto-activate, draggable, special cost blocked, setting off), 5 ActiveEffectsPanel (drop activate, wrong source rejected, drag handle, dismiss outside, cancel inside), 3 AlliesPanel (drop bestow, special cost blocked, hand rejected)
+- [x] All exit conditions met: build passes, lint passes, 445 tests green
 
 ### Phase 7A: Core Animations
 - [x] `useReducedMotion.ts` — Hook combining `settingsStore.reducedMotion`, `!animationsEnabled`, and `prefers-reduced-motion` media query; defensive `matchMedia` check for jsdom environments

@@ -24,6 +24,7 @@ describe('settingsStore', () => {
       expect(state.soundEnabled).toBe(false);
       expect(state.animationsEnabled).toBe(true);
       expect(state.reducedMotion).toBe(false);
+      expect(state.highlightDropTargets).toBe(true);
       expect(state.confirmBeforeActivation).toBe(false);
       expect(state.autoTriggerSurgeOnWarp).toBe(true);
       expect(state.shortRestClearEffects).toBe(true);
@@ -68,6 +69,11 @@ describe('settingsStore', () => {
     it('setShortRestClearEffects', () => {
       useSettingsStore.getState().setShortRestClearEffects(false);
       expect(useSettingsStore.getState().shortRestClearEffects).toBe(false);
+    });
+
+    it('setHighlightDropTargets', () => {
+      useSettingsStore.getState().setHighlightDropTargets(false);
+      expect(useSettingsStore.getState().highlightDropTargets).toBe(false);
     });
   });
 

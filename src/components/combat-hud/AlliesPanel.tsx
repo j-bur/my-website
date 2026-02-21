@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useSiphonStore } from '../../store';
+import { useSiphonStore, useSettingsStore } from '../../store';
+import { getCardDragData, isCardDrag } from '../../types/dragData';
+import { FEATURE_MAP } from '../../data/featureConstants';
 
 interface AlliesPanelProps {
   selectedAllyId: string | null;
@@ -13,11 +15,15 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
   const addAlly = useSiphonStore((s) => s.addAlly);
   const removeAlly = useSiphonStore((s) => s.removeAlly);
   const renameAlly = useSiphonStore((s) => s.renameAlly);
+  const bestowToAlly = useSiphonStore((s) => s.bestowToAlly);
+  const highlightDropTargets = useSettingsStore((s) => s.highlightDropTargets);
 
   const [isAddingAlly, setIsAddingAlly] = useState(false);
   const [newAllyName, setNewAllyName] = useState('');
   const [renamingAllyId, setRenamingAllyId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [chipDragOver, setChipDragOver] = useState<string | null>(null);
+  const [isCardBeingDragged, setIsCardBeingDragged] = useState(false);
 
   const addInputRef = useRef<HTMLInputElement>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
@@ -43,6 +49,25 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
       if (hoverTimerRef.current) {
         clearTimeout(hoverTimerRef.current);
       }
+    };
+  }, []);
+
+  // Global drag listeners for ambient drop zone highlighting
+  useEffect(() => {
+    const handleGlobalDragStart = (e: DragEvent) => {
+      if (e.dataTransfer?.types.includes('text/x-card-type')) {
+        setIsCardBeingDragged(true);
+      }
+    };
+    const handleGlobalDragEnd = () => {
+      setIsCardBeingDragged(false);
+      setChipDragOver(null);
+    };
+    window.addEventListener('dragstart', handleGlobalDragStart);
+    window.addEventListener('dragend', handleGlobalDragEnd);
+    return () => {
+      window.removeEventListener('dragstart', handleGlobalDragStart);
+      window.removeEventListener('dragend', handleGlobalDragEnd);
     };
   }, []);
 
@@ -119,6 +144,30 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
     onSelectAlly(selectedAllyId === allyId ? null : allyId);
   };
 
+  const handleChipDragOver = (e: React.DragEvent, allyId: string) => {
+    if (isCardDrag(e.dataTransfer)) {
+      e.preventDefault();
+      setChipDragOver(allyId);
+    }
+  };
+
+  const handleChipDragLeave = () => {
+    setChipDragOver(null);
+  };
+
+  const handleChipDrop = (e: React.DragEvent, allyId: string) => {
+    e.preventDefault();
+    setChipDragOver(null);
+    const data = getCardDragData(e.dataTransfer);
+    if (data?.source === 'deck') {
+      const feature = FEATURE_MAP.get(data.featureId);
+      if (feature && !feature.isSpecialCost) {
+        bestowToAlly(data.featureId, allyId);
+        onSelectAlly(null);
+      }
+    }
+  };
+
   return (
     <div
       className="flex items-center gap-2 px-2 py-1 border border-siphon-border/30 rounded-lg bg-siphon-surface/20 min-h-8 flex-wrap"
@@ -133,17 +182,21 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
         const count = bestowmentCounts.get(ally.id) ?? 0;
         const isSelected = selectedAllyId === ally.id;
         const isRenaming = renamingAllyId === ally.id;
+        const isDraggedOver = chipDragOver === ally.id;
+        const showAmbientHighlight = highlightDropTargets && isCardBeingDragged && !isDraggedOver;
 
         return (
           <div
             key={ally.id}
             className={`
               group inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs
-              transition-colors cursor-pointer
+              transition-all cursor-pointer
               ${isSelected
                 ? 'bg-ep-positive/20 border border-ep-positive/60 text-ep-positive'
                 : 'bg-siphon-surface/40 border border-siphon-border/40 text-text-primary hover:border-siphon-border/80'
               }
+              ${isDraggedOver ? 'ring-2 ring-ep-positive/60 scale-105' : ''}
+              ${showAmbientHighlight ? 'ring-1 ring-ep-positive/20' : ''}
             `}
             role="button"
             aria-label={`${ally.name}${count > 0 ? ` (${count} bestowed)` : ''}${isSelected ? ' (selected as bestow target)' : ''}`}
@@ -151,6 +204,9 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
             onClick={() => handleAllyClick(ally.id)}
             onMouseEnter={() => handleMouseEnter(ally.id)}
             onMouseLeave={handleMouseLeave}
+            onDragOver={(e) => handleChipDragOver(e, ally.id)}
+            onDragLeave={handleChipDragLeave}
+            onDrop={(e) => handleChipDrop(e, ally.id)}
           >
             {isRenaming ? (
               <input

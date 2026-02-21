@@ -65,6 +65,8 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   const setAnimationsEnabled = useSettingsStore((s) => s.setAnimationsEnabled);
   const reducedMotion = useSettingsStore((s) => s.reducedMotion);
   const setReducedMotion = useSettingsStore((s) => s.setReducedMotion);
+  const highlightDropTargets = useSettingsStore((s) => s.highlightDropTargets);
+  const setHighlightDropTargets = useSettingsStore((s) => s.setHighlightDropTargets);
   const confirmBeforeActivation = useSettingsStore((s) => s.confirmBeforeActivation);
   const setConfirmBeforeActivation = useSettingsStore((s) => s.setConfirmBeforeActivation);
   const autoTriggerSurgeOnWarp = useSettingsStore((s) => s.autoTriggerSurgeOnWarp);
@@ -139,6 +141,11 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         {/* Visual */}
         <SectionHeading>Visual</SectionHeading>
         <div className="space-y-1">
+          <BooleanToggle
+            label="Highlight drop targets when dragging"
+            value={highlightDropTargets}
+            onChange={setHighlightDropTargets}
+          />
           <BooleanToggle
             label="Enable animations"
             value={animationsEnabled}

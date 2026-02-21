@@ -14,6 +14,7 @@ interface SettingsStore {
   soundEnabled: boolean;
   animationsEnabled: boolean;
   reducedMotion: boolean;
+  highlightDropTargets: boolean;
   confirmBeforeActivation: boolean;
   autoTriggerSurgeOnWarp: boolean;
   shortRestClearEffects: boolean;
@@ -23,6 +24,7 @@ interface SettingsStore {
   setSoundEnabled: (enabled: boolean) => void;
   setAnimationsEnabled: (enabled: boolean) => void;
   setReducedMotion: (enabled: boolean) => void;
+  setHighlightDropTargets: (enabled: boolean) => void;
   setConfirmBeforeActivation: (enabled: boolean) => void;
   setAutoTriggerSurgeOnWarp: (enabled: boolean) => void;
   setShortRestClearEffects: (enabled: boolean) => void;
@@ -39,6 +41,7 @@ const DEFAULT_STATE = {
   soundEnabled: false,
   animationsEnabled: true,
   reducedMotion: false,
+  highlightDropTargets: true,
   confirmBeforeActivation: false,
   autoTriggerSurgeOnWarp: true,
   shortRestClearEffects: true,
@@ -57,6 +60,7 @@ export const useSettingsStore = create<SettingsStore>()(
       setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
       setAnimationsEnabled: (enabled) => set({ animationsEnabled: enabled }),
       setReducedMotion: (enabled) => set({ reducedMotion: enabled }),
+      setHighlightDropTargets: (enabled) => set({ highlightDropTargets: enabled }),
       setConfirmBeforeActivation: (enabled) => set({ confirmBeforeActivation: enabled }),
       setAutoTriggerSurgeOnWarp: (enabled) => set({ autoTriggerSurgeOnWarp: enabled }),
       setShortRestClearEffects: (enabled) => set({ shortRestClearEffects: enabled }),

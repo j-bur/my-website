@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { SiphonFeature } from '../../types';
 
 interface SiphonCardProps {
@@ -8,6 +9,9 @@ interface SiphonCardProps {
   isUnplayable?: boolean;
   compact?: boolean;
   allyName?: string;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
 }
 
 export function SiphonCard({
@@ -18,7 +22,11 @@ export function SiphonCard({
   isUnplayable = false,
   compact = false,
   allyName,
+  draggable: isDraggable,
+  onDragStart,
+  onDragEnd,
 }: SiphonCardProps) {
+  const [isDragging, setIsDragging] = useState(false);
   const costDisplay =
     typeof feature.cost === 'number' ? `${feature.cost} EP` : `${feature.cost}`;
 
@@ -26,14 +34,25 @@ export function SiphonCard({
     <div
       className={`
         relative flex flex-col border rounded-lg select-none
-        transition-all duration-200 cursor-pointer
+        transition-all duration-200
         ${isRaised ? 'border-siphon-accent shadow-lg shadow-siphon-accent/20 -translate-y-2 z-10' : 'border-card-border'}
         ${isUnplayable ? 'opacity-40 saturate-50' : ''}
+        ${isDragging ? 'opacity-50' : ''}
         ${compact ? 'w-28 min-h-36' : 'w-40 min-h-48'}
+        ${isDraggable && !isUnplayable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
         bg-card-bg hover:border-siphon-accent/60
       `}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
+      draggable={isDraggable}
+      onDragStart={(e) => {
+        setIsDragging(true);
+        onDragStart?.(e);
+      }}
+      onDragEnd={(e) => {
+        setIsDragging(false);
+        onDragEnd?.(e);
+      }}
       role="button"
       tabIndex={0}
       aria-label={feature.name}

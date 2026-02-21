@@ -4,3 +4,4 @@ export * from './siphonFeature';
 export * from './echoManifold';
 export * from './surgeEffect';
 export * from './activeEffect';
+export * from './dragData';

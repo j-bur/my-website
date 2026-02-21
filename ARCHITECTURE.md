@@ -42,7 +42,7 @@ src/
 │   │   ├── EchoManifoldDeck.tsx   # Phase card + mote pips (top-left)
 │   │   ├── WildSurgeDeck.tsx      # Surge deck placeholder (top-right)
 │   │   ├── PhaseAbilities.tsx     # Current phase's 3 abilities
-│   │   ├── ActiveEffectsPanel.tsx # Active effects on self (center)
+│   │   ├── ActiveEffectsPanel.tsx # Active effects + drop target + dismiss gesture (center)
 │   │   ├── ResourceDisplay.tsx    # Right column wrapper
 │   │   ├── EchoPointsBar.tsx      # EP bar (center-zero bidirectional)
 │   │   ├── FocusCounter.tsx       # Focus value with glow
@@ -63,7 +63,7 @@ src/
 │   ├── useReducedMotion.ts          # Combines settings + OS prefers-reduced-motion
 │   └── useAnimatedNumber.ts         # Smooth number interpolation via rAF
 ├── data/                          # Static game data (verified 2026-02-20)
-├── types/                         # TypeScript interfaces
+├── types/                         # TypeScript interfaces (includes dragData.ts for DnD)
 ├── utils/                         # Helper functions
 ├── store/                         # Zustand state stores
 │   ├── characterStore.ts          # Character stats, HP, hit dice

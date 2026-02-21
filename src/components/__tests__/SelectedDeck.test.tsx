@@ -269,4 +269,68 @@ describe('SelectedDeck', () => {
     // Deck should still be expanded (showing remaining cards)
     expect(screen.getByText('Temporal Surge')).toBeInTheDocument();
   });
+
+  // --- Drag-and-drop ---
+
+  it('deck cards have draggable attribute when not unplayable', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['subtle-luck', 'temporal-surge'],
+    });
+
+    render(<SelectedDeck />);
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+
+    expect(screen.getByLabelText('Subtle Luck').getAttribute('draggable')).toBe('true');
+    expect(screen.getByLabelText('Temporal Surge').getAttribute('draggable')).toBe('true');
+  });
+
+  it('While Selected cards are NOT draggable', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['siphon-greed', 'subtle-luck'],
+    });
+
+    render(<SelectedDeck />);
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+
+    // siphon-greed is While Selected → not draggable
+    expect(screen.getByLabelText('Siphon Greed').getAttribute('draggable')).not.toBe('true');
+    // subtle-luck is normal → draggable
+    expect(screen.getByLabelText('Subtle Luck').getAttribute('draggable')).toBe('true');
+  });
+
+  it('special cost cards are NOT draggable when ally is selected', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['recursion', 'temporal-surge'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    render(<SelectedDeck selectedAllyId="a1" onAllyBestowed={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+
+    // recursion is special cost → not draggable when ally selected
+    expect(screen.getByLabelText('Recursion').getAttribute('draggable')).not.toBe('true');
+    // temporal-surge is normal → draggable
+    expect(screen.getByLabelText('Temporal Surge').getAttribute('draggable')).toBe('true');
+  });
+
+  it('sets drag data on dragStart', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['subtle-luck', 'temporal-surge'],
+    });
+
+    render(<SelectedDeck />);
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+
+    const card = screen.getByLabelText('Subtle Luck');
+    const setData = vi.fn();
+    fireEvent.dragStart(card, {
+      dataTransfer: { setData, types: [], effectAllowed: '' },
+    });
+
+    expect(setData).toHaveBeenCalledWith(
+      'application/json',
+      expect.stringContaining('"featureId":"subtle-luck"')
+    );
+    expect(setData).toHaveBeenCalledWith('text/x-card-type', 'card');
+  });
 });

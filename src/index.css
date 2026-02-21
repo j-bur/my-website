@@ -181,6 +181,47 @@ body {
   animation: pip-drain 250ms ease-out;
 }
 
+/* Effect dismiss: snap back → strikethrough → fade out → collapse */
+@keyframes effect-dismiss {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  30% {
+    transform: translateX(0);
+    opacity: 1;
+    text-decoration: line-through;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
+
+.effect-dismiss {
+  animation: effect-dismiss 400ms ease-out forwards;
+  overflow: hidden;
+}
+
+/* Drop zone glow for active effects panel */
+@keyframes drop-zone-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(0, 212, 170, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(0, 212, 170, 0.3);
+  }
+}
+
+.drop-zone-glow {
+  animation: drop-zone-glow 1.5s ease-in-out infinite;
+}
+
 /* Programmatic reduced motion (applied via settingsStore) */
 .reduce-motion * {
   transition-duration: 0ms !important;
@@ -189,7 +230,9 @@ body {
 .reduce-motion .card-enter,
 .reduce-motion .pip-fill,
 .reduce-motion .pip-drain,
-.reduce-motion .focus-pulse {
+.reduce-motion .focus-pulse,
+.reduce-motion .effect-dismiss,
+.reduce-motion .drop-zone-glow {
   animation: none !important;
 }
 
@@ -199,6 +242,8 @@ body {
   .pip-fill,
   .pip-drain,
   .focus-pulse,
+  .effect-dismiss,
+  .drop-zone-glow,
   .glitch-hover:hover,
   .chromatic-aberration:hover,
   .warp-active:hover {

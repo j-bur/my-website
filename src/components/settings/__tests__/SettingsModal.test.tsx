@@ -42,6 +42,7 @@ describe('SettingsModal', () => {
     render(<SettingsModal onClose={vi.fn()} />);
 
     expect(screen.getByText('Enable sound effects')).toBeInTheDocument();
+    expect(screen.getByText('Highlight drop targets when dragging')).toBeInTheDocument();
     expect(screen.getByText('Enable animations')).toBeInTheDocument();
     expect(screen.getByText('Reduced motion')).toBeInTheDocument();
     expect(screen.getByText('Confirm before activation')).toBeInTheDocument();
@@ -171,5 +172,16 @@ describe('SettingsModal', () => {
     fireEvent.click(d3Button);
 
     expect(useSettingsStore.getState().diceMode.siphonFeature).toBe('dice3d');
+  });
+
+  it('toggles highlight drop targets off and updates store', () => {
+    render(<SettingsModal onClose={vi.fn()} />);
+
+    // Highlight drop targets defaults to on (true), click Off
+    const row = screen.getByText('Highlight drop targets when dragging').closest('div')!;
+    const offButton = row.querySelector('button:last-child')!;
+    fireEvent.click(offButton);
+
+    expect(useSettingsStore.getState().highlightDropTargets).toBe(false);
   });
 });

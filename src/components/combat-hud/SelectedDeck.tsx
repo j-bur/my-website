@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSiphonStore } from '../../store';
 import { FEATURE_MAP, TRIGGERED_FEATURE_IDS, WHILE_SELECTED_FEATURE_IDS } from '../../data/featureConstants';
+import { setCardDragData } from '../../types/dragData';
 import { SiphonCard } from '../cards/SiphonCard';
 
 interface SelectedDeckProps {
@@ -104,6 +105,7 @@ export function SelectedDeck({ onActivateCard, selectedAllyId, onAllyBestowed }:
             const isWhileSelected = WHILE_SELECTED_FEATURE_IDS.has(cardId);
             const isSpecialCostBlocked = selectedAllyId != null && feature.isSpecialCost;
             const isUnplayable = isWhileSelected || isSpecialCostBlocked;
+            const isDraggable = !isUnplayable;
             return (
               <div key={cardId} className="relative">
                 <SiphonCard
@@ -111,6 +113,14 @@ export function SelectedDeck({ onActivateCard, selectedAllyId, onAllyBestowed }:
                   compact
                   isUnplayable={isUnplayable}
                   onClick={isUnplayable ? undefined : () => handleCardClick(cardId)}
+                  draggable={isDraggable}
+                  onDragStart={(e) => {
+                    setCardDragData(e.dataTransfer, {
+                      type: 'card',
+                      featureId: cardId,
+                      source: 'deck',
+                    });
+                  }}
                 />
                 {isSpecialCostBlocked && (
                   <div

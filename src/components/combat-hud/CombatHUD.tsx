@@ -122,7 +122,7 @@ export function CombatHUD() {
 
       {/* Center: Active Effects */}
       <div style={{ gridArea: 'effects' }}>
-        <ActiveEffectsPanel />
+        <ActiveEffectsPanel onActivateCard={handleActivateCard} />
       </div>
 
       {/* Right: Resources */}

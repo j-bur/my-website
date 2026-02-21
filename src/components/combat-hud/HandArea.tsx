@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { useSiphonStore } from '../../store';
+import { useSiphonStore, useSettingsStore } from '../../store';
 import { TRIGGERED_FEATURE_IDS, FEATURE_MAP } from '../../data/featureConstants';
+import { setCardDragData, getCardDragData, isCardDrag } from '../../types/dragData';
 import { SiphonCard } from '../cards/SiphonCard';
 
 interface HandAreaProps {
@@ -12,10 +13,14 @@ interface HandAreaProps {
 export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: HandAreaProps) {
   const handCardIds = useSiphonStore((s) => s.handCardIds);
   const selectedCardIds = useSiphonStore((s) => s.selectedCardIds);
+  const bestowToSelf = useSiphonStore((s) => s.bestowToSelf);
   const bestowToAlly = useSiphonStore((s) => s.bestowToAlly);
+  const highlightDropTargets = useSettingsStore((s) => s.highlightDropTargets);
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   const [enteringCards, setEnteringCards] = useState<Set<string>>(new Set());
   const prevHandRef = useRef<string[]>([]);
+  const [isCardBeingDragged, setIsCardBeingDragged] = useState(false);
+  const [isDragTarget, setIsDragTarget] = useState(false);
 
   // Compute hand cards: explicit hand + triggered features in selected
   const handCards = useMemo(() => {
@@ -38,12 +43,66 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
     return () => clearTimeout(timeout);
   }, [handCards]);
 
+  // Global drag listeners for drop zone highlighting
+  useEffect(() => {
+    const handleGlobalDragStart = (e: DragEvent) => {
+      if (e.dataTransfer?.types.includes('text/x-card-type')) {
+        setIsCardBeingDragged(true);
+      }
+    };
+    const handleGlobalDragEnd = () => {
+      setIsCardBeingDragged(false);
+      setIsDragTarget(false);
+    };
+    window.addEventListener('dragstart', handleGlobalDragStart);
+    window.addEventListener('dragend', handleGlobalDragEnd);
+    return () => {
+      window.removeEventListener('dragstart', handleGlobalDragStart);
+      window.removeEventListener('dragend', handleGlobalDragEnd);
+    };
+  }, []);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (isCardDrag(e.dataTransfer)) {
+      e.preventDefault();
+      setIsDragTarget(true);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setIsDragTarget(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragTarget(false);
+    const data = getCardDragData(e.dataTransfer);
+    if (data?.source === 'deck') {
+      const feature = FEATURE_MAP.get(data.featureId);
+      if (!feature) return;
+      bestowToSelf(data.featureId);
+      // Activation:None auto-activate after bestow
+      if (feature.activation === 'None') {
+        onActivateCard?.(data.featureId);
+      }
+    }
+  };
+
+  const showAmbientHighlight = highlightDropTargets && isCardBeingDragged && !isDragTarget;
+  const showActiveHighlight = isDragTarget;
+
   if (handCards.length === 0) {
     return (
       <div
-        className="flex items-end h-full min-h-36"
+        className={`flex items-end h-full min-h-36 rounded-lg transition-all ${
+          showActiveHighlight ? 'ring-2 ring-ep-positive/60 ring-inset bg-ep-positive/5' :
+          showAmbientHighlight ? 'ring-2 ring-ep-positive/30 ring-inset' : ''
+        }`}
         role="list"
         aria-label="Hand (empty)"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         <div className="text-text-muted/30 text-xs italic px-4 pb-4">
           No cards in hand. Bestow features from the Selected deck.
@@ -58,7 +117,13 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
 
   return (
     <div
-      className="flex flex-col justify-end h-full min-h-36 px-2 pb-2"
+      className={`flex flex-col justify-end h-full min-h-36 px-2 pb-2 rounded-lg transition-all ${
+        showActiveHighlight ? 'ring-2 ring-ep-positive/60 ring-inset bg-ep-positive/5' :
+        showAmbientHighlight ? 'ring-2 ring-ep-positive/30 ring-inset' : ''
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       {selectedAllyId && (
         <div className="text-[10px] uppercase tracking-widest text-ep-positive mb-1 px-2">
@@ -75,6 +140,8 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
         if (!feature) return null;
 
         const isHovered = hoveredCardId === cardId;
+        const isUnplayable = !!selectedAllyId && feature.isSpecialCost;
+        const isDraggable = !isUnplayable;
 
         return (
           <div
@@ -91,14 +158,22 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
               feature={feature}
               isRaised={isHovered}
               compact={isLargeHand && !isHovered}
-              isUnplayable={!!selectedAllyId && feature.isSpecialCost}
+              isUnplayable={isUnplayable}
               onClick={selectedAllyId && !feature.isSpecialCost ? () => {
                 bestowToAlly(cardId, selectedAllyId);
                 onAllyBestowed?.();
               } : undefined}
               onDoubleClick={selectedAllyId ? undefined : () => onActivateCard?.(cardId)}
+              draggable={isDraggable}
+              onDragStart={(e) => {
+                setCardDragData(e.dataTransfer, {
+                  type: 'card',
+                  featureId: cardId,
+                  source: 'hand',
+                });
+              }}
             />
-            {selectedAllyId && feature.isSpecialCost && (
+            {isUnplayable && (
               <div
                 className="absolute inset-0 flex items-end justify-center pb-1 pointer-events-none"
                 title="Cannot bestow to allies"

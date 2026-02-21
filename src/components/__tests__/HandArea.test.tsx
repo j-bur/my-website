@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { HandArea } from '../combat-hud/HandArea';
-import { useSiphonStore } from '../../store';
+import { useSiphonStore, useSettingsStore } from '../../store';
 
 function resetStore() {
   useSiphonStore.setState({
@@ -97,5 +97,91 @@ describe('HandArea', () => {
     render(<HandArea selectedAllyId="a1" />);
 
     expect(screen.getByText(/click a card to bestow to ally/i)).toBeInTheDocument();
+  });
+
+  // --- Drag-and-drop ---
+
+  it('bestows to self when deck card is dropped on hand', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['subtle-luck', 'temporal-surge'],
+    });
+
+    render(<HandArea />);
+
+    const handArea = screen.getByRole('list', { name: /hand \(empty\)/i });
+    fireEvent.dragOver(handArea, {
+      dataTransfer: { types: ['text/x-card-type'] },
+    });
+    fireEvent.drop(handArea, {
+      dataTransfer: {
+        types: ['text/x-card-type', 'application/json'],
+        getData: () => JSON.stringify({ type: 'card', featureId: 'subtle-luck', source: 'deck' }),
+      },
+    });
+
+    const state = useSiphonStore.getState();
+    expect(state.handCardIds).toContain('subtle-luck');
+  });
+
+  it('auto-activates None-activation cards on drop', () => {
+    // subtle-luck has activation: 'None'
+    useSiphonStore.setState({
+      selectedCardIds: ['subtle-luck', 'temporal-surge'],
+    });
+
+    const onActivateCard = vi.fn();
+    render(<HandArea onActivateCard={onActivateCard} />);
+
+    const handArea = screen.getByRole('list', { name: /hand \(empty\)/i });
+    fireEvent.drop(handArea, {
+      dataTransfer: {
+        types: ['text/x-card-type', 'application/json'],
+        getData: () => JSON.stringify({ type: 'card', featureId: 'subtle-luck', source: 'deck' }),
+      },
+    });
+
+    expect(onActivateCard).toHaveBeenCalledWith('subtle-luck');
+  });
+
+  it('hand cards have draggable attribute', () => {
+    useSiphonStore.setState({
+      handCardIds: ['subtle-luck'],
+    });
+
+    render(<HandArea />);
+
+    expect(screen.getByLabelText('Subtle Luck').getAttribute('draggable')).toBe('true');
+  });
+
+  it('special cost hand cards NOT draggable when ally selected', () => {
+    // recursion has isSpecialCost: true
+    useSiphonStore.setState({
+      handCardIds: ['recursion'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    render(<HandArea selectedAllyId="a1" />);
+
+    expect(screen.getByLabelText('Recursion').getAttribute('draggable')).not.toBe('true');
+  });
+
+  it('does not highlight when highlightDropTargets is false', () => {
+    useSettingsStore.getState().setHighlightDropTargets(false);
+    useSiphonStore.setState({
+      handCardIds: ['subtle-luck'],
+    });
+
+    const { container } = render(<HandArea />);
+
+    // Simulate a global dragstart to set isCardBeingDragged
+    const dragStartEvent = new Event('dragstart', { bubbles: true });
+    Object.defineProperty(dragStartEvent, 'dataTransfer', {
+      value: { types: ['text/x-card-type'] },
+    });
+    window.dispatchEvent(dragStartEvent);
+
+    // Should NOT have the ambient highlight ring class
+    const wrapper = container.firstElementChild!;
+    expect(wrapper.className).not.toContain('ring-ep-positive/30');
   });
 });

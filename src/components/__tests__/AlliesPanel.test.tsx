@@ -270,4 +270,74 @@ describe('AlliesPanel', () => {
 
     vi.useRealTimers();
   });
+
+  // --- Drag-and-drop ---
+
+  it('bestows card to ally when deck card is dropped on ally chip', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['subtle-luck'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    const onSelectAlly = vi.fn();
+    render(<AlliesPanel selectedAllyId={null} onSelectAlly={onSelectAlly} />);
+
+    const chip = screen.getByRole('button', { name: 'Briar' });
+    fireEvent.dragOver(chip, {
+      dataTransfer: { types: ['text/x-card-type'] },
+    });
+    fireEvent.drop(chip, {
+      dataTransfer: {
+        types: ['text/x-card-type', 'application/json'],
+        getData: () => JSON.stringify({ type: 'card', featureId: 'subtle-luck', source: 'deck' }),
+      },
+    });
+
+    const state = useSiphonStore.getState();
+    expect(state.allyBestowments).toHaveLength(1);
+    expect(state.allyBestowments[0].featureId).toBe('subtle-luck');
+    expect(state.allyBestowments[0].allyId).toBe('a1');
+    // Should clear ally selection after bestow
+    expect(onSelectAlly).toHaveBeenCalledWith(null);
+  });
+
+  it('blocks special cost cards from being dropped on ally', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['recursion'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    render(<AlliesPanel selectedAllyId={null} onSelectAlly={vi.fn()} />);
+
+    const chip = screen.getByRole('button', { name: 'Briar' });
+    fireEvent.drop(chip, {
+      dataTransfer: {
+        types: ['text/x-card-type', 'application/json'],
+        getData: () => JSON.stringify({ type: 'card', featureId: 'recursion', source: 'deck' }),
+      },
+    });
+
+    const state = useSiphonStore.getState();
+    expect(state.allyBestowments).toHaveLength(0);
+  });
+
+  it('rejects hand card drops on ally chip', () => {
+    useSiphonStore.setState({
+      handCardIds: ['subtle-luck'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    render(<AlliesPanel selectedAllyId={null} onSelectAlly={vi.fn()} />);
+
+    const chip = screen.getByRole('button', { name: 'Briar' });
+    fireEvent.drop(chip, {
+      dataTransfer: {
+        types: ['text/x-card-type', 'application/json'],
+        getData: () => JSON.stringify({ type: 'card', featureId: 'subtle-luck', source: 'hand' }),
+      },
+    });
+
+    const state = useSiphonStore.getState();
+    expect(state.allyBestowments).toHaveLength(0);
+  });
 });
