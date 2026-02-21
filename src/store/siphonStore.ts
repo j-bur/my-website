@@ -74,6 +74,24 @@ interface SiphonStore {
   clearExpiredEffects: () => void;
   clearEffectsBelowDuration: (maxDurationMs: number) => void;
 
+  // Activation (combines spendEP + addFocus + addActiveEffect + activateFromHand)
+  performActivation: (params: {
+    featureId: string;
+    effectiveCost: number;
+    focusRollResult: number;
+    level: number;
+    activeEffect?: {
+      sourceType: 'siphon' | 'manifold' | 'surge';
+      sourceId: string;
+      sourceName: string;
+      description: string;
+      totalDuration: string;
+      durationMs: number | null;
+      requiresConcentration: boolean;
+      featureWarpEffect?: string;
+    };
+  }) => { spendResult: SpendResult; focusGained: number };
+
   // Computed Helpers
   getDeckCards: () => string[];
   getHandCards: () => string[];
@@ -249,6 +267,33 @@ export const useSiphonStore = create<SiphonStore>()(
             id === oldFeatureId ? newFeatureId : id
           ),
         }));
+      },
+
+      // --- Activation (orchestrated) ---
+
+      performActivation: (params) => {
+        const { featureId, effectiveCost, focusRollResult, level, activeEffect } = params;
+
+        // 1. Spend EP
+        const spendResult = get().spendEP(effectiveCost, level);
+
+        // 2. Add focus (doubling is handled internally based on current EP)
+        const focusGained = get().addFocus(focusRollResult);
+
+        // 3. Conditionally add active effect (with warp info from spendResult)
+        if (activeEffect) {
+          const { featureWarpEffect, ...effectBase } = activeEffect;
+          get().addActiveEffect({
+            ...effectBase,
+            warpActive: spendResult.warpTriggered,
+            warpDescription: spendResult.warpTriggered ? featureWarpEffect : undefined,
+          });
+        }
+
+        // 4. Return card from hand to selected deck
+        get().activateFromHand(featureId);
+
+        return { spendResult, focusGained };
       },
 
       // --- Ally Management ---

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { SelectedDeck } from '../combat-hud/SelectedDeck';
 import { useSiphonStore } from '../../store';
@@ -125,5 +125,70 @@ describe('SelectedDeck', () => {
 
     // Only temporal-surge is in the deck (subtle-luck is in hand)
     expect(screen.getByRole('button', { name: /selected deck: 1 cards/i })).toBeInTheDocument();
+  });
+
+  // --- Activation:None auto-activate ---
+
+  it('calls onActivateCard for Activation:None features after bestow', () => {
+    // 'subtle-luck' has activation: 'None'
+    useSiphonStore.setState({
+      selectedCardIds: ['subtle-luck', 'temporal-surge'],
+    });
+
+    const onActivateCard = vi.fn();
+    render(<SelectedDeck onActivateCard={onActivateCard} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+    fireEvent.click(screen.getByLabelText('Subtle Luck'));
+
+    expect(onActivateCard).toHaveBeenCalledWith('subtle-luck');
+  });
+
+  it('does NOT call onActivateCard for non-None activation features', () => {
+    // 'gravity-well' has activation: 'Bonus Action'
+    useSiphonStore.setState({
+      selectedCardIds: ['gravity-well', 'temporal-surge'],
+    });
+
+    const onActivateCard = vi.fn();
+    render(<SelectedDeck onActivateCard={onActivateCard} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+    fireEvent.click(screen.getByLabelText('Gravity Well'));
+
+    expect(onActivateCard).not.toHaveBeenCalled();
+  });
+
+  // --- While Selected protection ---
+
+  it('renders While Selected features as unplayable in expanded deck', () => {
+    // 'siphon-greed' has duration: 'While Selected'
+    useSiphonStore.setState({
+      selectedCardIds: ['siphon-greed', 'subtle-luck'],
+    });
+
+    render(<SelectedDeck />);
+
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+
+    // Both should be visible
+    expect(screen.getByLabelText('Siphon Greed')).toBeInTheDocument();
+    expect(screen.getByLabelText('Subtle Luck')).toBeInTheDocument();
+  });
+
+  it('does NOT bestow While Selected features on click', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['siphon-greed', 'subtle-luck'],
+    });
+
+    render(<SelectedDeck />);
+
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+    fireEvent.click(screen.getByLabelText('Siphon Greed'));
+
+    const state = useSiphonStore.getState();
+    // siphon-greed should still be in selected, not moved to hand
+    expect(state.selectedCardIds).toContain('siphon-greed');
+    expect(state.handCardIds).not.toContain('siphon-greed');
   });
 });

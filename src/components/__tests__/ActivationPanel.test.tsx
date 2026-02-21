@@ -350,4 +350,65 @@ describe('ActivationPanel', () => {
     expect(state.handCardIds).not.toContain('test-feature');
     expect(state.selectedCardIds).toContain('test-feature');
   });
+
+  // --- Varies cost tests ---
+
+  it('shows cost input for Varies cost features', () => {
+    const feature = makeFeature({ cost: 'Varies' });
+    render(<ActivationPanel feature={feature} onComplete={onComplete} onCancel={onCancel} />);
+
+    expect(screen.getByLabelText('Choose EP cost')).toBeInTheDocument();
+  });
+
+  it('disables confirm button when Varies cost is 0', () => {
+    const feature = makeFeature({ cost: 'Varies' });
+    render(<ActivationPanel feature={feature} onComplete={onComplete} onCancel={onCancel} />);
+
+    const confirmBtn = screen.getByText('Roll in Foundry');
+    expect(confirmBtn).toBeDisabled();
+  });
+
+  it('enables confirm button when Varies cost is entered', () => {
+    const feature = makeFeature({ cost: 'Varies' });
+    render(<ActivationPanel feature={feature} onComplete={onComplete} onCancel={onCancel} />);
+
+    const costInput = screen.getByLabelText('Choose EP cost');
+    fireEvent.change(costInput, { target: { value: '5' } });
+
+    const confirmBtn = screen.getByText('Roll in Foundry');
+    expect(confirmBtn).not.toBeDisabled();
+  });
+
+  it('uses chosen cost for EP deduction with Varies features', () => {
+    useSiphonStore.setState({ currentEP: 10, handCardIds: ['test-feature'] });
+    const feature = makeFeature({ cost: 'Varies', duration: 'Instant' });
+    render(<ActivationPanel feature={feature} onComplete={onComplete} onCancel={onCancel} />);
+
+    // Set cost to 4
+    const costInput = screen.getByLabelText('Choose EP cost');
+    fireEvent.change(costInput, { target: { value: '4' } });
+
+    // Confirm and enter focus result
+    fireEvent.click(screen.getByText('Roll in Foundry'));
+    const focusInput = screen.getByLabelText('Focus roll result');
+    fireEvent.change(focusInput, { target: { value: '6' } });
+    fireEvent.click(screen.getByText('Apply'));
+
+    // EP: 10 - 4 = 6
+    expect(useSiphonStore.getState().currentEP).toBe(6);
+    expect(onComplete).toHaveBeenCalledWith(null);
+  });
+
+  it('updates focus dice display reactively when Varies cost changes', () => {
+    // Feature with [Cost]d8 focus dice — focus changes with cost
+    const feature = makeFeature({ cost: 'Varies', focusDice: '[Cost]d8' });
+    render(<ActivationPanel feature={feature} onComplete={onComplete} onCancel={onCancel} />);
+
+    // Initially cost is 0, so focus dice shows "0d8" or similar
+    const costInput = screen.getByLabelText('Choose EP cost');
+    fireEvent.change(costInput, { target: { value: '3' } });
+
+    // Focus dice should show "3d8"
+    expect(screen.getByText('3d8')).toBeInTheDocument();
+  });
 });

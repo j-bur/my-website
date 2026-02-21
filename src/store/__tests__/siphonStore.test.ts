@@ -859,4 +859,135 @@ describe('siphonStore', () => {
       expect(useSiphonStore.getState().activeEffects).toHaveLength(1);
     });
   });
+
+  // ========================================
+  // performActivation
+  // ========================================
+
+  describe('performActivation', () => {
+    it('spends EP, adds focus, and returns card to deck', () => {
+      useSiphonStore.setState({
+        currentEP: 10,
+        focus: 0,
+        handCardIds: ['subtle-luck'],
+        selectedCardIds: [],
+      });
+
+      const result = useSiphonStore.getState().performActivation({
+        featureId: 'subtle-luck',
+        effectiveCost: 3,
+        focusRollResult: 7,
+        level: 5,
+      });
+
+      const state = useSiphonStore.getState();
+      expect(state.currentEP).toBe(7);
+      expect(state.focus).toBe(7);
+      expect(state.handCardIds).not.toContain('subtle-luck');
+      expect(state.selectedCardIds).toContain('subtle-luck');
+      expect(result.spendResult.warpTriggered).toBe(false);
+      expect(result.focusGained).toBe(7);
+    });
+
+    it('doubles focus when EP goes negative (warp)', () => {
+      useSiphonStore.setState({
+        currentEP: 2,
+        focus: 0,
+        handCardIds: ['subtle-luck'],
+        selectedCardIds: [],
+      });
+
+      const result = useSiphonStore.getState().performActivation({
+        featureId: 'subtle-luck',
+        effectiveCost: 5,
+        focusRollResult: 4,
+        level: 5,
+      });
+
+      expect(useSiphonStore.getState().currentEP).toBe(-3);
+      expect(useSiphonStore.getState().focus).toBe(8); // 4 * 2
+      expect(result.spendResult.warpTriggered).toBe(true);
+      expect(result.focusGained).toBe(8);
+    });
+
+    it('adds active effect with warp info when provided', () => {
+      useSiphonStore.setState({
+        currentEP: 1,
+        focus: 0,
+        handCardIds: ['test-feature'],
+        selectedCardIds: [],
+      });
+
+      useSiphonStore.getState().performActivation({
+        featureId: 'test-feature',
+        effectiveCost: 3,
+        focusRollResult: 5,
+        level: 5,
+        activeEffect: {
+          sourceType: 'siphon',
+          sourceId: 'test-feature',
+          sourceName: 'Test Feature',
+          description: 'A test.',
+          totalDuration: '10 minutes',
+          durationMs: 600000,
+          requiresConcentration: false,
+          featureWarpEffect: 'Reality flickers!',
+        },
+      });
+
+      const effects = useSiphonStore.getState().activeEffects;
+      expect(effects).toHaveLength(1);
+      expect(effects[0].warpActive).toBe(true); // EP went negative
+      expect(effects[0].warpDescription).toBe('Reality flickers!');
+    });
+
+    it('does NOT set warp description when warp does not trigger', () => {
+      useSiphonStore.setState({
+        currentEP: 10,
+        focus: 0,
+        handCardIds: ['test-feature'],
+        selectedCardIds: [],
+      });
+
+      useSiphonStore.getState().performActivation({
+        featureId: 'test-feature',
+        effectiveCost: 3,
+        focusRollResult: 5,
+        level: 5,
+        activeEffect: {
+          sourceType: 'siphon',
+          sourceId: 'test-feature',
+          sourceName: 'Test Feature',
+          description: 'A test.',
+          totalDuration: '10 minutes',
+          durationMs: 600000,
+          requiresConcentration: false,
+          featureWarpEffect: 'Reality flickers!',
+        },
+      });
+
+      const effects = useSiphonStore.getState().activeEffects;
+      expect(effects).toHaveLength(1);
+      expect(effects[0].warpActive).toBe(false);
+      expect(effects[0].warpDescription).toBeUndefined();
+    });
+
+    it('does not add active effect when not provided', () => {
+      useSiphonStore.setState({
+        currentEP: 10,
+        focus: 0,
+        handCardIds: ['test-feature'],
+        selectedCardIds: [],
+      });
+
+      useSiphonStore.getState().performActivation({
+        featureId: 'test-feature',
+        effectiveCost: 3,
+        focusRollResult: 5,
+        level: 5,
+      });
+
+      expect(useSiphonStore.getState().activeEffects).toHaveLength(0);
+    });
+  });
 });

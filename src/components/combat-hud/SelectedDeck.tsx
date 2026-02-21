@@ -7,6 +7,10 @@ const TRIGGERED_FEATURE_IDS = new Set(
   SIPHON_FEATURES.filter((f) => f.duration === 'Triggered').map((f) => f.id)
 );
 
+const WHILE_SELECTED_FEATURE_IDS = new Set(
+  SIPHON_FEATURES.filter((f) => f.duration === 'While Selected').map((f) => f.id)
+);
+
 const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
 interface SelectedDeckProps {
@@ -83,12 +87,14 @@ export function SelectedDeck({ onActivateCard }: SelectedDeckProps) {
           {deckCards.map((cardId) => {
             const feature = featureMap.get(cardId);
             if (!feature) return null;
+            const isWhileSelected = WHILE_SELECTED_FEATURE_IDS.has(cardId);
             return (
               <SiphonCard
                 key={cardId}
                 feature={feature}
                 compact
-                onClick={() => handleBestow(cardId)}
+                isUnplayable={isWhileSelected}
+                onClick={isWhileSelected ? undefined : () => handleBestow(cardId)}
               />
             );
           })}
