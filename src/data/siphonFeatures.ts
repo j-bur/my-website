@@ -374,7 +374,7 @@ export const SIPHON_FEATURES: SiphonFeature[] = [
     duration: '1 hour',
     activation: 'Action',
     description: 'You call upon the latent potential of the multiverse and manifest the effect of one spell that is 1st level or a cantrip. The spell can be from any class\'s spell list, and you don\'t need to meet any requirements in that spell except for concentration.',
-    warpEffect: 'Roll a die. If the number is odd, roll on the Wild Magic Surge table. If it is even, roll on it twice.',
+    warpEffect: 'Roll a die. If the number is odd, roll on the Wild Echo Surge table. If it is even, roll on it twice.',
     tags: ['spellcasting', 'utility']
   },
   {
@@ -434,7 +434,7 @@ export const SIPHON_FEATURES: SiphonFeature[] = [
     focusDice: '3d8',
     duration: '1 minute',
     activation: 'Action',
-    description: 'You emanate an aura with a radius equal to five times your number of Static Capacitance charges. Allies in this aura may use five feet of their movement to teleport to another location in this aura which they can see.',
+    description: 'You emanate an aura with a radius equal to five times your number of Siphon Capacitance charges. Allies in this aura may use five feet of their movement to teleport to another location in this aura which they can see.',
     warpEffect: 'The radius is doubled, and all creatures benefit from Spatial Flux.',
     tags: ['support', 'teleportation', 'area']
   },

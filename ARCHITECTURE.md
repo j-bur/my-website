@@ -109,12 +109,13 @@ interface SiphonStore {
 **EP Flow**:
 ```
 spendEP(cost, level)
-  ├─ wasPositive = currentEP >= 0
   ├─ newEP = currentEP - cost
   ├─ isNowNegative = newEP < 0
-  ├─ warpTriggered = wasPositive && isNowNegative (or already negative)
+  ├─ warpTriggered = newEP < 0          // EP is negative AFTER deducting cost
+  ├─ focusDoubled = newEP < 0           // Same condition as warp
   └─ if newEP <= -level: Echo Drain state
 ```
+Note: Warp triggers ANY time EP is negative after cost deduction — not only when crossing from positive to negative. If EP was already -2 and you spend 3 more, Warp triggers because -5 < 0.
 
 ---
 

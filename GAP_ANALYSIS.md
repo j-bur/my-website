@@ -12,7 +12,7 @@ This document identifies discrepancies between the current codebase and the DESI
 | Store: Siphon | Significant gaps | High |
 | Store: Manifold | Good | Medium |
 | Types | Good | Low |
-| Data | Good (verify count) | Low |
+| Data | Complete (42/42 features verified) | Low |
 | UI: Deck Builder | Minor gaps | Medium |
 | UI: Combat View | Major rework needed | High |
 | UI: Settings | Not implemented | Medium |
@@ -322,6 +322,36 @@ Design specifies:
 4. Confirm → EP deducted, Focus added, card returns to Selected deck
 
 **Current**: Click "Activate" button, immediate processing.
+
+---
+
+## 7. Gaps Found in Documentation Audit (2026-02-20)
+
+These additional gaps were identified by cross-referencing source PDFs against all documentation and code.
+
+### Special Feature Interactions (Not Yet Tracked)
+
+| Gap | Source | Impact |
+|-----|--------|--------|
+| **Superconduction bypasses bestow rules** | Echo Siphon Features PDF | Reaction + 60ft range + immediate self-activation. Needs special activation path in UI. |
+| **Manifestation replaces itself** | Echo Siphon Features PDF | Removes itself from Selected deck and adds a different feature. Store needs `replaceSelectedCard(oldId, newId)`. |
+| **Activation: None auto-activates on bestow** | Siphon Wielder PDF | EP cost and Focus roll happen immediately at bestow, no separate activate step. |
+| **Echo Intuition halves both Cost AND Focus** | Echo Manifold PDF | Activation Panel must show modified values when Echo Intuition is active. |
+| **Siphon Greed cost halving is conditional** | Echo Siphon Features PDF | Only applies while Siphon Greed is Selected — NOT a general Echo Drain mechanic. |
+
+### Missing Validation
+
+| Gap | Location | Fix |
+|-----|----------|-----|
+| **No Special Cost check in bestowFeature()** | `siphonStore.ts` line 171 | Add: `if (isSpecialCost && targetId !== 'self') return error` |
+
+### Data Verification
+
+| Item | Status |
+|------|--------|
+| Feature count | **42/42 verified** (all features present in `siphonFeatures.ts`) |
+| Manifold abilities | 9/9 verified |
+| Surge table entries | 100/100 verified |
 
 ---
 

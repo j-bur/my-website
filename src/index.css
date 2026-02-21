@@ -2,10 +2,10 @@
 
 /* Siphon Interface Theme */
 @theme {
-  /* Dark theme colors */
-  --color-siphon-bg: #0a0a0f;
-  --color-siphon-surface: #12121a;
-  --color-siphon-border: #1f1f2e;
+  /* Dark theme colors — must match DESIGN.md Color Language table */
+  --color-siphon-bg: #161418;
+  --color-siphon-surface: #1e1c20;
+  --color-siphon-border: #4e4a50;
 
   /* Astral turquoise accent (from Echo Manifold description) */
   --color-siphon-accent: #00d4aa;
@@ -17,15 +17,18 @@
   --color-ep-drain: #ff2244;
 
   /* Focus */
-  --color-focus: #9966ff;
+  --color-focus: #7a42e0;
   --color-focus-warning: #ff6600;
 
   /* Warp effect */
-  --color-warp: #ff00ff;
+  --color-warp: #d119d1;
+
+  /* Capacitance */
+  --color-capacitance: #ffbb33;
 
   /* Card colors */
   --color-card-bg: #1a1a24;
-  --color-card-border: #2a2a3a;
+  --color-card-border: #4e4a50;
   --color-card-selected: #00d4aa;
 
   /* Text */

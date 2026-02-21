@@ -93,6 +93,34 @@ When in doubt, re-read DESIGN.md. The code should match the design, not the othe
 **Wrong**: Countdown timers showing remaining duration
 **Right**: Total duration display only (e.g., "10 min"), no countdown
 
+### 8. Treating Cost Halving as General Echo Drain
+**Wrong**: All Siphon Feature costs are halved while Echo Drained
+**Right**: Cost halving is a **Siphon Greed-specific passive effect** — it ONLY applies when Siphon Greed is in the Selected deck. Echo Drain itself does not reduce costs.
+
+### 9. Ignoring Echo Intuition's Dual Modifier
+**Wrong**: Echo Intuition (Revelation Phase, 3 motes) only halves cost
+**Right**: Echo Intuition halves BOTH the EP cost AND the Focus gained from Siphon Features for 8 hours. The Activation Panel must show modified values when this is active.
+
+### 10. Treating All Bestows as Action + Touch
+**Wrong**: Every bestow requires an Action and Touch range
+**Right**: Superconduction is a Reaction that bestows at 60 feet, and if targeting self, allows immediate activation. This bypasses the normal bestow flow entirely.
+
+### 11. Missing Manifestation's Self-Replacement
+**Wrong**: Manifestation activates like a normal triggered feature
+**Right**: Manifestation removes itself from the Selected deck and replaces itself with a different Siphon Feature chosen at activation time. The store needs a `replaceSelectedCard()` method.
+
+### 12. Separate Activate Step for Activation: None Features
+**Wrong**: Features with Activation: None go through a separate bestow-then-activate flow
+**Right**: When a feature with Activation: None is bestowed, the activation (EP cost deduction, Focus roll, Warp check) happens immediately — bestow and activate are one step.
+
+---
+
+## Source PDF Corrections
+
+These corrections have been applied to the data files after verifying against source PDFs:
+- **Spatial Flux**: Source PDF says "Static Capacitance" — this is a typo for "Siphon Capacitance" (confirmed by designer)
+- **Distort Reality Warp**: Source PDF references "Wild Magic Surge" table — treated as Wild Echo Surge for app simplicity (designer decision)
+
 ---
 
 ## Color Palette (Use These Exact Values)

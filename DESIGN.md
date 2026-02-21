@@ -94,6 +94,10 @@ The Siphon Wielder system uses three distinct steps:
 
 In Combat View, the **Hand** contains only cards that have been Bestowed to self. The **Selected deck** holds all features chosen at long rest that haven't yet been Bestowed.
 
+**Activation: None Features**: Features with Activation: None (e.g., Subtle Luck, Temporal Surge) auto-activate when Bestowed — the EP cost is deducted and Focus is rolled immediately as part of the bestow step. There is no separate "activate" action for these features.
+
+**Superconduction Exception**: Superconduction bypasses normal bestow rules — it is a Reaction (not Action), works at 60 feet (not touch), and if targeting self, allows immediate activation of the bestowed feature. See the Superconduction card for full details.
+
 **Selected Deck (Bottom Left)**
 - Contains all features chosen at long rest that haven't been Bestowed to self
 - Click to fan out cards above the hand area for viewing/bestowing
@@ -622,6 +626,16 @@ If activation would cause EP to go negative, the panel shows:
 - Card animates back to hand
 - No resources spent
 
+**Active Cost/Focus Modifiers:**
+When **Echo Intuition** (Revelation Phase ability) is active, both Cost and Focus for Siphon Features are halved. The Activation Panel must reflect this:
+```
+│  Cost: 5 EP → 2 EP (Echo Intuition)   │
+│  Current EP: 8 → 6 after              │
+│                                        │
+│  Focus: 2d8 → 1d8 (Echo Intuition)    │
+```
+Show the original values struck through or dimmed, with the modified values prominent. This modifier applies for the full 8-hour duration of Echo Intuition.
+
 ---
 
 ### Activating a Phase Ability
@@ -1012,9 +1026,12 @@ The timer tracks in-game time, not real time. Uses preset buttons for quick sele
 - Click preset → sets current in-game time
 - Arrow buttons adjust by 1 hour for fine-tuning
 - App calculates and displays expiration (current + 8 hours)
-- "Extend +8 hrs" button for Flux Capacitance
+- "Extend +8 hrs" button for Flux Capacitance (each click extends by another 8 hours)
 - "Timer Expired" button when in-game time passes expiration
 - "Clear" removes timer and charges
+
+**Important — Acquisition Window Mechanic:**
+The 8-hour window starts when the **first** Siphon Capacitance charge is gained (via Siphon Flux). ALL charges accumulated during this window are part of the same obligation — they must ALL be expended together before the window expires, with one Wild Echo Surge roll per charge. After all charges are spent, a new window can begin when new charges are gained. The "Expires at" display means "all current charges must be spent by this time."
 
 ### Concentration Tracking
 - Three Revelation abilities require concentration
@@ -1031,7 +1048,7 @@ Features with non-fixed costs need calculation. The app must parse and resolve t
 | `Twice your PB` or `2x PB` | Double Proficiency Bonus | Reject Fate (Cost: Twice your PB) |
 | `Level` | Character level | Manifestation (Cost: Level*) |
 | `Level/2 (rounded up)` | Half level, rounded up | Sentience (Cost: Level/2 (rounded up)*) |
-| `Varies` | User chooses; may have special rules | Supercapacitance, Longing |
+| `Varies` | User chooses; may have special rules (see below) | Supercapacitance, Doublecast, Longing |
 | `0` | No EP cost | Siphon Greed (Cost: 0*) |
 | Number with `*` | Special Cost — cannot be Bestowed to allies | Harness Potential (Cost: 18*) |
 
@@ -1046,13 +1063,20 @@ Some features have Focus expressions that reference other values:
 | `[Cost/2]d8` | Roll dice equal to half the Cost | Superconduction (Focus: [Cost/2]d8) |
 | `[Cost]` | Gain Focus equal to the Cost (no dice) | Supercapacitance (Focus: [Cost]) |
 
+**Varies Cost Special Rules:**
+- **Supercapacitance**: Cost = number of additional features selected (see Supercapacitance Overflow)
+- **Doublecast**: Cost = level of the chosen spell slot
+- **Longing**: Cost = twice the level of the triggering effect (minimum 3). The Activation Panel needs a "triggering effect level" input field when activating Longing.
+- **Superconduction**: Cost = half the cost of the Siphon Feature being bestowed, rounded down (minimum 1)
+
 **Special Cost Rules:**
 - Features marked with `*` have Special Costs and **cannot be Bestowed to allies**
 - Display these with an asterisk or lock icon on the card
 
 ### Supercapacitance Overflow
 - Allows selecting more features than PB
-- Cost doubles if exceeding PB
+- **Supercapacitance's own Cost doubles** if the total number of Selected features exceeds PB
+  - Example: PB = 3, selecting 5 features (2 extra via Supercapacitance). Supercapacitance cost = 2 EP at long rest. But since 5 > PB (3), the cost doubles to 4 EP. Focus gained also equals the (undoubled) Cost: 2.
 - Hand UI compresses to show up to 15 cards
 - Slot counter shows "5/3 (Supercapacitance +2)"
 

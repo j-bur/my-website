@@ -525,7 +525,7 @@ export const WILD_ECHO_SURGE_TABLE: SurgeTableEntry[] = [
   },
   {
     roll: 88,
-    extreme: 'You transform into an empty wooden chest for 1 minute, during which time you are considered petrified unless they succeed on a Constitution saving throw against your save DC',
+    extreme: 'You transform into an empty wooden chest for 1 minute, during which time you are considered petrified unless you succeed on a Constitution saving throw against your save DC.',
     moderate: 'You and all creatures within 30 feet of you gain vulnerability to cold damage for 1 minute.',
     nuisance: 'Your attacks deal 1d4 additional force damage.'
   },
@@ -544,7 +544,7 @@ export const WILD_ECHO_SURGE_TABLE: SurgeTableEntry[] = [
   {
     roll: 91,
     extreme: 'You are protected from Plants for 1 day. Such creatures cannot attack you or harm you unless they succeed on a Charisma saving throw against your save DC.',
-    moderate: 'You are protected from Celestials for 1 hour. Such creatures cannot attack you or harm you unless they succeed a on a Charisma saving throw against your save DC.',
+    moderate: 'You are protected from Celestials for 1 hour. Such creatures cannot attack you or harm you unless they succeed on a Charisma saving throw against your save DC.',
     nuisance: 'Your fingernails and toenails grow to an uncomfortable length. Until you trim them, your Dexterity is reduced by 1 and your speed is reduced by 5 feet, even if you\'re not wearing shoes.'
   },
   {
