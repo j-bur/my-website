@@ -20,7 +20,7 @@ export function parseDiceExpression(
   context: { pb?: number; level?: number; cost?: number } = {}
 ): DiceExpression {
   // Replace variables with values
-  let resolved = notation
+  const resolved = notation
     .replace(/\[PB\]/gi, String(context.pb || 0))
     .replace(/\[Level\]/gi, String(context.level || 0))
     .replace(/\[Cost\]/gi, String(context.cost || 0))

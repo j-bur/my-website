@@ -20,25 +20,19 @@ This document describes the technical architecture of The Siphon Interface.
 
 ## Directory Structure
 
+> **Note**: Components and most stores were pruned on 2026-02-20 for clean-slate rework.
+> Phase 1 creates characterStore + siphonStore from STORE_CONTRACTS.md.
+> Phase 2+ creates components from DESIGN.md.
+
 ```
 src/
-├── components/           # React components organized by feature
-│   ├── landing/          # Landing page components
-│   ├── deck-builder/     # Long rest card selection
-│   ├── combat-hud/       # Main combat interface
-│   ├── echo-manifold/    # Phase switching and abilities
-│   ├── cards/            # Reusable card components
-│   ├── common/           # Shared UI components
-│   └── settings/         # Settings modal (TODO)
-├── store/                # Zustand state stores
-│   ├── characterStore.ts # Character stats
-│   ├── siphonStore.ts    # Core siphon mechanics
-│   └── manifoldStore.ts  # Echo Manifold state
+├── data/                 # Static game data (verified 2026-02-20)
 ├── types/                # TypeScript interfaces
-├── data/                 # Static game data
 ├── utils/                # Helper functions
-├── assets/               # Static assets
-├── App.tsx               # Root component with routing
+├── store/                # Zustand state stores
+│   ├── manifoldStore.ts  # Echo Manifold state (kept — largely correct)
+│   └── index.ts          # Store re-exports
+├── App.tsx               # Minimal stub (placeholder until Phase 2)
 ├── main.tsx              # Entry point
 └── index.css             # Global styles and Tailwind
 ```
@@ -49,64 +43,17 @@ src/
 
 Three Zustand stores manage application state. All stores persist to localStorage.
 
-### characterStore
+### characterStore — PRUNED (Phase 1A creates from scratch)
 
-**Purpose**: Character identity and stats
-
-```typescript
-interface CharacterStore {
-  // State
-  name: string;
-  level: number;              // 1-20
-  proficiencyBonus: number;   // Auto-calculated from level
-  maxHP: number;              // Base max HP
-  currentHP: number;          // Current HP (not actively used)
-  reducedMaxHP: number;       // Max HP after Echo Drain reduction
-  spellSaveDC: number;
-
-  // TODO: Add these
-  hitDice: number;            // Current available Hit Dice
-  maxHitDice: number;         // = level
-}
-```
-
-**Key Behaviors**:
-- `proficiencyBonus` auto-updates when `level` changes
-- `reducedMaxHP` tracks permanent HP loss from Echo Drain spending
+See `.claude/docs/STORE_CONTRACTS.md` for target interface. Key additions over previous version: Hit Dice tracking, persist version migration.
 
 ---
 
-### siphonStore
+### siphonStore — PRUNED (Phase 1B creates from scratch)
 
-**Purpose**: Core siphon mechanics and card management
+See `.claude/docs/STORE_CONTRACTS.md` for target interface. Key changes: Hand/Deck card zones, ally management, card-return-after-activate flow.
 
-```typescript
-interface SiphonStore {
-  // Resources
-  currentEP: number;              // Can go negative
-  focus: number;                  // Accumulated tension
-  siphonCapacitance: number;      // Charges (max = PB)
-  capacitanceTimerStart: number | null;  // 8-hour timer
-
-  // Card Management (NEEDS REVISION - see GAP_ANALYSIS.md)
-  selectedCardIds: string[];      // Cards in Selected deck
-  bestowedFeatures: BestowedFeature[];
-
-  // TODO: Add these for proper Select → Bestow → Activate flow
-  handCardIds: string[];          // Cards bestowed to self
-  allies: Ally[];                 // Named ally slots
-  allyBestowments: AllyBestowment[];
-  activeEffects: ActiveEffect[];  // Effects on self
-}
-```
-
-**Key Behaviors**:
-- EP can go negative (danger zone)
-- Echo Drain triggers at EP = -Level
-- Focus gain doubles when EP is negative
-- Warp effects trigger when EP goes negative AFTER paying cost
-
-**EP Flow**:
+**EP Flow** (preserved here for quick reference):
 ```
 spendEP(cost, level)
   ├─ newEP = currentEP - cost
@@ -207,27 +154,7 @@ interface ManifoldStore {
 
 ### Current Structure
 
-```
-App
-├── LandingPage
-│   └── GlitchButton
-├── DeckBuilder
-│   ├── CharacterSetup
-│   ├── FilterControls
-│   ├── SelectionSummary
-│   └── SiphonCard (×N)
-└── CombatHUD
-    ├── EchoPointsBar
-    ├── FocusCounter
-    ├── SiphonCapacitanceTracker
-    ├── ActiveCardHand
-    │   └── SiphonCard (×N)
-    ├── EchoManifold
-    │   ├── PhaseSelector
-    │   ├── MoteTracker
-    │   └── ManifoldAbilityCard (×3)
-    └── SurgeTableModal
-```
+> All components were pruned on 2026-02-20. Phase 2+ rebuilds from DESIGN.md.
 
 ### Target Structure (per DESIGN.md)
 
@@ -268,15 +195,9 @@ App
 
 ## Routing
 
-```typescript
-const routes = [
-  { path: '/', element: <LandingPage /> },
-  { path: '/deck-builder', element: <DeckBuilder /> },
-  { path: '/combat', element: <CombatHUD /> },
-];
-```
+> Routing was pruned with components. Phase 2 will restore routes per DESIGN.md.
 
-Navigation flow:
+Target navigation flow:
 1. Landing → "Open Siphon" → Deck Builder (if no session) or Combat (if session exists)
 2. Deck Builder → "Enter Combat" → Combat
 3. Combat → "Deck Builder" button → Deck Builder

@@ -21,8 +21,7 @@ Rewrite siphonStore to support the Select -> Bestow -> Activate card lifecycle. 
 - [ ] `npm run lint` passes
 - [ ] `npm run test` passes with 30+ store test cases (in addition to Phase 0 tests)
 - [ ] Store tests verify: RULE-EP-001 through RULE-EP-005, RULE-FOCUS-001/002, RULE-CARD-001 through RULE-CARD-008, RULE-GREED-001 through RULE-GREED-004
-- [ ] localStorage migration works (clear storage, set v1 data, reload, verify v2 state)
-- [ ] App renders without console errors (navigate Landing -> Deck Builder -> Combat)
+- [ ] All store tests pass and stores export correctly from `src/store/index.ts`
 
 ---
 
@@ -55,6 +54,7 @@ Rewrite siphonStore to support the Select -> Bestow -> Activate card lifecycle. 
    - `src/store/__tests__/settingsStore.test.ts`
 
 ### Files to Create
+- `src/store/characterStore.ts` (from scratch — see STORE_CONTRACTS.md for target interface)
 - `src/store/settingsStore.ts`
 - `src/store/__tests__/characterStore.test.ts`
 - `src/store/__tests__/settingsStore.test.ts`
@@ -62,7 +62,7 @@ Rewrite siphonStore to support the Select -> Bestow -> Activate card lifecycle. 
 ### Files to Modify
 - `src/types/siphonFeature.ts`
 - `src/types/index.ts`
-- `src/store/characterStore.ts`
+- `src/store/index.ts` (add characterStore + settingsStore exports)
 
 ---
 
@@ -70,23 +70,18 @@ Rewrite siphonStore to support the Select -> Bestow -> Activate card lifecycle. 
 
 ### Tasks
 
-1. **Rewrite siphonStore** (`src/store/siphonStore.ts`):
+1. **Create siphonStore** (`src/store/siphonStore.ts`) from scratch:
    - New state model per STORE_CONTRACTS.md
-   - All EP, Focus, Capacitance actions (preserve existing logic)
-   - New card zone methods: `bestowToSelf`, `bestowToAlly`, `activateFromHand`, `returnCardToDeck`, `replaceSelectedCard`
-   - New computed: `getDeckCards`, `getHandCards`, `getEffectiveCost`, `getEffectiveFocusDice`
-   - New ally methods: `addAlly`, `removeAlly`, `renameAlly`, etc.
-   - New active effects methods: `addActiveEffect`, `removeActiveEffect`, etc.
-   - Updated rest methods: `longRest`, `shortRest` per STORE_CONTRACTS.md
-   - Persist version 2 with migration from v1
+   - All EP, Focus, Capacitance actions (reference `src/utils/` for existing calculation logic)
+   - Card zone methods: `bestowToSelf`, `bestowToAlly`, `activateFromHand`, `returnCardToDeck`, `replaceSelectedCard`
+   - Computed: `getDeckCards`, `getHandCards`, `getEffectiveCost`, `getEffectiveFocusDice`
+   - Ally methods: `addAlly`, `removeAlly`, `renameAlly`, etc.
+   - Active effects methods: `addActiveEffect`, `removeActiveEffect`, etc.
+   - Rest methods: `longRest`, `shortRest` per STORE_CONTRACTS.md
+   - Persist version 1 (fresh store, no migration needed)
+   - Update `src/store/index.ts` to export siphonStore
 
-2. **Minimal component compatibility fixes**:
-   - `src/components/combat-hud/ActiveCardHand.tsx` -- update to use new store API (may just need import changes)
-   - `src/components/combat-hud/CombatHUD.tsx` -- update store references
-   - Any other component importing from siphonStore -- MINIMAL fixes only
-   - Goal: app compiles and renders, even if features don't work perfectly yet
-
-3. **Write comprehensive store tests**:
+2. **Write comprehensive store tests**:
    - `src/store/__tests__/siphonStore.test.ts`
    - Test every rule from RULES.md that pertains to siphonStore
    - Test card zone transitions: select, bestow, activate, return
@@ -95,12 +90,11 @@ Rewrite siphonStore to support the Select -> Bestow -> Activate card lifecycle. 
    - Test rest mechanics (longRest, shortRest)
 
 ### Files to Create
+- `src/store/siphonStore.ts` (from scratch — see STORE_CONTRACTS.md for target interface)
 - `src/store/__tests__/siphonStore.test.ts`
 
 ### Files to Modify
-- `src/store/siphonStore.ts` (complete rewrite)
-- `src/components/combat-hud/ActiveCardHand.tsx` (minimal compat)
-- `src/components/combat-hud/CombatHUD.tsx` (minimal compat)
+- `src/store/index.ts` (add siphonStore export)
 
 ---
 

@@ -63,8 +63,9 @@ _(none yet)_
 ### Infrastructure
 - [x] Vite + React 19 + TypeScript setup
 - [x] Tailwind CSS v4 configuration
-- [x] Zustand stores (basic structure -- needs Phase 1 redesign)
-- [x] React Router configuration
+- [x] Zustand manifoldStore (kept — largely correct)
+- [ ] characterStore — pruned, Phase 1A creates from STORE_CONTRACTS.md
+- [ ] siphonStore — pruned, Phase 1B creates from STORE_CONTRACTS.md
 - [x] Custom color palette in CSS
 
 ### Data (Complete, Verified 2026-02-20)
@@ -73,15 +74,8 @@ _(none yet)_
 - [x] 100 Wild Echo Surge entries (3 severity columns)
 - [x] All type definitions
 
-### Components (Existing, Need Revision in Phase 2+)
-- [x] LandingPage, GlitchButton
-- [x] DeckBuilder, CharacterSetup, FilterControls, SelectionSummary
-- [x] SiphonCard
-- [x] CombatHUD (needs Phase 2 layout revision)
-- [x] EchoPointsBar, FocusCounter, SiphonCapacitanceTracker
-- [x] ActiveCardHand (to be replaced by HandArea in Phase 2)
-- [x] EchoManifold, PhaseSelector, MoteTracker, ManifoldAbilityCard
-- [x] SurgeTableModal
+### Components — PRUNED (2026-02-20)
+All 17 components were deleted for clean-slate rework. They contradicted DESIGN.md layout and would cause AI agents to anchor to incorrect patterns. Phase 2+ rebuilds all components from DESIGN.md.
 
 ---
 
@@ -90,9 +84,8 @@ _(none yet)_
 | Issue | Impact | Resolution |
 |-------|--------|------------|
 | No test infrastructure | Cannot verify behavior | Phase 0 |
-| siphonStore doesn't support Hand vs Deck | Blocks all card flow | Phase 1 |
-| No Hit Dice in characterStore | Blocks phase switch, rest | Phase 1 |
-| Combat layout wrong | Blocks UI interaction | Phase 2 |
+| No characterStore or siphonStore | Stores pruned for clean-slate rework | Phase 1 (create from STORE_CONTRACTS.md) |
+| No components | Components pruned for clean-slate rework | Phase 2+ (create from DESIGN.md) |
 
 ---
 
@@ -107,6 +100,19 @@ _(none yet)_
 - Created SESSION_PROTOCOL.md with mandatory session procedures
 - Created CARD_LIFECYCLE.md with state diagrams for card flow
 - Created SPECIAL_CASES.md consolidating all edge cases
+- **Next**: Phase 0 (Testing Infrastructure)
+
+### 2026-02-20 — Code Pruning for Clean-Slate Rework
+- Deleted all 17 components (src/components/) — contradicted DESIGN.md, high anchoring risk
+- Deleted characterStore.ts and siphonStore.ts — structurally wrong, Phase 1 creates fresh from STORE_CONTRACTS.md
+- Kept manifoldStore.ts — largely correct, no phase rewrites it
+- Kept all data (42 features, 9 manifold abilities, 100 surge entries), types, and utils
+- Deleted legacy docs: GAP_ANALYSIS.md (stale), SIPHON_INTERFACE.md (inaccurate)
+- Deleted boilerplate: App.css, assets/react.svg, empty hooks/
+- Deleted _backup/ (pre-React artifacts), dist/ (build output)
+- Replaced App.tsx with minimal stub (keeps build passing)
+- Updated ARCHITECTURE.md, IMPLEMENTATION_STATUS.md, phase-1-stores.md
+- **Rationale**: Incorrect existing code causes AI agents to anchor, cargo-cult, and patch rather than build correctly from spec. Clean slate + good docs = faster, more accurate implementation.
 - **Next**: Phase 0 (Testing Infrastructure)
 
 ### 2026-02-20 — Documentation Audit Session
@@ -129,3 +135,4 @@ _(none yet)_
 4. Write utility tests referencing `.claude/docs/RULES.md` for expected behaviors
 5. Target: 15+ test cases across 5 utility files
 6. Do NOT modify any existing source code in Phase 0
+7. **Codebase was pruned on 2026-02-20** — only data, types, utils, and manifoldStore remain in src/. See session log below.
