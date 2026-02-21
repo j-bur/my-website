@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-20
-**Current Phase**: Pre-Phase 0 (Documentation restructure complete, testing infrastructure next)
+**Current Phase**: Phase 0 Complete (Testing infrastructure ready, Phase 1 next)
 
 ---
 
@@ -10,8 +10,8 @@
 | Phase | Status | Gate |
 |-------|--------|------|
 | Documentation Restructure | ✅ Complete | CLAUDE.md lean, .claude/docs/ populated |
-| Phase 0: Testing Infrastructure | 🔴 Not Started | Need Vitest setup + 15+ utility tests |
-| Phase 1: Store Redesign | 🔴 Not Started | Blocked by Phase 0 |
+| Phase 0: Testing Infrastructure | ✅ Complete | 68 tests passing across 5 utility files |
+| Phase 1: Store Redesign | 🔴 Not Started | Phase 0 gate passed |
 | Phase 2: Combat Layout | 🔴 Not Started | Blocked by Phase 1 |
 | Phase 3: Activation Flow | 🔴 Not Started | Blocked by Phase 2 |
 | Phase 4: Rest Mechanics | 🔴 Not Started | Blocked by Phase 3 |
@@ -23,12 +23,11 @@
 
 ## Next Session
 
-1. **Start with Phase 0**: Read `.claude/docs/PHASE_SPECS/phase-0-testing.md`
-2. Install: `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`
-3. Create `vitest.config.ts`
-4. Write utility tests referencing `.claude/docs/RULES.md` for expected behaviors
-5. Target: 15+ test cases across 5 utility files
-6. Do NOT modify any existing source code in Phase 0
+1. **Start with Phase 1**: Read `.claude/docs/PHASE_SPECS/phase-1-stores.md`
+2. Phase 1A: Create `characterStore.ts` from STORE_CONTRACTS.md
+3. Phase 1B: Create `siphonStore.ts` from STORE_CONTRACTS.md
+4. Write 30+ store tests referencing RULES.md
+5. No existing source code was modified in Phase 0
 
 ---
 
@@ -70,6 +69,17 @@ _(none yet)_
 - [x] `.claude/docs/SPECIAL_CASES.md` — Feature edge cases
 - [x] `.claude/docs/PHASE_SPECS/` — 8 phase spec files (0-7)
 
+### Phase 0: Testing Infrastructure
+- [x] Vitest + jsdom + @testing-library/react + @testing-library/jest-dom installed
+- [x] `vitest.config.ts` created
+- [x] `npm run test` and `npm run test:watch` scripts added
+- [x] 68 tests across 5 utility test files:
+  - costCalculator (17 tests): resolveCost, formatCost, isVariableCost
+  - echoPointUtils (16 tests): EP spend, warp triggers, echo drain, long rest recovery
+  - focusCalculator (5 tests): focus doubling when EP negative
+  - diceRoller (17 tests): parsing, rolling, PB/Cost/Cost2 substitution
+  - durationParser (13 tests): ms conversion, special duration handling
+
 ### Infrastructure
 - [x] Vite + React 19 + TypeScript setup
 - [x] Tailwind CSS v4 configuration
@@ -93,13 +103,22 @@ All 17 components were deleted for clean-slate rework. They contradicted DESIGN.
 
 | Issue | Impact | Resolution |
 |-------|--------|------------|
-| No test infrastructure | Cannot verify behavior | Phase 0 |
+| ~~No test infrastructure~~ | ~~Cannot verify behavior~~ | ✅ Phase 0 complete |
 | No characterStore or siphonStore | Stores pruned for clean-slate rework | Phase 1 (create from STORE_CONTRACTS.md) |
 | No components | Components pruned for clean-slate rework | Phase 2+ (create from DESIGN.md) |
 
 ---
 
 ## Session Log
+
+### 2026-02-20 — Phase 0: Testing Infrastructure
+- Installed Vitest, @testing-library/react, @testing-library/jest-dom, jsdom
+- Created `vitest.config.ts` (jsdom environment)
+- Added `test` and `test:watch` scripts to package.json
+- Wrote 68 tests across 5 utility test files covering all RULES.md EP, Focus, and cost rules
+- No existing source code was modified
+- All exit conditions met: build passes, lint passes, 68 tests green
+- **Next**: Phase 1 (Store Redesign)
 
 ### 2026-02-20 — Documentation Restructure
 - Restructured all documentation for AI-assisted development
