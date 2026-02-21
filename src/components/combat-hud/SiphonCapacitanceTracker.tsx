@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSiphonStore } from '../../store';
 import { useCharacterStore } from '../../store';
 
@@ -33,6 +33,29 @@ export function SiphonCapacitanceTracker() {
   const clearCapacitance = useSiphonStore((s) => s.clearCapacitance);
 
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [prevCap, setPrevCap] = useState(capacitance);
+  const [animatingPips, setAnimatingPips] = useState<Map<number, 'fill' | 'drain'>>(new Map());
+  const clearRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Detect capacitance changes during render (React's "adjust state from previous renders" pattern)
+  if (prevCap !== capacitance) {
+    setPrevCap(capacitance);
+    const anims = new Map<number, 'fill' | 'drain'>();
+    if (capacitance > prevCap) {
+      for (let i = prevCap; i < capacitance; i++) anims.set(i, 'fill');
+    } else {
+      for (let i = capacitance; i < prevCap; i++) anims.set(i, 'drain');
+    }
+    setAnimatingPips(anims);
+  }
+
+  // Clear animation classes after duration
+  useEffect(() => {
+    if (animatingPips.size === 0) return;
+    clearTimeout(clearRef.current);
+    clearRef.current = setTimeout(() => setAnimatingPips(new Map()), 350);
+    return () => clearTimeout(clearRef.current);
+  }, [animatingPips]);
 
   return (
     <div className="flex flex-col gap-1" role="group" aria-label={`Capacitance: ${capacitance} of ${maxCapacitance}`}>
@@ -43,16 +66,20 @@ export function SiphonCapacitanceTracker() {
         </span>
       </div>
       <div className="flex gap-1">
-        {Array.from({ length: maxCapacitance }, (_, i) => (
-          <div
-            key={i}
-            className={`w-3 h-3 rounded-sm border transition-all ${
-              i < capacitance
-                ? 'bg-capacitance border-capacitance shadow-sm shadow-capacitance/30'
-                : 'bg-transparent border-siphon-border/60'
-            }`}
-          />
-        ))}
+        {Array.from({ length: maxCapacitance }, (_, i) => {
+          const animClass = animatingPips.get(i);
+          return (
+            <div
+              key={i}
+              className={`w-3 h-3 rounded-sm border transition-all duration-200 ${
+                i < capacitance
+                  ? 'bg-capacitance border-capacitance shadow-sm shadow-capacitance/30'
+                  : 'bg-transparent border-siphon-border/60'
+              }${animClass === 'fill' ? ' pip-fill' : ''}${animClass === 'drain' ? ' pip-drain' : ''}`}
+              style={animClass ? { '--pip-color': 'var(--color-capacitance)' } as React.CSSProperties : undefined}
+            />
+          );
+        })}
       </div>
 
       {/* Timer section — only show when there are charges */}

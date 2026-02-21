@@ -306,6 +306,23 @@ describe('siphonStore', () => {
       useSiphonStore.getState().bestowToAlly('subtle-luck', 'nonexistent');
       expect(useSiphonStore.getState().allyBestowments).toHaveLength(0);
     });
+
+    it('sets isFromSelectedDeck true when bestowing a hand card', () => {
+      useSiphonStore.setState({
+        selectedCardIds: ['subtle-luck'],
+        handCardIds: [],
+        allies: [{ id: 'ally1', name: 'Briar' }],
+      });
+      // Bestow to self moves card from selectedCardIds -> handCardIds
+      useSiphonStore.getState().bestowToSelf('subtle-luck');
+      expect(useSiphonStore.getState().handCardIds).toContain('subtle-luck');
+      expect(useSiphonStore.getState().selectedCardIds).not.toContain('subtle-luck');
+      // Now bestow that hand card to ally
+      useSiphonStore.getState().bestowToAlly('subtle-luck', 'ally1');
+      const state = useSiphonStore.getState();
+      expect(state.allyBestowments).toHaveLength(1);
+      expect(state.allyBestowments[0].isFromSelectedDeck).toBe(true);
+    });
   });
 
   // ========================================

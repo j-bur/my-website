@@ -126,3 +126,86 @@ body {
 .weavers-watch {
   box-shadow: inset 0 0 30px rgba(255, 0, 255, 0.05);
 }
+
+/* Card enters hand — slide from left with fade */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-24px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.card-enter {
+  animation: card-enter 300ms ease-out both;
+}
+
+/* Pip fill pulse (motes / capacitance) */
+@keyframes pip-fill {
+  0% {
+    transform: scale(1);
+    box-shadow: none;
+  }
+  50% {
+    transform: scale(1.4);
+    box-shadow: 0 0 8px var(--pip-color, currentColor);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pip-fill {
+  animation: pip-fill 300ms ease-out;
+}
+
+/* Pip drain shrink (motes / capacitance) */
+@keyframes pip-drain {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pip-drain {
+  animation: pip-drain 250ms ease-out;
+}
+
+/* Programmatic reduced motion (applied via settingsStore) */
+.reduce-motion * {
+  transition-duration: 0ms !important;
+}
+
+.reduce-motion .card-enter,
+.reduce-motion .pip-fill,
+.reduce-motion .pip-drain,
+.reduce-motion .focus-pulse {
+  animation: none !important;
+}
+
+/* OS-level reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .card-enter,
+  .pip-fill,
+  .pip-drain,
+  .focus-pulse,
+  .glitch-hover:hover,
+  .chromatic-aberration:hover,
+  .warp-active:hover {
+    animation: none !important;
+  }
+
+  * {
+    transition-duration: 0ms !important;
+  }
+}

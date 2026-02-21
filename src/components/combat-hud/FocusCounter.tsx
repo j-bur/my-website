@@ -1,7 +1,9 @@
 import { useSiphonStore } from '../../store';
+import { useAnimatedNumber } from '../../hooks/useAnimatedNumber';
 
 export function FocusCounter() {
   const focus = useSiphonStore((s) => s.focus);
+  const displayedFocus = useAnimatedNumber(focus, 400);
 
   // Glow intensity scales with focus value
   const glowIntensity = Math.min(1, focus / 30);
@@ -12,14 +14,14 @@ export function FocusCounter() {
       <div className="flex items-center justify-between">
         <span className="text-text-muted uppercase tracking-wider text-[10px]">Focus</span>
         <span
-          className="text-xl font-bold tabular-nums text-focus transition-all"
+          className="text-xl font-bold tabular-nums text-focus transition-all duration-300"
           style={{
             textShadow: glowIntensity > 0
               ? `0 0 ${8 + glowIntensity * 16}px rgba(122, 66, 224, ${0.3 + glowIntensity * 0.5})`
               : 'none',
           }}
         >
-          {focus}
+          {displayedFocus}
         </span>
       </div>
       {isHighFocus && (

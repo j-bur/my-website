@@ -59,6 +59,9 @@ src/
 │   │   ├── AllyBestowmentView.tsx # Overlay showing ally's bestowed cards with remove
 │   │   └── index.ts              # Barrel export
 │   └── __tests__/                 # Component tests
+├── hooks/                           # Custom React hooks (Phase 7A)
+│   ├── useReducedMotion.ts          # Combines settings + OS prefers-reduced-motion
+│   └── useAnimatedNumber.ts         # Smooth number interpolation via rAF
 ├── data/                          # Static game data (verified 2026-02-20)
 ├── types/                         # TypeScript interfaces
 ├── utils/                         # Helper functions

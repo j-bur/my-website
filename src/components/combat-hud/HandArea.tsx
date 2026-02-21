@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useSiphonStore } from '../../store';
 import { TRIGGERED_FEATURE_IDS, FEATURE_MAP } from '../../data/featureConstants';
 import { SiphonCard } from '../cards/SiphonCard';
@@ -14,6 +14,8 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
   const selectedCardIds = useSiphonStore((s) => s.selectedCardIds);
   const bestowToAlly = useSiphonStore((s) => s.bestowToAlly);
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
+  const [enteringCards, setEnteringCards] = useState<Set<string>>(new Set());
+  const prevHandRef = useRef<string[]>([]);
 
   // Compute hand cards: explicit hand + triggered features in selected
   const handCards = useMemo(() => {
@@ -22,6 +24,19 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
     );
     return [...handCardIds, ...triggeredInSelected];
   }, [handCardIds, selectedCardIds]);
+
+  // Detect newly entering cards for slide-in animation
+  useEffect(() => {
+    const prevSet = new Set(prevHandRef.current);
+    const newIds = handCards.filter((id) => !prevSet.has(id));
+    prevHandRef.current = handCards;
+
+    if (newIds.length === 0) return;
+
+    setEnteringCards(new Set(newIds));
+    const timeout = setTimeout(() => setEnteringCards(new Set()), 350);
+    return () => clearTimeout(timeout);
+  }, [handCards]);
 
   if (handCards.length === 0) {
     return (
@@ -64,7 +79,7 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
         return (
           <div
             key={cardId}
-            className="relative transition-all duration-200"
+            className={`relative transition-all duration-300 ease-out${enteringCards.has(cardId) ? ' card-enter' : ''}`}
             style={{
               marginLeft: index === 0 ? 0 : overlapPx,
               zIndex: isHovered ? 50 : index,

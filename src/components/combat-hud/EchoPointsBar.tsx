@@ -1,10 +1,12 @@
 import { useSiphonStore } from '../../store';
 import { useCharacterStore } from '../../store';
+import { useAnimatedNumber } from '../../hooks/useAnimatedNumber';
 
 export function EchoPointsBar() {
   const currentEP = useSiphonStore((s) => s.currentEP);
   const level = useCharacterStore((s) => s.level);
   const maxEP = level; // EP Max equals Level
+  const displayedEP = useAnimatedNumber(currentEP, 300);
 
   // Bar extends right (positive) or left (negative) from center zero-point
   const isNegative = currentEP < 0;
@@ -21,7 +23,7 @@ export function EchoPointsBar() {
             isNegative ? 'text-ep-negative' : currentEP > 0 ? 'text-ep-positive' : 'text-text-secondary'
           }`}
         >
-          {currentEP}
+          {displayedEP}
         </span>
       </div>
       <div className="relative h-2 bg-siphon-surface rounded-full border border-siphon-border/50 overflow-hidden">
@@ -29,7 +31,7 @@ export function EchoPointsBar() {
         <div className="absolute left-1/2 top-0 bottom-0 w-px bg-text-muted/40 z-10" />
         {/* Fill bar */}
         <div
-          className={`absolute top-0 bottom-0 rounded-full transition-all duration-300 ${
+          className={`absolute top-0 bottom-0 rounded-full transition-all duration-300 ease-out ${
             isNegative ? 'bg-ep-negative' : 'bg-ep-positive'
           }`}
           style={{

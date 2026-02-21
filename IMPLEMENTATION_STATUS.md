@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 6 Complete (Phase 7: Animations next)
+**Current Phase**: Phase 7A Complete (Phase 7B: Drag-and-Drop next)
 
 ---
 
@@ -22,15 +22,18 @@
 | Phase 6A: Ally Panel + Bestow | ✅ Complete | 17 new tests (13 AlliesPanel + 4 SelectedDeck), 413 total |
 | Phase 6B: AllyBestowmentView | ✅ Complete | 10 new tests (8 AllyBestowmentView + 2 AlliesPanel hover), 425 total |
 | Post-Phase 6 Audit | ✅ Complete | 3 bugs fixed, dead code removed, constants consolidated |
-| Phase 7: Animations | 🔴 Not Started | Ready to begin |
+| Phase 7A: Core Animations | ✅ Complete | Card slide-in, animated counters, pip pulse, reduced motion |
+| Phase 7B: Drag-and-Drop | 🔴 Not Started | Ready to begin |
 
 ---
 
 ## Next Session
 
-1. **Start with Phase 7**: Read `.claude/docs/PHASE_SPECS/phase-7-polish.md`
-2. Animations, drag-and-drop bestow, silvery tendril VFX
-3. All Phase 6 exit conditions met (AlliesPanel, bestow-to-ally, AllyBestowmentView overlay)
+1. **Phase 7B: Drag-and-Drop** — Read `.claude/docs/PHASE_SPECS/phase-7-polish.md` Session 7B section
+2. Drag cards from SelectedDeck to HandArea (bestow to self) or AlliesPanel (bestow to ally)
+3. Drag cards from HandArea to ActiveEffectsPanel (activate)
+4. Drag-to-dismiss effects from ActiveEffectsPanel
+5. All Phase 7A animations operational; 426 tests passing
 
 ---
 
@@ -81,6 +84,10 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - `[FIXED]` AllyBestowmentView grouping logic re-derived "From Selected Deck" from current `selectedCardIds` instead of using the stored `isFromSelectedDeck` flag. Fixed to use `b.isFromSelectedDeck` directly. (found during Phase 6B review, fixed during post-Phase 6 audit)
 - `[FIXED]` `onMouseLeave={onDismiss}` on AllyBestowmentView's `fixed inset-0` backdrop was dead code — mouse can't leave a full-screen element. Removed the dead handlers. (found during Phase 6B review, fixed during post-Phase 6 audit)
 - `[FIXED]` HandArea showed no visual feedback on special-cost cards when ally is selected. Added `isUnplayable` styling and "Cannot bestow to allies" label to match SelectedDeck behavior. (found during Phase 6B review, fixed during post-Phase 6 audit)
+- `[DISCOVERY]` `setupTests.ts` mocks `window.matchMedia` returning `matches: false` for all queries. Tests cannot exercise the OS-level `prefers-reduced-motion: reduce` path. To test it, override the mock per-test with `matches: true`. (found during Phase 7A, relevant to any future media-query-dependent hooks)
+- `[DISCOVERY]` HandArea's `setEnteringCards` in `useEffect` calls setState synchronously — same pattern the lint rule `react-hooks/set-state-in-effect` flagged in the pip components. Currently not flagged (lint may not catch all cases). If the rule gets stricter, HandArea will need the same "adjust state during render" refactor used in EchoManifoldDeck/SiphonCapacitanceTracker. (found during Phase 7A)
+- `[DISCOVERY]` `useAnimatedNumber` returns `target` directly when `skipAnimation` is true, but `displayed` state can drift if `skipAnimation` toggles mid-animation. Harmless in practice (nobody toggles settings mid-animation), but the state model isn't clean. A ref-based approach for `displayed` would be more robust. (found during Phase 7A)
+- `[DISCOVERY]` Pip animation uses React's "adjust state during render" pattern (`if (prev !== current) { setPrev; setAnimating }`) which triggers a double render per change. Correct per React docs but slightly wasteful. A `useMemo`+ref approach could avoid the extra render. Not a real perf issue with 5 pips. (found during Phase 7A)
 
 ---
 
@@ -239,6 +246,19 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### Phase 7A: Core Animations
+- [x] `useReducedMotion.ts` — Hook combining `settingsStore.reducedMotion`, `!animationsEnabled`, and `prefers-reduced-motion` media query; defensive `matchMedia` check for jsdom environments
+- [x] `useAnimatedNumber.ts` — Hook that smoothly interpolates displayed numbers toward target using requestAnimationFrame with ease-out cubic easing; respects reduced motion
+- [x] `index.css` — Added 3 new keyframe animations: `card-enter` (slide-in from left), `pip-fill` (scale+glow pulse), `pip-drain` (shrink+fade); `.reduce-motion` class disables all animations; `@media (prefers-reduced-motion)` fallback
+- [x] `App.tsx` — Applies `.reduce-motion` class to root div when `useReducedMotion()` returns true
+- [x] `HandArea.tsx` — Tracks entering cards via ref comparison; new cards get `card-enter` CSS animation (300ms slide+fade); updated transition to `duration-300 ease-out`
+- [x] `FocusCounter.tsx` — Uses `useAnimatedNumber(focus, 400)` for smooth count-up/down; aria-label reads true value
+- [x] `EchoPointsBar.tsx` — Uses `useAnimatedNumber(currentEP, 300)` for numeric display; added `ease-out` to fill bar transition
+- [x] `EchoManifoldDeck.tsx` — Mote pips get `pip-fill`/`pip-drain` CSS animation on state change; uses React's "adjust state from previous renders" pattern (setState during render, not in effect)
+- [x] `SiphonCapacitanceTracker.tsx` — Capacitance pips get `pip-fill`/`pip-drain` animations; same pattern as motes
+- [x] `setupTests.ts` — Added `window.matchMedia` mock for jsdom
+- [x] All exit conditions met: build passes, lint passes, 426 tests green
 
 ### Post-Phase 6 Audit
 - [x] **Bug Fix**: AllyBestowmentView now uses stored `isFromSelectedDeck` flag instead of re-deriving from `selectedCardIds` (which misclassified hand cards)
