@@ -15,3 +15,4 @@ export { MacroDisplay } from './MacroDisplay';
 export { SurgeResultModal } from './SurgeResultModal';
 export { LongRestDialog } from './LongRestDialog';
 export { ShortRestDialog } from './ShortRestDialog';
+export { AlliesPanel } from './AlliesPanel';

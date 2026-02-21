@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 5C Complete (Phase 6: Ally System next)
+**Current Phase**: Phase 6A Complete (Phase 6B: AllyBestowmentView next)
 
 ---
 
@@ -19,16 +19,18 @@
 | Phase 5A: Settings Modal | ✅ Complete | 15 new tests, 347 total |
 | Phase 5B: Timer + Overrides + Data | ✅ Complete | 36 new tests, 383 total |
 | Phase 5C: While Selected Mechanics | ✅ Complete | 20 new tests, 403 total |
-| Phase 6: Ally System | 🔴 Not Started | Blocked by Phase 5 |
+| Phase 6A: Ally Panel + Bestow | ✅ Complete | 17 new tests (13 AlliesPanel + 4 SelectedDeck), 413 total |
+| Phase 6B: AllyBestowmentView | 🔴 Not Started | Blocked by Phase 6A |
 | Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
 
 ---
 
 ## Next Session
 
-1. **Start with Phase 6**: Read `.claude/docs/PHASE_SPECS/phase-6-allies.md`
-2. Ally System: AlliesPanel, bestowment overlay, ally management
-3. All Phase 5 exit conditions met (settings, overrides, data, While Selected mechanics)
+1. **Start with Phase 6B**: Read `.claude/docs/PHASE_SPECS/phase-6-allies.md` (Session 6B section)
+2. AllyBestowmentView overlay: hover ally (500ms delay) to see bestowed cards
+3. Update SiphonCard for ally context (optional badge)
+4. All Phase 6A exit conditions met (AlliesPanel, bestow-to-ally, special cost blocking)
 
 ---
 
@@ -231,6 +233,15 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### Phase 6A: AlliesPanel + Bestow Flow
+- [x] `AlliesPanel.tsx` — Ally chips with name, bestowed count badge, [+] add button (inline name input), pencil icon for rename, × icon for remove; click chip to select as bestow target (highlighted state)
+- [x] `CombatHUD.tsx` — Replaced allies placeholder with AlliesPanel, added `selectedAllyId` state, passed to AlliesPanel and SelectedDeck
+- [x] `SelectedDeck.tsx` — When ally selected as bestow target: click card bestows to ally via `bestowToAlly()`, deck stays open, ally deselects after bestow; special cost features blocked with "Cannot bestow to allies" label (RULE-ALLY-001); instruction text shown when ally is selected
+- [x] Barrel export updated: `AlliesPanel` added to `combat-hud/index.ts`
+- [x] 13 AlliesPanel tests: empty state, add ally, render chips, bestowed count, select/deselect target, highlight, remove (RULE-ALLY-002), rename, cancel rename, cancel add, clear selected on remove, empty name
+- [x] 4 SelectedDeck bestow-to-ally tests: bestow to ally, block special cost (RULE-ALLY-001), ally instruction text, deck stays open
+- [x] All exit conditions met: build passes, lint passes, 413 tests green
 
 ### 2026-02-21 — Phase 5C: While Selected Long Rest Mechanics
 - Created `whileSelectedCalculator.ts`: `calculateWhileSelectedEffects(selectedCardIds, pb)` returns ordered effects for Supercapacitance (EP cost doubled when total > PB, focus = undoubled cost) and Siphon Greed (1d4 focus dice)

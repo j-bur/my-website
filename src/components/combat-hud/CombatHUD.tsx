@@ -13,6 +13,7 @@ import { ActivationPanel } from './ActivationPanel';
 import { SurgeResultModal } from './SurgeResultModal';
 import { LongRestDialog } from './LongRestDialog';
 import { ShortRestDialog } from './ShortRestDialog';
+import { AlliesPanel } from './AlliesPanel';
 import { SettingsModal } from '../settings';
 
 const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
@@ -24,6 +25,7 @@ export function CombatHUD() {
   const [showLongRest, setShowLongRest] = useState(false);
   const [showShortRest, setShowShortRest] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [selectedAllyId, setSelectedAllyId] = useState<string | null>(null);
 
   const stagedFeature = stagedCardId ? featureMap.get(stagedCardId) ?? null : null;
 
@@ -121,24 +123,21 @@ export function CombatHUD() {
         <ResourceDisplay />
       </div>
 
-      {/* Allies row (placeholder for Phase 6) */}
-      <div
-        style={{ gridArea: 'allies' }}
-        className="flex items-center gap-2 px-2 py-1 border border-siphon-border/30 rounded-lg bg-siphon-surface/20 min-h-8"
-        role="region"
-        aria-label="Allies"
-      >
-        <span className="text-[10px] uppercase tracking-widest text-text-muted">
-          Allies:
-        </span>
-        <span className="text-text-muted/40 text-xs italic">
-          (Phase 6)
-        </span>
+      {/* Allies row */}
+      <div style={{ gridArea: 'allies' }}>
+        <AlliesPanel
+          selectedAllyId={selectedAllyId}
+          onSelectAlly={setSelectedAllyId}
+        />
       </div>
 
       {/* Bottom Left: Selected Deck */}
       <div style={{ gridArea: 'deck' }} className="flex items-end">
-        <SelectedDeck onActivateCard={handleActivateCard} />
+        <SelectedDeck
+          onActivateCard={handleActivateCard}
+          selectedAllyId={selectedAllyId}
+          onAllyBestowed={() => setSelectedAllyId(null)}
+        />
       </div>
 
       {/* Bottom: Hand */}

@@ -15,13 +15,16 @@ const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
 interface SelectedDeckProps {
   onActivateCard?: (featureId: string) => void;
+  selectedAllyId?: string | null;
+  onAllyBestowed?: () => void;
 }
 
-export function SelectedDeck({ onActivateCard }: SelectedDeckProps) {
+export function SelectedDeck({ onActivateCard, selectedAllyId, onAllyBestowed }: SelectedDeckProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const selectedCardIds = useSiphonStore((s) => s.selectedCardIds);
   const handCardIds = useSiphonStore((s) => s.handCardIds);
   const bestowToSelf = useSiphonStore((s) => s.bestowToSelf);
+  const bestowToAlly = useSiphonStore((s) => s.bestowToAlly);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Compute deck cards: selected minus hand minus triggered
@@ -61,7 +64,22 @@ export function SelectedDeck({ onActivateCard }: SelectedDeckProps) {
     };
   }, [isExpanded, handleEscape, handleClickOutside]);
 
-  const handleBestow = (featureId: string) => {
+  const handleCardClick = (featureId: string) => {
+    const feature = featureMap.get(featureId);
+    if (!feature) return;
+
+    // If an ally is selected as bestow target
+    if (selectedAllyId) {
+      // RULE-ALLY-001: Special cost features cannot be bestowed to allies
+      if (feature.isSpecialCost) return;
+
+      bestowToAlly(featureId, selectedAllyId);
+      onAllyBestowed?.();
+      // Deck stays open after bestowing to ally
+      return;
+    }
+
+    // Default: bestow to self
     bestowToSelf(featureId);
     // If no more deck cards after bestow, collapse
     if (deckCards.length <= 1) {
@@ -69,8 +87,7 @@ export function SelectedDeck({ onActivateCard }: SelectedDeckProps) {
     }
 
     // Activation:None features auto-open the activation panel after bestow
-    const feature = featureMap.get(featureId);
-    if (feature?.activation === 'None' && onActivateCard) {
+    if (feature.activation === 'None' && onActivateCard) {
       onActivateCard(featureId);
     }
   };
@@ -80,22 +97,42 @@ export function SelectedDeck({ onActivateCard }: SelectedDeckProps) {
       {/* Expanded card fan (above the deck) */}
       {isExpanded && deckCards.length > 0 && (
         <div
-          className="flex gap-2 flex-wrap mb-2 p-2 border border-siphon-border/50 rounded-lg bg-siphon-bg/80 backdrop-blur-sm"
+          className={`flex gap-2 flex-wrap mb-2 p-2 border rounded-lg bg-siphon-bg/80 backdrop-blur-sm ${
+            selectedAllyId ? 'border-ep-positive/50' : 'border-siphon-border/50'
+          }`}
           role="list"
           aria-label="Selected deck cards"
         >
+          {selectedAllyId && (
+            <div className="w-full text-[10px] uppercase tracking-widest text-ep-positive mb-1">
+              Click a card to bestow to ally
+            </div>
+          )}
           {deckCards.map((cardId) => {
             const feature = featureMap.get(cardId);
             if (!feature) return null;
             const isWhileSelected = WHILE_SELECTED_FEATURE_IDS.has(cardId);
+            const isSpecialCostBlocked = selectedAllyId != null && feature.isSpecialCost;
+            const isUnplayable = isWhileSelected || isSpecialCostBlocked;
             return (
-              <SiphonCard
-                key={cardId}
-                feature={feature}
-                compact
-                isUnplayable={isWhileSelected}
-                onClick={isWhileSelected ? undefined : () => handleBestow(cardId)}
-              />
+              <div key={cardId} className="relative">
+                <SiphonCard
+                  feature={feature}
+                  compact
+                  isUnplayable={isUnplayable}
+                  onClick={isUnplayable ? undefined : () => handleCardClick(cardId)}
+                />
+                {isSpecialCostBlocked && (
+                  <div
+                    className="absolute inset-0 flex items-end justify-center pb-1 pointer-events-none"
+                    title="Cannot bestow to allies"
+                  >
+                    <span className="text-[9px] text-ep-negative bg-siphon-bg/90 px-1 rounded">
+                      Cannot bestow to allies
+                    </span>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>

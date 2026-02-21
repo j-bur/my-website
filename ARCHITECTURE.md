@@ -55,6 +55,7 @@ src/
 │   │   ├── SurgeResultModal.tsx   # Wild surge result display
 │   │   ├── LongRestDialog.tsx     # Long rest preview + execution
 │   │   ├── ShortRestDialog.tsx    # Short rest with HD spending
+│   │   ├── AlliesPanel.tsx        # Ally chips, add/rename/remove, bestow target
 │   │   └── index.ts              # Barrel export
 │   └── __tests__/                 # Component tests
 ├── data/                          # Static game data (verified 2026-02-20)
@@ -161,7 +162,7 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 5C Complete)
+### Current Structure (Phase 6A Complete)
 
 ```
 App (layout wrapper with <Outlet />)
@@ -190,8 +191,8 @@ App (layout wrapper with <Outlet />)
 │   │   ├── EchoPointsBar
 │   │   ├── HitDiceDisplay
 │   │   │   └── SiphonCapacitanceTracker (with in-game timer)
-│   ├── Allies placeholder (grid: allies)
-│   ├── SelectedDeck (grid: deck)
+│   ├── AlliesPanel (grid: allies) — ally chips, add/rename/remove, bestow target selection
+│   ├── SelectedDeck (grid: deck) — bestow to self or ally
 │   │   └── SiphonCard (×N, when expanded)
 │   ├── HandArea (grid: hand)
 │   │   └── SiphonCard (×N, fanned)

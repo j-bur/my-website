@@ -191,4 +191,82 @@ describe('SelectedDeck', () => {
     expect(state.selectedCardIds).toContain('siphon-greed');
     expect(state.handCardIds).not.toContain('siphon-greed');
   });
+
+  // --- Bestow to ally ---
+
+  it('bestows card to ally when ally is selected as target', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['subtle-luck', 'temporal-surge'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    const onAllyBestowed = vi.fn();
+    render(
+      <SelectedDeck
+        selectedAllyId="a1"
+        onAllyBestowed={onAllyBestowed}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+    fireEvent.click(screen.getByLabelText('Subtle Luck'));
+
+    const state = useSiphonStore.getState();
+    expect(state.allyBestowments).toHaveLength(1);
+    expect(state.allyBestowments[0].allyId).toBe('a1');
+    expect(state.allyBestowments[0].featureId).toBe('subtle-luck');
+    // Card stays in selected deck (not moved to hand)
+    expect(state.selectedCardIds).toContain('subtle-luck');
+    expect(state.handCardIds).not.toContain('subtle-luck');
+    // Callback fires to clear ally selection
+    expect(onAllyBestowed).toHaveBeenCalled();
+  });
+
+  it('blocks special cost features from bestowing to ally (RULE-ALLY-001)', () => {
+    // 'recursion' has isSpecialCost: true, duration: '8 hours' (not filtered out)
+    useSiphonStore.setState({
+      selectedCardIds: ['recursion', 'temporal-surge'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    render(<SelectedDeck selectedAllyId="a1" onAllyBestowed={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+
+    // Should show "Cannot bestow to allies" text on the special cost card
+    expect(screen.getByText('Cannot bestow to allies')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Recursion'));
+
+    const state = useSiphonStore.getState();
+    expect(state.allyBestowments).toHaveLength(0);
+  });
+
+  it('shows ally bestow instruction when ally is selected', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['subtle-luck'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    render(<SelectedDeck selectedAllyId="a1" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+
+    expect(screen.getByText(/click a card to bestow to ally/i)).toBeInTheDocument();
+  });
+
+  it('deck stays open after bestowing to ally', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['subtle-luck', 'temporal-surge'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    render(<SelectedDeck selectedAllyId="a1" onAllyBestowed={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
+    fireEvent.click(screen.getByLabelText('Subtle Luck'));
+
+    // Deck should still be expanded (showing remaining cards)
+    expect(screen.getByText('Temporal Surge')).toBeInTheDocument();
+  });
 });
