@@ -4,7 +4,7 @@
 **Tech Stack**: React 19 + TypeScript + Vite + Tailwind CSS v4 + Zustand + React Router 7
 **Aesthetic**: Dark, atmospheric card game. No bright colors. Cards have no illustrations — typography and iconography only.
 
-**Current State**: Only `src/data/`, `src/types/`, `src/utils/`, and `src/store/manifoldStore.ts` exist. Components and other stores were pruned for clean-slate rework. Check `IMPLEMENTATION_STATUS.md` for the current phase and next steps.
+**Current State**: Phase 5C complete. All 4 stores, 43 components, and 403 tests operational. Combat HUD, Deck Builder, Settings, rest mechanics, and While Selected mechanics all implemented. Check `IMPLEMENTATION_STATUS.md` for the current phase and next steps.
 
 ---
 

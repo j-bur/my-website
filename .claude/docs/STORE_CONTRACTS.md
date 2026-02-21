@@ -90,7 +90,11 @@ interface SiphonState {
   currentEP: number;                    // Can go negative. Max = level.
   focus: number;                        // >= 0. Accumulated tension.
   siphonCapacitance: number;            // 0 to PB. Charges from Siphon Flux.
-  capacitanceTimerStart: number | null; // Timestamp for 8-hour acquisition window.
+  /** @deprecated Vestigial — stores Date.now() (real-world ms) but no UI reads it.
+   *  Use capacitanceInGameTime/capacitanceExpiresAt instead. */
+  capacitanceTimerStart: number | null;
+  capacitanceInGameTime: number | null; // In-game minutes since midnight (0-1439), set by user via time picker.
+  capacitanceExpiresAt: number | null;  // In-game expiry time in minutes (can exceed 1440 for next-day wrap).
 
   // Card Zones
   selectedCardIds: string[];            // Selected Deck (chosen at long rest).
@@ -148,10 +152,18 @@ addCapacitance(): void
 
 expendCapacitance(amount: number): void
 // siphonCapacitance = max(0, siphonCapacitance - amount).
-// If siphonCapacitance reaches 0, clears capacitanceTimerStart.
+// If siphonCapacitance reaches 0, clears all timer fields.
 
 clearCapacitance(): void
-// siphonCapacitance = 0, capacitanceTimerStart = null.
+// siphonCapacitance = 0, all timer fields = null.
+
+setCapacitanceTimer(minutesSinceMidnight: number): void
+// Sets capacitanceInGameTime = minutesSinceMidnight.
+// Sets capacitanceExpiresAt = minutesSinceMidnight + 480 (8 hours).
+
+extendCapacitanceTimer(): void
+// If capacitanceExpiresAt is not null: capacitanceExpiresAt += 480.
+// Used when gaining additional Siphon Capacitance charges.
 ```
 
 ### Card Selection (Deck Builder)
@@ -189,13 +201,34 @@ bestowToAlly(featureId: string, allyId: string): void
 
 ### Activate Actions (Combat)
 ```typescript
+performActivation(params: {
+  featureId: string;
+  effectiveCost: number;
+  focusRollResult: number;
+  level: number;
+  activeEffect?: {
+    sourceType: 'siphon' | 'manifold' | 'surge';
+    sourceId: string;
+    sourceName: string;
+    description: string;
+    totalDuration: string;
+    durationMs: number | null;
+    requiresConcentration: boolean;
+    featureWarpEffect?: string;
+  };
+}): { spendResult: SpendResult; focusGained: number }
+// Orchestrated activation: spendEP + addFocus + addActiveEffect + card zone transition.
+// 1. Calls spendEP(effectiveCost, level) → SpendResult.
+// 2. Calls addFocus(focusRollResult) → actual focus gained (may be doubled).
+// 3. If activeEffect provided and warp triggered, sets warpActive/warpDescription.
+// 4. If activeEffect provided, calls addActiveEffect().
+// 5. Moves card from handCardIds → selectedCardIds.
+// Returns { spendResult, focusGained }.
+
 activateFromHand(featureId: string, epCost: number, focusGain: number, warpTriggered: boolean): void
+// Low-level card zone transition only. Prefer performActivation() for full flow.
 // Removes featureId from handCardIds.
 // Adds featureId back to selectedCardIds (card returns to deck).
-// EP and Focus changes are handled by the CALLER (UI activation flow)
-// calling spendEP() and addFocus() separately before this method.
-// This method only manages the card zone transition.
-// If the feature has a duration, the caller should also call addActiveEffect().
 
 returnCardToDeck(featureId: string): void
 // Removes from handCardIds, adds to selectedCardIds.
@@ -268,25 +301,37 @@ hasSiphonGreedSelected(): boolean
 // 'siphon-greed' in selectedCardIds.
 
 setEchoIntuitionActive(active: boolean): void
+// Toggles Echo Intuition modifier. Set true when Revelation Phase 3-mote ability activates.
+// Duration: 8 hours (tracked via activeEffects, not this boolean).
 ```
 
 ### Rest Actions
 ```typescript
-longRest(pb: number, maxEP: number): { epRecovered: number; focusReduced: number; maxHPRestored: number }
-// 1. EP += pb (capped at maxEP). Siphon Greed 2x multiplier if applicable.
-// 2. Focus -= d4 roll (min 0).
-// 3. Max HP restored by amount of EP recovered (if reducedMaxHP < maxHP).
-// 4. handCardIds -> all move back to selectedCardIds.
-// 5. allyBestowments cleared.
-// 6. Active effects with duration < 8 hours removed.
-// 7. capacitance cleared.
+longRest(
+  pb: number,
+  maxEP: number,
+  focusRollOverride?: number,
+  whileSelectedEffects?: Array<{ featureId: string; epCost: number; focusGain: number }>
+): { epRecovered: number; focusReduced: number; maxHPRestored: number; whileSelectedEPCost: number; whileSelectedFocusGain: number }
+// 1. EP += pb (capped at maxEP). Siphon Greed scales EPR by integer multiples over Echo Drain.
+// 2. Focus -= d4 roll (min 0). Uses focusRollOverride if provided (macro mode).
+// 3. While Selected effects applied IN ORDER (after EP recovery and focus reduction):
+//    - For each effect: EP -= epCost, then focus += focusGain (doubled if EP < 0).
+//    - Order matters: Supercapacitance EP cost first (may push EP negative), then Siphon Greed focus.
+// 4. Max HP restored by amount of EP recovered (caller applies to characterStore).
+// 5. handCardIds -> all move back to selectedCardIds.
+// 6. allyBestowments cleared.
+// 7. Active effects with duration < 8 hours removed.
+// 8. All capacitance fields cleared.
 // NOTE: Motes and Hit Dice restoration happens in manifoldStore and characterStore respectively.
 
 shortRest(clearShortEffects: boolean): void
 // If clearShortEffects: remove active effects with durationMs <= 3600000.
-// Clear expired effects.
 // Does NOT affect: EP, Focus, motes, selectedCardIds, handCardIds, allyBestowments.
 // NOTE: Phase switch and Hit Dice handled by manifoldStore and characterStore.
+
+resetSiphon(): void
+// Resets all siphon state to defaults. Used by DataManagement "Clear All".
 ```
 
 ### Migration (v1 -> v2)

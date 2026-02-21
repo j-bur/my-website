@@ -50,9 +50,9 @@ This document describes the three-step card flow that is fundamental to the enti
 **UI location**: Deck Builder view
 
 Rules:
-- Maximum selection = proficiency bonus
+- Maximum selection = proficiency bonus (Supercapacitance allows exceeding this)
 - Selection persists until next Long Rest
-- "While Selected" features apply their cost/effects when selected
+- "While Selected" features (Supercapacitance, Siphon Greed) apply their costs/effects at Long Rest, not at selection time. See `SPECIAL_CASES.md > While Selected Features` for details.
 
 ---
 
@@ -139,10 +139,13 @@ When Echo Intuition is active (from Manifold):
 - The Activation Panel must show MODIFIED values, not base values
 - Duration: 8 hours
 
-### Siphon Greed (Conditional Modifier)
+### Siphon Greed (Conditional Modifier + While Selected)
 When Siphon Greed is in the Selected Deck AND the player is Echo Drained (`currentEP <= -level`):
 - All Siphon Feature EP costs are halved: `Math.max(1, Math.floor(cost / 2))`
+- Long Rest EP recovery scales by `floor(abs(currentEP) / level)`
 - This is NOT a general Echo Drain effect -- it only works because Siphon Greed is Selected
+
+Additionally, while selected Siphon Greed grants 1d4 Focus at each Long Rest (see `SPECIAL_CASES.md > While Selected Features`).
 
 ---
 

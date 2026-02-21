@@ -210,7 +210,7 @@ App (layout wrapper with <Outlet />)
     └── DataManagement (export/import/reset/clear)
 ```
 
-### Target Structure (per DESIGN.md + Phase 4.5)
+### Target Structure (Post-Phase 6: Ally System)
 
 ```
 App (layout wrapper with <Outlet />)

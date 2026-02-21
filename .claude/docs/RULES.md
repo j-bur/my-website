@@ -242,4 +242,45 @@ Machine-readable behavioral rules for The Siphon Interface. Each rule maps direc
 ### RULE-CAP-002: Capacitance clears on long rest
 - GIVEN: siphonCapacitance = 2
 - WHEN: longRest(...)
-- THEN: siphonCapacitance = 0, capacitanceTimerStart = null
+- THEN: siphonCapacitance = 0, all capacitance timer fields = null
+
+---
+
+## While Selected Effects
+
+### RULE-WS-001: While Selected effects apply at Long Rest, not at selection time
+- GIVEN: 'supercapacitance' in selectedCardIds, extra features beyond PB
+- WHEN: longRest(..., whileSelectedEffects)
+- THEN: EP cost deducted AFTER EP recovery and focus d4 reduction
+
+### RULE-WS-002: Supercapacitance EP cost = extra features × 2
+- GIVEN: selectedCardIds.length = 5, PB = 3, 'supercapacitance' in selectedCardIds
+- WHEN: calculateWhileSelectedEffects(selectedCardIds, pb=3)
+- THEN: Supercapacitance effect has epCost = 4 (2 extra × 2)
+
+### RULE-WS-003: Supercapacitance focus gain = extra feature count (undoubled base)
+- GIVEN: selectedCardIds.length = 5, PB = 3
+- WHEN: calculateWhileSelectedEffects(selectedCardIds, pb=3)
+- THEN: Supercapacitance effect has focusGain = 2
+
+### RULE-WS-004: Siphon Greed While Selected focus = 1d4 (dice-based)
+- GIVEN: 'siphon-greed' in selectedCardIds
+- WHEN: calculateWhileSelectedEffects(selectedCardIds, pb)
+- THEN: Siphon Greed effect has focusGain = 0 (sentinel), focusDice = '1d4'
+- NOTE: Caller must roll and fill in actual value before passing to longRest()
+
+### RULE-WS-005: While Selected focus doubles when EP negative
+- GIVEN: currentEP < 0 after While Selected EP cost deduction
+- WHEN: longRest processes While Selected effect with focusGain = 3
+- THEN: actual focus gained = 6 (doubled)
+
+### RULE-WS-006: Effect order is load-bearing (Supercapacitance before Siphon Greed)
+- GIVEN: 'supercapacitance' and 'siphon-greed' both in selectedCardIds
+- WHEN: calculateWhileSelectedEffects(selectedCardIds, pb)
+- THEN: Supercapacitance is first in array, Siphon Greed is second
+- WHY: Supercapacitance EP cost may push EP negative, causing Siphon Greed focus to double
+
+### RULE-WS-007: No While Selected effect when no extra features
+- GIVEN: selectedCardIds.length = 3, PB = 3, 'supercapacitance' in selectedCardIds
+- WHEN: calculateWhileSelectedEffects(selectedCardIds, pb=3)
+- THEN: Supercapacitance effect is NOT included (0 extra features = no cost)
