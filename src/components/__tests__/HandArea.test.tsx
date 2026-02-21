@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { HandArea } from '../combat-hud/HandArea';
 import { useSiphonStore } from '../../store';
 
@@ -64,5 +64,38 @@ describe('HandArea', () => {
     render(<HandArea />);
 
     expect(screen.getByRole('list', { name: /hand: 3 cards/i })).toBeInTheDocument();
+  });
+
+  it('bestows hand card to ally when ally is selected and card is clicked', () => {
+    useSiphonStore.setState({
+      handCardIds: ['subtle-luck'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    const onAllyBestowed = vi.fn();
+    render(
+      <HandArea
+        selectedAllyId="a1"
+        onAllyBestowed={onAllyBestowed}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Subtle Luck' }));
+
+    const state = useSiphonStore.getState();
+    expect(state.allyBestowments).toHaveLength(1);
+    expect(state.allyBestowments[0].featureId).toBe('subtle-luck');
+    expect(state.allyBestowments[0].allyId).toBe('a1');
+    expect(onAllyBestowed).toHaveBeenCalled();
+  });
+
+  it('shows instruction text when ally is selected', () => {
+    useSiphonStore.setState({
+      handCardIds: ['subtle-luck'],
+    });
+
+    render(<HandArea selectedAllyId="a1" />);
+
+    expect(screen.getByText(/click a card to bestow to ally/i)).toBeInTheDocument();
   });
 });

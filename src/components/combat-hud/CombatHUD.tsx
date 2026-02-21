@@ -152,7 +152,11 @@ export function CombatHUD() {
 
       {/* Bottom: Hand */}
       <div style={{ gridArea: 'hand' }}>
-        <HandArea onActivateCard={handleActivateCard} />
+        <HandArea
+          onActivateCard={handleActivateCard}
+          selectedAllyId={selectedAllyId}
+          onAllyBestowed={() => setSelectedAllyId(null)}
+        />
       </div>
 
       {/* Activation Panel overlay */}

@@ -11,11 +11,14 @@ const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
 interface HandAreaProps {
   onActivateCard?: (featureId: string) => void;
+  selectedAllyId?: string | null;
+  onAllyBestowed?: () => void;
 }
 
-export function HandArea({ onActivateCard }: HandAreaProps) {
+export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: HandAreaProps) {
   const handCardIds = useSiphonStore((s) => s.handCardIds);
   const selectedCardIds = useSiphonStore((s) => s.selectedCardIds);
+  const bestowToAlly = useSiphonStore((s) => s.bestowToAlly);
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
 
   // Compute hand cards: explicit hand + triggered features in selected
@@ -46,10 +49,18 @@ export function HandArea({ onActivateCard }: HandAreaProps) {
 
   return (
     <div
-      className="flex items-end h-full min-h-36 px-2 pb-2"
-      role="list"
-      aria-label={`Hand: ${handCards.length} cards`}
+      className="flex flex-col justify-end h-full min-h-36 px-2 pb-2"
     >
+      {selectedAllyId && (
+        <div className="text-[10px] uppercase tracking-widest text-ep-positive mb-1 px-2">
+          Click a card to bestow to ally
+        </div>
+      )}
+      <div
+        className="flex items-end"
+        role="list"
+        aria-label={`Hand: ${handCards.length} cards`}
+      >
       {handCards.map((cardId, index) => {
         const feature = featureMap.get(cardId);
         if (!feature) return null;
@@ -71,11 +82,16 @@ export function HandArea({ onActivateCard }: HandAreaProps) {
               feature={feature}
               isRaised={isHovered}
               compact={isLargeHand && !isHovered}
-              onDoubleClick={() => onActivateCard?.(cardId)}
+              onClick={selectedAllyId && !feature.isSpecialCost ? () => {
+                bestowToAlly(cardId, selectedAllyId);
+                onAllyBestowed?.();
+              } : undefined}
+              onDoubleClick={selectedAllyId ? undefined : () => onActivateCard?.(cardId)}
             />
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
