@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-20
-**Current Phase**: Phase 0 Complete (Testing infrastructure ready, Phase 1 next)
+**Current Phase**: Phase 1 Complete (All stores built, Phase 2 next)
 
 ---
 
@@ -11,7 +11,7 @@
 |-------|--------|------|
 | Documentation Restructure | ✅ Complete | CLAUDE.md lean, .claude/docs/ populated |
 | Phase 0: Testing Infrastructure | ✅ Complete | 68 tests passing across 5 utility files |
-| Phase 1: Store Redesign | 🔴 Not Started | Phase 0 gate passed |
+| Phase 1: Store Redesign | ✅ Complete | 94 store tests + 68 utility tests = 162 total |
 | Phase 2: Combat Layout | 🔴 Not Started | Blocked by Phase 1 |
 | Phase 3: Activation Flow | 🔴 Not Started | Blocked by Phase 2 |
 | Phase 4: Rest Mechanics | 🔴 Not Started | Blocked by Phase 3 |
@@ -23,11 +23,10 @@
 
 ## Next Session
 
-1. **Start with Phase 1**: Read `.claude/docs/PHASE_SPECS/phase-1-stores.md`
-2. Phase 1A: Create `characterStore.ts` from STORE_CONTRACTS.md
-3. Phase 1B: Create `siphonStore.ts` from STORE_CONTRACTS.md
-4. Write 30+ store tests referencing RULES.md
-5. No existing source code was modified in Phase 0
+1. **Start with Phase 2**: Read `.claude/docs/PHASE_SPECS/phase-2-combat-layout.md`
+2. Build spatial layout components from DESIGN.md
+3. Implement Deck, Hand, and Effects panel components
+4. All 3 stores (character, settings, siphon) are ready to use
 
 ---
 
@@ -69,6 +68,13 @@ _(none yet)_
 - [x] `.claude/docs/SPECIAL_CASES.md` — Feature edge cases
 - [x] `.claude/docs/PHASE_SPECS/` — 8 phase spec files (0-7)
 
+### Phase 1: Store Redesign
+- [x] New types added: `Ally`, `AllyBestowment`, `SelfActiveEffect`, `SpendResult`
+- [x] `characterStore.ts` — level, HP, hit dice, PB, spell save DC (persist v2)
+- [x] `settingsStore.ts` — dice modes, sound, animations, UI preferences (persist v1)
+- [x] `siphonStore.ts` — EP, Focus, Capacitance, card zones, allies, active effects, cost modifiers, rest actions (persist v2)
+- [x] 94 store tests covering RULE-EP-*, RULE-FOCUS-*, RULE-CARD-*, RULE-GREED-*, RULE-INTUITION-*, RULE-ALLY-*, RULE-REST-*, RULE-CAP-*
+
 ### Phase 0: Testing Infrastructure
 - [x] Vitest + jsdom + @testing-library/react + @testing-library/jest-dom installed
 - [x] `vitest.config.ts` created
@@ -84,8 +90,9 @@ _(none yet)_
 - [x] Vite + React 19 + TypeScript setup
 - [x] Tailwind CSS v4 configuration
 - [x] Zustand manifoldStore (kept — largely correct)
-- [ ] characterStore — pruned, Phase 1A creates from STORE_CONTRACTS.md
-- [ ] siphonStore — pruned, Phase 1B creates from STORE_CONTRACTS.md
+- [x] characterStore — created from STORE_CONTRACTS.md (Phase 1)
+- [x] settingsStore — created from STORE_CONTRACTS.md (Phase 1)
+- [x] siphonStore — created from STORE_CONTRACTS.md (Phase 1)
 - [x] Custom color palette in CSS
 
 ### Data (Complete, Verified 2026-02-20)
@@ -104,12 +111,25 @@ All 17 components were deleted for clean-slate rework. They contradicted DESIGN.
 | Issue | Impact | Resolution |
 |-------|--------|------------|
 | ~~No test infrastructure~~ | ~~Cannot verify behavior~~ | ✅ Phase 0 complete |
-| No characterStore or siphonStore | Stores pruned for clean-slate rework | Phase 1 (create from STORE_CONTRACTS.md) |
+| ~~No characterStore or siphonStore~~ | ~~Stores pruned for clean-slate rework~~ | ✅ Phase 1 complete |
 | No components | Components pruned for clean-slate rework | Phase 2+ (create from DESIGN.md) |
 
 ---
 
 ## Session Log
+
+### 2026-02-20 — Phase 1: Store Redesign
+- Added new types: `Ally`, `AllyBestowment`, `SelfActiveEffect`, `SpendResult` to `types/siphonFeature.ts`
+- Created `characterStore.ts`: level, HP, hit dice, proficiency bonus, spell save DC, persist v2 with migration
+- Created `settingsStore.ts`: dice modes, sound, animations, reduced motion, confirmation settings
+- Created `siphonStore.ts`: EP/Focus/Capacitance, card zones (Select/Bestow/Activate), allies, active effects, cost modifiers (Siphon Greed + Echo Intuition), long rest, short rest, persist v2 with migration
+- Updated `store/index.ts` to export all stores
+- 94 store tests across 3 test files:
+  - characterStore (17 tests): level clamping, PB calculation, HP management, hit dice spend/restore
+  - settingsStore (10 tests): defaults, dice mode toggles, boolean setters, reset
+  - siphonStore (67 tests): EP-001 through EP-008, FOCUS-001 through FOCUS-004, CARD-001 through CARD-008, GREED-001 through GREED-004, INTUITION-001/002, ALLY-001/002, REST-001/005/006, CAP-002
+- All exit conditions met: build passes, lint passes, 162 tests green
+- **Next**: Phase 2 (Combat Layout)
 
 ### 2026-02-20 — Phase 0: Testing Infrastructure
 - Installed Vitest, @testing-library/react, @testing-library/jest-dom, jsdom

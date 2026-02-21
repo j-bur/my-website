@@ -41,6 +41,14 @@ export interface BestowedFeature {
   warpTriggered: boolean;
 }
 
+export interface SpendResult {
+  newEP: number;
+  warpTriggered: boolean;
+  isNowEchoDrained: boolean;
+  focusDoubled: boolean;
+  hpReduction: number;
+}
+
 export interface ActivationResult {
   featureId: string;
   epSpent: number;
@@ -49,4 +57,31 @@ export interface ActivationResult {
   warpTriggered: boolean;
   newEP: number;
   isNowEchoDrained: boolean;
+}
+
+export interface Ally {
+  id: string;
+  name: string;
+}
+
+export interface AllyBestowment {
+  id: string;                       // Unique instance ID
+  allyId: string;                   // Reference to Ally.id
+  featureId: string;                // Reference to SiphonFeature.id
+  isFromSelectedDeck: boolean;      // false if bestowed from "All Features"
+  bestowedAt: number;               // Timestamp
+}
+
+export interface SelfActiveEffect {
+  id: string;                       // Unique instance ID
+  sourceType: 'siphon' | 'manifold' | 'surge';
+  sourceId: string;                 // Feature/ability/surge ID
+  sourceName: string;               // Display name
+  description: string;
+  startedAt: number;                // Timestamp
+  totalDuration: string;            // Original string for display ("10 min")
+  durationMs: number | null;        // Parsed duration; null = permanent/triggered
+  requiresConcentration: boolean;
+  warpActive: boolean;
+  warpDescription?: string;
 }
