@@ -312,28 +312,26 @@ describe('siphonStore', () => {
   // Activate Actions (RULE-CARD-002, RULE-CARD-007)
   // ========================================
 
-  describe('activateFromHand', () => {
+  describe('returnCardToDeck', () => {
     // RULE-CARD-002: Cards return to deck after activation
     it('RULE-CARD-002: moves card from hand back to selected deck', () => {
       useSiphonStore.setState({
         handCardIds: ['temporal-surge'],
         selectedCardIds: ['other-card'],
       });
-      useSiphonStore.getState().activateFromHand('temporal-surge');
+      useSiphonStore.getState().returnCardToDeck('temporal-surge');
       const state = useSiphonStore.getState();
       expect(state.handCardIds).toEqual([]);
       expect(state.selectedCardIds).toContain('temporal-surge');
       expect(state.selectedCardIds).toContain('other-card');
     });
-  });
 
-  describe('returnCardToDeck', () => {
-    it('returns card from hand to deck', () => {
-      useSiphonStore.setState({ handCardIds: ['a'], selectedCardIds: ['b'] });
+    it('does not duplicate card if already in selected deck', () => {
+      useSiphonStore.setState({ handCardIds: ['a'], selectedCardIds: ['a', 'b'] });
       useSiphonStore.getState().returnCardToDeck('a');
       const state = useSiphonStore.getState();
       expect(state.handCardIds).toEqual([]);
-      expect(state.selectedCardIds).toContain('a');
+      expect(state.selectedCardIds).toEqual(['a', 'b']);
     });
   });
 

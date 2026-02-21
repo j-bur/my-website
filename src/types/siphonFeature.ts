@@ -31,32 +31,12 @@ export interface SiphonFeature {
   tags: string[];                   // For filtering: 'combat', 'utility', 'healing', etc.
 }
 
-export interface BestowedFeature {
-  id: string;                       // Unique instance ID
-  featureId: string;                // Reference to SiphonFeature
-  targetId: string;                 // 'self' or ally identifier
-  bestowedAt: number;               // Timestamp
-  expiresAt: number | null;         // null for triggered/permanent
-  isActivated: boolean;
-  warpTriggered: boolean;
-}
-
 export interface SpendResult {
   newEP: number;
   warpTriggered: boolean;
   isNowEchoDrained: boolean;
   focusDoubled: boolean;
   hpReduction: number;
-}
-
-export interface ActivationResult {
-  featureId: string;
-  epSpent: number;
-  focusRolled: number;
-  focusGained: number;              // May be doubled if EP negative
-  warpTriggered: boolean;
-  newEP: number;
-  isNowEchoDrained: boolean;
 }
 
 export interface Ally {

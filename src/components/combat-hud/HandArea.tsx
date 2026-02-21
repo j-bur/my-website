@@ -1,13 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useSiphonStore } from '../../store';
-import { SIPHON_FEATURES } from '../../data/siphonFeatures';
+import { TRIGGERED_FEATURE_IDS, FEATURE_MAP } from '../../data/featureConstants';
 import { SiphonCard } from '../cards/SiphonCard';
-
-const TRIGGERED_FEATURE_IDS = new Set(
-  SIPHON_FEATURES.filter((f) => f.duration === 'Triggered').map((f) => f.id)
-);
-
-const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
 interface HandAreaProps {
   onActivateCard?: (featureId: string) => void;
@@ -62,7 +56,7 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
         aria-label={`Hand: ${handCards.length} cards`}
       >
       {handCards.map((cardId, index) => {
-        const feature = featureMap.get(cardId);
+        const feature = FEATURE_MAP.get(cardId);
         if (!feature) return null;
 
         const isHovered = hoveredCardId === cardId;
@@ -70,7 +64,7 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
         return (
           <div
             key={cardId}
-            className="transition-all duration-200"
+            className="relative transition-all duration-200"
             style={{
               marginLeft: index === 0 ? 0 : overlapPx,
               zIndex: isHovered ? 50 : index,
@@ -82,12 +76,23 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
               feature={feature}
               isRaised={isHovered}
               compact={isLargeHand && !isHovered}
+              isUnplayable={!!selectedAllyId && feature.isSpecialCost}
               onClick={selectedAllyId && !feature.isSpecialCost ? () => {
                 bestowToAlly(cardId, selectedAllyId);
                 onAllyBestowed?.();
               } : undefined}
               onDoubleClick={selectedAllyId ? undefined : () => onActivateCard?.(cardId)}
             />
+            {selectedAllyId && feature.isSpecialCost && (
+              <div
+                className="absolute inset-0 flex items-end justify-center pb-1 pointer-events-none"
+                title="Cannot bestow to allies"
+              >
+                <span className="text-[9px] text-ep-negative bg-siphon-bg/90 px-1 rounded">
+                  Cannot bestow to allies
+                </span>
+              </div>
+            )}
           </div>
         );
       })}

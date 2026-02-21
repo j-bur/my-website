@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { SurgeResult } from '../../types';
 import { useSiphonStore } from '../../store';
-import { SIPHON_FEATURES } from '../../data/siphonFeatures';
+import { FEATURE_MAP } from '../../data/featureConstants';
 import { EchoManifoldDeck } from './EchoManifoldDeck';
 import { WildSurgeDeck } from './WildSurgeDeck';
 import { PhaseAbilities } from './PhaseAbilities';
@@ -17,8 +17,6 @@ import { ShortRestDialog } from './ShortRestDialog';
 import { AlliesPanel } from './AlliesPanel';
 import { AllyBestowmentView } from './AllyBestowmentView';
 import { SettingsModal } from '../settings';
-
-const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
 export function CombatHUD() {
   const navigate = useNavigate();
@@ -36,7 +34,7 @@ export function CombatHUD() {
     [hoveredAllyId, allies]
   );
 
-  const stagedFeature = stagedCardId ? featureMap.get(stagedCardId) ?? null : null;
+  const stagedFeature = stagedCardId ? FEATURE_MAP.get(stagedCardId) ?? null : null;
 
   const handleActivateCard = (featureId: string) => {
     setStagedCardId(featureId);

@@ -1,13 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SIPHON_FEATURES } from '../../data/siphonFeatures';
-import { useSiphonStore } from '../../store';
-import { useCharacterStore } from '../../store';
+import { FEATURE_MAP } from '../../data/featureConstants';
+import { useSiphonStore, useCharacterStore } from '../../store';
 import { SiphonCard } from '../cards/SiphonCard';
 import { LongRestDialog } from '../combat-hud/LongRestDialog';
 import { ShortRestDialog } from '../combat-hud/ShortRestDialog';
-
-const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
 export function SelectedPanel() {
   const navigate = useNavigate();
@@ -29,7 +26,7 @@ export function SelectedPanel() {
   const selectedFeatures = useMemo(
     () =>
       selectedCardIds
-        .map((id) => featureMap.get(id))
+        .map((id) => FEATURE_MAP.get(id))
         .filter((f): f is NonNullable<typeof f> => f != null),
     [selectedCardIds]
   );

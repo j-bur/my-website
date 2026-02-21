@@ -57,10 +57,10 @@ describe('AllyBestowmentView', () => {
 
   it('groups cards into Selected Deck and All Features sections', () => {
     useSiphonStore.setState({
-      selectedCardIds: ['subtle-luck'], // Only subtle-luck is still selected
+      selectedCardIds: ['subtle-luck'],
       allyBestowments: [
         { id: 'b1', allyId: 'a1', featureId: 'subtle-luck', isFromSelectedDeck: true, bestowedAt: 1 },
-        { id: 'b2', allyId: 'a1', featureId: 'temporal-surge', isFromSelectedDeck: true, bestowedAt: 2 },
+        { id: 'b2', allyId: 'a1', featureId: 'temporal-surge', isFromSelectedDeck: false, bestowedAt: 2 },
       ],
     });
 
@@ -148,9 +148,9 @@ describe('AllyBestowmentView', () => {
 
   it('shows only From All Features when no bestowed cards are in selected deck', () => {
     useSiphonStore.setState({
-      selectedCardIds: [], // No cards selected
+      selectedCardIds: [],
       allyBestowments: [
-        { id: 'b1', allyId: 'a1', featureId: 'subtle-luck', isFromSelectedDeck: true, bestowedAt: 1 },
+        { id: 'b1', allyId: 'a1', featureId: 'subtle-luck', isFromSelectedDeck: false, bestowedAt: 1 },
       ],
     });
 

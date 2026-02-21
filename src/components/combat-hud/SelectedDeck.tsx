@@ -1,17 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSiphonStore } from '../../store';
-import { SIPHON_FEATURES } from '../../data/siphonFeatures';
+import { FEATURE_MAP, TRIGGERED_FEATURE_IDS, WHILE_SELECTED_FEATURE_IDS } from '../../data/featureConstants';
 import { SiphonCard } from '../cards/SiphonCard';
-
-const TRIGGERED_FEATURE_IDS = new Set(
-  SIPHON_FEATURES.filter((f) => f.duration === 'Triggered').map((f) => f.id)
-);
-
-const WHILE_SELECTED_FEATURE_IDS = new Set(
-  SIPHON_FEATURES.filter((f) => f.duration === 'While Selected').map((f) => f.id)
-);
-
-const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
 interface SelectedDeckProps {
   onActivateCard?: (featureId: string) => void;
@@ -65,7 +55,7 @@ export function SelectedDeck({ onActivateCard, selectedAllyId, onAllyBestowed }:
   }, [isExpanded, handleEscape, handleClickOutside]);
 
   const handleCardClick = (featureId: string) => {
-    const feature = featureMap.get(featureId);
+    const feature = FEATURE_MAP.get(featureId);
     if (!feature) return;
 
     // If an ally is selected as bestow target
@@ -109,7 +99,7 @@ export function SelectedDeck({ onActivateCard, selectedAllyId, onAllyBestowed }:
             </div>
           )}
           {deckCards.map((cardId) => {
-            const feature = featureMap.get(cardId);
+            const feature = FEATURE_MAP.get(cardId);
             if (!feature) return null;
             const isWhileSelected = WHILE_SELECTED_FEATURE_IDS.has(cardId);
             const isSpecialCostBlocked = selectedAllyId != null && feature.isSpecialCost;

@@ -20,8 +20,9 @@
 | Phase 5B: Timer + Overrides + Data | ✅ Complete | 36 new tests, 383 total |
 | Phase 5C: While Selected Mechanics | ✅ Complete | 20 new tests, 403 total |
 | Phase 6A: Ally Panel + Bestow | ✅ Complete | 17 new tests (13 AlliesPanel + 4 SelectedDeck), 413 total |
-| Phase 6B: AllyBestowmentView | ✅ Complete | 10 new tests (8 AllyBestowmentView + 2 AlliesPanel hover), 423 total |
-| Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
+| Phase 6B: AllyBestowmentView | ✅ Complete | 10 new tests (8 AllyBestowmentView + 2 AlliesPanel hover), 425 total |
+| Post-Phase 6 Audit | ✅ Complete | 3 bugs fixed, dead code removed, constants consolidated |
+| Phase 7: Animations | 🔴 Not Started | Ready to begin |
 
 ---
 
@@ -77,9 +78,9 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - `[DISCOVERY]` Test count drift: IMPLEMENTATION_STATUS.md documented 403 tests after Phase 5C, but baseline run at Phase 6A start showed 396. The 7-test discrepancy was not investigated — likely a previous session overcounted. Phase 6A recorded 413 based on the actual 396 baseline + 17 new. Future sessions should trust `npm run test` output, not this document's running totals. (found during Phase 6A)
 - `[DISCOVERY]` Phase 6 spec has conflicting ally click behaviors: exit conditions say "click name to edit" (rename), while the task description says "click ally name: selects as bestow target." Phase 6A resolved this with separate buttons (click chip = select target, pencil icon = rename, × icon = remove). Phase 6B sessions should follow the implemented pattern, not the spec's "click name to edit" wording. (found during Phase 6A, relevant to Phase 6B)
 - `[DISCOVERY]` `selectedAllyId` (the ally bestow-target selection) is transient React state in CombatHUD, not persisted in siphonStore. It resets on navigation. Phase 6B's AllyBestowmentView needs its own state for tracking which ally is being hovered/viewed — it cannot reuse `selectedAllyId` since hover and bestow-target are independent interactions. (found during Phase 6A, relevant to Phase 6B)
-- `[BUG]` AllyBestowmentView grouping logic uses `selectedCardIds` to classify bestowments as "From Selected Deck" vs "From All Features", but `bestowToSelf()` removes cards from `selectedCardIds`. Cards in `handCardIds` that are bestowed to an ally are misclassified as "From All Features". Fix: include `handCardIds` in the daily selection set. (found during Phase 6B review, see phase-6-allies.md Fix 1)
-- `[BUG]` `onMouseLeave={onDismiss}` on AllyBestowmentView's `fixed inset-0` backdrop never fires — mouse can't leave a full-screen element. Dismiss only works via backdrop click. Either remove the dead handler or rework to a positioned overlay per DESIGN.md. (found during Phase 6B review, see phase-6-allies.md Fix 2)
-- `[BUG]` HandArea shows no visual feedback on special-cost cards when ally is selected — unlike SelectedDeck which dims them and shows "Cannot bestow to allies" label. (found during Phase 6B review, see phase-6-allies.md Fix 3)
+- `[FIXED]` AllyBestowmentView grouping logic re-derived "From Selected Deck" from current `selectedCardIds` instead of using the stored `isFromSelectedDeck` flag. Fixed to use `b.isFromSelectedDeck` directly. (found during Phase 6B review, fixed during post-Phase 6 audit)
+- `[FIXED]` `onMouseLeave={onDismiss}` on AllyBestowmentView's `fixed inset-0` backdrop was dead code — mouse can't leave a full-screen element. Removed the dead handlers. (found during Phase 6B review, fixed during post-Phase 6 audit)
+- `[FIXED]` HandArea showed no visual feedback on special-cost cards when ally is selected. Added `isUnplayable` styling and "Cannot bestow to allies" label to match SelectedDeck behavior. (found during Phase 6B review, fixed during post-Phase 6 audit)
 
 ---
 
@@ -238,6 +239,15 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### Post-Phase 6 Audit
+- [x] **Bug Fix**: AllyBestowmentView now uses stored `isFromSelectedDeck` flag instead of re-deriving from `selectedCardIds` (which misclassified hand cards)
+- [x] **Bug Fix**: Removed dead `onMouseLeave` handlers from AllyBestowmentView's full-screen backdrop
+- [x] **Bug Fix**: HandArea now shows `isUnplayable` styling + "Cannot bestow to allies" label on special-cost cards when ally is selected
+- [x] **Refactor**: Extracted `FEATURE_MAP`, `TRIGGERED_FEATURE_IDS`, `WHILE_SELECTED_FEATURE_IDS` to `src/data/featureConstants.ts` — eliminated 3× TRIGGERED_FEATURE_IDS and 5× featureMap duplicates across components and store
+- [x] **Cleanup**: Removed dead types `BestowedFeature` and `ActivationResult` from siphonFeature.ts (defined but never imported)
+- [x] **Cleanup**: Removed deprecated `activateFromHand` from siphonStore — `performActivation` now calls `returnCardToDeck` directly; consolidated duplicate tests
+- [x] All changes verified: build passes, lint passes, 425 tests green
 
 ### Phase 6B: AllyBestowmentView Overlay
 - [x] `AllyBestowmentView.tsx` — Full-screen overlay showing ally's bestowed cards: "Viewing: AllyName" header, two groups (From Selected Deck / From All Features) based on whether card is still in selectedCardIds, compact SiphonCard components with ally name badge, × remove button per card, backdrop click to dismiss

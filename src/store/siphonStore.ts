@@ -1,13 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Ally, AllyBestowment, SelfActiveEffect, SpendResult } from '../types';
-import { SIPHON_FEATURES } from '../data/siphonFeatures';
+import { SIPHON_FEATURES, TRIGGERED_FEATURE_IDS } from '../data';
 import { rollD } from '../utils/diceRoller';
-
-// Pre-compute triggered feature IDs for getDeckCards/getHandCards
-const TRIGGERED_FEATURE_IDS = new Set(
-  SIPHON_FEATURES.filter((f) => f.duration === 'Triggered').map((f) => f.id)
-);
 
 interface SiphonStore {
   // Core Resources
@@ -67,9 +62,6 @@ interface SiphonStore {
   bestowToAlly: (featureId: string, allyId: string) => void;
 
   // Activate Actions (Combat)
-  /** @deprecated Low-level card zone transition only. Use performActivation() for the full
-   *  orchestrated flow (spendEP + addFocus + addActiveEffect + card return). */
-  activateFromHand: (featureId: string) => void;
   returnCardToDeck: (featureId: string) => void;
   replaceSelectedCard: (oldFeatureId: string, newFeatureId: string) => void;
 
@@ -86,7 +78,7 @@ interface SiphonStore {
   clearExpiredEffects: () => void;
   clearEffectsBelowDuration: (maxDurationMs: number) => void;
 
-  // Activation (combines spendEP + addFocus + addActiveEffect + activateFromHand)
+  // Activation (combines spendEP + addFocus + addActiveEffect + returnCardToDeck)
   performActivation: (params: {
     featureId: string;
     effectiveCost: number;
@@ -267,23 +259,13 @@ export const useSiphonStore = create<SiphonStore>()(
           id: generateId(),
           allyId,
           featureId,
-          isFromSelectedDeck: state.selectedCardIds.includes(featureId),
+          isFromSelectedDeck: state.selectedCardIds.includes(featureId) || state.handCardIds.includes(featureId),
           bestowedAt: Date.now(),
         };
         set({ allyBestowments: [...state.allyBestowments, bestowment] });
       },
 
       // --- Activate Actions ---
-
-      /** @deprecated Use performActivation() instead. */
-      activateFromHand: (featureId) => {
-        const state = get();
-        const newHand = state.handCardIds.filter((id) => id !== featureId);
-        const newSelected = state.selectedCardIds.includes(featureId)
-          ? state.selectedCardIds
-          : [...state.selectedCardIds, featureId];
-        set({ handCardIds: newHand, selectedCardIds: newSelected });
-      },
 
       returnCardToDeck: (featureId) => {
         const state = get();
@@ -324,7 +306,7 @@ export const useSiphonStore = create<SiphonStore>()(
         }
 
         // 4. Return card from hand to selected deck
-        get().activateFromHand(featureId);
+        get().returnCardToDeck(featureId);
 
         return { spendResult, focusGained };
       },
