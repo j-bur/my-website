@@ -15,6 +15,8 @@ interface SiphonStore {
   focus: number;
   siphonCapacitance: number;
   capacitanceTimerStart: number | null;
+  capacitanceInGameTime: number | null;
+  capacitanceExpiresAt: number | null;
 
   // Card Zones
   selectedCardIds: string[];
@@ -44,6 +46,8 @@ interface SiphonStore {
   addCapacitance: () => void;
   expendCapacitance: (amount: number) => void;
   clearCapacitance: () => void;
+  setCapacitanceTimer: (minutesSinceMidnight: number) => void;
+  extendCapacitanceTimer: () => void;
 
   // Card Selection (Deck Builder)
   selectCard: (cardId: string, maxCards: number) => boolean;
@@ -105,6 +109,9 @@ interface SiphonStore {
   // Rest Actions
   longRest: (pb: number, maxEP: number, focusRollOverride?: number) => { epRecovered: number; focusReduced: number; maxHPRestored: number };
   shortRest: (clearShortEffects: boolean) => void;
+
+  // Full Reset
+  resetSiphon: () => void;
 }
 
 function generateId(): string {
@@ -116,6 +123,8 @@ const DEFAULT_STATE = {
   focus: 0,
   siphonCapacitance: 0,
   capacitanceTimerStart: null as number | null,
+  capacitanceInGameTime: null as number | null,
+  capacitanceExpiresAt: null as number | null,
   selectedCardIds: [] as string[],
   handCardIds: [] as string[],
   allies: [] as Ally[],
@@ -183,11 +192,26 @@ export const useSiphonStore = create<SiphonStore>()(
         set({
           siphonCapacitance: newCap,
           capacitanceTimerStart: newCap === 0 ? null : state.capacitanceTimerStart,
+          ...(newCap === 0 ? { capacitanceInGameTime: null, capacitanceExpiresAt: null } : {}),
         });
       },
 
       clearCapacitance: () =>
-        set({ siphonCapacitance: 0, capacitanceTimerStart: null }),
+        set({ siphonCapacitance: 0, capacitanceTimerStart: null, capacitanceInGameTime: null, capacitanceExpiresAt: null }),
+
+      setCapacitanceTimer: (minutesSinceMidnight) => {
+        set({
+          capacitanceInGameTime: minutesSinceMidnight,
+          capacitanceExpiresAt: minutesSinceMidnight + 480,
+        });
+      },
+
+      extendCapacitanceTimer: () => {
+        const state = get();
+        if (state.capacitanceExpiresAt !== null) {
+          set({ capacitanceExpiresAt: state.capacitanceExpiresAt + 480 });
+        }
+      },
 
       // --- Card Selection ---
 
@@ -471,10 +495,14 @@ export const useSiphonStore = create<SiphonStore>()(
           activeEffects: remainingEffects,
           siphonCapacitance: 0,
           capacitanceTimerStart: null,
+          capacitanceInGameTime: null,
+          capacitanceExpiresAt: null,
         });
 
         return { epRecovered, focusReduced, maxHPRestored };
       },
+
+      resetSiphon: () => set(DEFAULT_STATE),
 
       shortRest: (clearShortEffects) => {
         const state = get();

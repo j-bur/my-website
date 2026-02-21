@@ -1,10 +1,38 @@
+import { useState } from 'react';
 import { useSiphonStore } from '../../store';
 import { useCharacterStore } from '../../store';
+
+const TIME_PRESETS: { label: string; minutes: number; icon?: string }[] = [
+  { label: 'Dawn', minutes: 360, icon: '☀' },
+  { label: 'Morning', minutes: 540 },
+  { label: 'Midday', minutes: 720 },
+  { label: 'Afternoon', minutes: 900 },
+  { label: 'Dusk', minutes: 1080, icon: '🌅' },
+  { label: 'Evening', minutes: 1260 },
+  { label: 'Night', minutes: 1380 },
+  { label: 'Midnight', minutes: 0, icon: '🌙' },
+];
+
+function formatInGameTime(minutes: number): string {
+  const wrapped = ((minutes % 1440) + 1440) % 1440;
+  const hours = Math.floor(wrapped / 60);
+  const mins = wrapped % 60;
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+  return `${displayHour}:${mins.toString().padStart(2, '0')} ${period}`;
+}
 
 export function SiphonCapacitanceTracker() {
   const capacitance = useSiphonStore((s) => s.siphonCapacitance);
   const pb = useCharacterStore((s) => s.proficiencyBonus);
   const maxCapacitance = pb;
+  const inGameTime = useSiphonStore((s) => s.capacitanceInGameTime);
+  const expiresAt = useSiphonStore((s) => s.capacitanceExpiresAt);
+  const setTimer = useSiphonStore((s) => s.setCapacitanceTimer);
+  const extendTimer = useSiphonStore((s) => s.extendCapacitanceTimer);
+  const clearCapacitance = useSiphonStore((s) => s.clearCapacitance);
+
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   return (
     <div className="flex flex-col gap-1" role="group" aria-label={`Capacitance: ${capacitance} of ${maxCapacitance}`}>
@@ -26,6 +54,101 @@ export function SiphonCapacitanceTracker() {
           />
         ))}
       </div>
+
+      {/* Timer section — only show when there are charges */}
+      {capacitance > 0 && (
+        <div className="mt-1">
+          {inGameTime !== null && expiresAt !== null ? (
+            /* Timer is set — show current time, expiry, and action buttons */
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  className="w-5 h-5 rounded border border-siphon-border text-text-muted hover:text-text-primary text-[10px]"
+                  onClick={() => setTimer(inGameTime - 60)}
+                  aria-label="Decrease time by 1 hour"
+                >
+                  ◄
+                </button>
+                <button
+                  className="text-xs font-medium text-capacitance tabular-nums cursor-pointer hover:text-text-primary"
+                  onClick={() => setShowTimePicker(!showTimePicker)}
+                  aria-label="Current in-game time"
+                >
+                  {formatInGameTime(inGameTime)}
+                </button>
+                <button
+                  className="w-5 h-5 rounded border border-siphon-border text-text-muted hover:text-text-primary text-[10px]"
+                  onClick={() => setTimer(inGameTime + 60)}
+                  aria-label="Increase time by 1 hour"
+                >
+                  ►
+                </button>
+              </div>
+              <div className="text-center text-[10px] text-text-muted">
+                Expires at: <span className="text-capacitance font-medium">{formatInGameTime(expiresAt)}</span>
+              </div>
+              <div className="flex gap-1 justify-center">
+                <button
+                  className="px-1.5 py-0.5 text-[10px] rounded border border-siphon-border text-text-muted hover:text-ep-negative hover:border-ep-negative transition-colors"
+                  onClick={clearCapacitance}
+                >
+                  Timer Expired
+                </button>
+                <button
+                  className="px-1.5 py-0.5 text-[10px] rounded border border-siphon-border text-text-muted hover:text-capacitance hover:border-capacitance transition-colors"
+                  onClick={extendTimer}
+                >
+                  Extend +8 hrs
+                </button>
+                <button
+                  className="px-1.5 py-0.5 text-[10px] rounded border border-siphon-border text-text-muted hover:text-text-primary hover:border-text-muted transition-colors"
+                  onClick={clearCapacitance}
+                >
+                  Clear
+                </button>
+              </div>
+
+              {/* Collapsible time presets */}
+              {showTimePicker && (
+                <div className="grid grid-cols-4 gap-0.5" role="group" aria-label="Time presets">
+                  {TIME_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      className={`px-1 py-0.5 text-[10px] rounded border transition-colors ${
+                        inGameTime === preset.minutes
+                          ? 'border-capacitance text-capacitance bg-capacitance/10'
+                          : 'border-siphon-border text-text-muted hover:text-text-primary hover:border-text-muted'
+                      }`}
+                      onClick={() => {
+                        setTimer(preset.minutes);
+                        setShowTimePicker(false);
+                      }}
+                    >
+                      {preset.icon ? `${preset.icon} ` : ''}{preset.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* No timer set — show preset picker to set the time */
+            <div className="space-y-1">
+              <div className="text-center text-[10px] text-text-muted">Set acquisition time:</div>
+              <div className="grid grid-cols-4 gap-0.5" role="group" aria-label="Time presets">
+                {TIME_PRESETS.map((preset) => (
+                  <button
+                    key={preset.label}
+                    className="px-1 py-0.5 text-[10px] rounded border border-siphon-border text-text-muted hover:text-capacitance hover:border-capacitance transition-colors"
+                    onClick={() => setTimer(preset.minutes)}
+                  >
+                    {preset.icon ? `${preset.icon} ` : ''}{preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

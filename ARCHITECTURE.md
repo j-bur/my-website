@@ -31,9 +31,11 @@ src/
 │   │   ├── CollectionGrid.tsx       # All 42 features, filterable
 │   │   ├── SelectedPanel.tsx        # Selected cards + rest/nav buttons
 │   │   └── index.ts                 # Barrel export
-│   ├── settings/                     # Phase 5A: Settings modal
+│   ├── settings/                     # Phase 5A-5B: Settings modal + overrides + data
 │   │   ├── SettingsModal.tsx          # Modal with all settings sections
 │   │   ├── DiceModeToggle.tsx         # Reusable 3D/Macro toggle pair
+│   │   ├── ManualOverrides.tsx        # EP/Focus/Motes/HD/MaxHP override inputs
+│   │   ├── DataManagement.tsx         # Export/Import/Reset/Clear buttons
 │   │   └── index.ts                   # Barrel export
 │   ├── combat-hud/
 │   │   ├── CombatHUD.tsx          # CSS Grid layout container
@@ -45,7 +47,7 @@ src/
 │   │   ├── EchoPointsBar.tsx      # EP bar (center-zero bidirectional)
 │   │   ├── FocusCounter.tsx       # Focus value with glow
 │   │   ├── HitDiceDisplay.tsx     # Hit dice current/max
-│   │   ├── SiphonCapacitanceTracker.tsx # Capacitance pips
+│   │   ├── SiphonCapacitanceTracker.tsx # Capacitance pips + in-game timer
 │   │   ├── SelectedDeck.tsx       # Deck with expand/collapse (bottom-left)
 │   │   ├── HandArea.tsx           # Fanned hand cards (bottom)
 │   │   ├── ActivationPanel.tsx    # Feature activation overlay
@@ -156,7 +158,7 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 5A Complete)
+### Current Structure (Phase 5B Complete)
 
 ```
 App (layout wrapper with <Outlet />)
@@ -168,6 +170,9 @@ App (layout wrapper with <Outlet />)
 │   ├── LongRestDialog (overlay, reused from combat-hud)
 │   ├── ShortRestDialog (overlay, reused from combat-hud)
 │   └── SettingsModal (overlay, gear icon in header)
+│       ├── DiceModeToggle (×4), BooleanToggle (×6)
+│       ├── ManualOverrides (EP, Focus, Motes, HD, Max HP Reduction)
+│       └── DataManagement (Export, Import, Reset Session, Clear All)
 ├── CombatHUD (/combat, CSS Grid layout)
 │   ├── Header (grid: header) — Deck Builder nav + rest buttons + gear icon
 │   ├── EchoManifoldDeck (grid: manifold)
@@ -181,7 +186,7 @@ App (layout wrapper with <Outlet />)
 │   │   ├── FocusCounter
 │   │   ├── EchoPointsBar
 │   │   ├── HitDiceDisplay
-│   │   └── SiphonCapacitanceTracker
+│   │   │   └── SiphonCapacitanceTracker (with in-game timer)
 │   ├── Allies placeholder (grid: allies)
 │   ├── SelectedDeck (grid: deck)
 │   │   └── SiphonCard (×N, when expanded)
@@ -192,9 +197,14 @@ App (layout wrapper with <Outlet />)
 │   ├── LongRestDialog (overlay) — preview + cross-store rest
 │   ├── ShortRestDialog (overlay) — HD spending + effect clearing
 │   └── SettingsModal (overlay, gear icon in header)
+│       ├── DiceModeToggle (×4), BooleanToggle (×6)
+│       ├── ManualOverrides (EP, Focus, Motes, HD, Max HP Reduction)
+│       └── DataManagement (Export, Import, Reset Session, Clear All)
 └── SettingsModal (shared component in settings/)
     ├── DiceModeToggle (×4, for each roll type)
-    └── BooleanToggle (×6, for sound/visual/gameplay settings)
+    ├── BooleanToggle (×6, for sound/visual/gameplay settings)
+    ├── ManualOverrides (direct value editing)
+    └── DataManagement (export/import/reset/clear)
 ```
 
 ### Target Structure (per DESIGN.md + Phase 4.5)

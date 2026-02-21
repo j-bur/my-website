@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useSettingsStore } from '../../store';
 import { DiceModeToggle } from './DiceModeToggle';
+import { ManualOverrides } from './ManualOverrides';
+import { DataManagement } from './DataManagement';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -168,6 +170,14 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
             onChange={setShortRestClearEffects}
           />
         </div>
+
+        {/* Manual Overrides */}
+        <SectionHeading>Manual Overrides</SectionHeading>
+        <ManualOverrides />
+
+        {/* Data */}
+        <SectionHeading>Data</SectionHeading>
+        <DataManagement />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 5A Complete (Phase 5B: Timer + Overrides + Data next)
+**Current Phase**: Phase 5B Complete (Phase 5C: While Selected mechanics next)
 
 ---
 
@@ -17,6 +17,7 @@
 | Phase 4: Rest Mechanics | ✅ Complete | 59 new tests (24 integration + 15 + 20 component) = 300 total |
 | Phase 4.5: Deck Builder + Routing | ✅ Complete | 32 new tests (8+10+8+4+2) = 332 total |
 | Phase 5A: Settings Modal | ✅ Complete | 15 new tests, 347 total |
+| Phase 5B: Timer + Overrides + Data | ✅ Complete | 36 new tests, 383 total |
 | Phase 6: Ally System | 🔴 Not Started | Blocked by Phase 5 |
 | Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
 
@@ -24,11 +25,12 @@
 
 ## Next Session
 
-1. **Start with Phase 5B**: Read `.claude/docs/PHASE_SPECS/phase-5-settings.md` (Session 5B section)
-2. Manual overrides (EP, Focus, Motes, HD, Max HP) in SettingsModal
-3. Data export/import, reset session, clear all data
-4. Capacitance timer UI with presets
-5. Then Phase 5C: While Selected mechanics (Siphon Greed/Supercapacitance EP cost at long rest)
+1. **Start with Phase 5C**: Read `.claude/docs/PHASE_SPECS/phase-5-settings.md` (Session 5C section)
+2. While Selected mechanics: Siphon Greed focus gain at long rest, Supercapacitance EP cost at long rest
+3. Create `whileSelectedCalculator.ts` utility
+4. Extend `siphonStore.longRest()` to accept While Selected effects
+5. Update `LongRestDialog` with While Selected preview section
+6. Then Phase 6: Ally System
 
 ---
 
@@ -115,6 +117,19 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - [x] 9 Manifold Abilities (3 phases, 3 each)
 - [x] 100 Wild Echo Surge entries (3 severity columns)
 - [x] All type definitions
+
+### Phase 5B: Timer + Overrides + Data
+- [x] `ManualOverrides.tsx` — Number inputs with ±1 buttons for EP, Focus, Motes, Hit Dice, Max HP Reduction; clamping validation; Echo Drained note display
+- [x] `DataManagement.tsx` — Export (JSON download), Import (file picker with error/success feedback), Reset Session (EP→PB, clears combat), Clear All Data (two-click confirmation with blur reset)
+- [x] `dataExport.ts` — `exportAllState()`, `importAllState(json)`, `resetAllStores()`, `resetSession(pb)` utilities with version 1 format
+- [x] `SiphonCapacitanceTracker.tsx` — In-game time picker (8 presets), ±1 hour arrows, expiration display, Extend +8 hrs / Timer Expired / Clear buttons; shows only when charges exist
+- [x] `siphonStore.ts` — Added `capacitanceInGameTime`, `capacitanceExpiresAt`, `setCapacitanceTimer()`, `extendCapacitanceTimer()`, `resetSiphon()`
+- [x] `SettingsModal.tsx` — Added Manual Overrides and Data sections with ManualOverrides and DataManagement components
+- [x] 12 dataExport tests: export format/values/no-functions, import restore/invalid/missing-version/bad-version, resetAllStores, resetSession (4 tests)
+- [x] 9 ManualOverrides tests: renders all inputs, EP/Focus/Motes/HD/MaxHP updates, clamping, Echo Drained note
+- [x] 6 DataManagement tests: renders buttons, export download, import file, reset session, clear confirmation, blur cancels confirmation
+- [x] 9 SiphonCapacitanceTracker tests: charge pips, no timer when empty, preset picker, preset click, arrow adjust, extend, timer expired, clear, action buttons
+- [x] All exit conditions met: build passes, lint passes, 383 tests green
 
 ### Phase 5A: Settings Modal
 - [x] `DiceModeToggle.tsx` — Reusable [3D] [Macro] toggle pair with accent color active state, `aria-pressed` accessibility
@@ -203,6 +218,19 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### 2026-02-21 — Phase 5B: Timer + Overrides + Data
+- Created `ManualOverrides.tsx`: number inputs with +/− buttons for EP, Focus, Motes, Hit Dice, Max HP Reduction; each calls appropriate store setter with clamping validation
+- Created `DataManagement.tsx`: Export Data (JSON download), Import Data (file picker), Reset Session (EP→PB, Focus→0, motes→0, clear combat state), Clear All Data (confirmation required)
+- Created `dataExport.ts` utility: `exportAllState()` (version 1 JSON with all 4 stores), `importAllState(json)` (validate + restore), `resetAllStores()`, `resetSession(pb)`
+- Updated `SiphonCapacitanceTracker.tsx`: in-game time picker with 8 presets (Dawn/Morning/Midday/Afternoon/Dusk/Evening/Night/Midnight), ±1 hour arrow buttons, expiration display (current + 8 hours), Extend +8 hrs/Timer Expired/Clear action buttons; collapsible preset grid
+- Added `siphonStore` fields: `capacitanceInGameTime`, `capacitanceExpiresAt`, `setCapacitanceTimer()`, `extendCapacitanceTimer()`, `resetSiphon()`
+- Updated `SettingsModal.tsx`: added Manual Overrides and Data sections
+- Updated barrel export `settings/index.ts` with ManualOverrides and DataManagement
+- 36 new tests across 4 test files: 12 dataExport utility, 9 ManualOverrides, 6 DataManagement, 9 SiphonCapacitanceTracker
+- Total: 383 tests passing across 27 test files
+- All exit conditions met: build passes, lint passes, 383 tests green
+- **Next**: Phase 5C (While Selected long rest mechanics)
 
 ### 2026-02-21 — Phase 5A: Settings Modal
 - Created `DiceModeToggle.tsx`: reusable 3D/Macro toggle pair with accent color active state
