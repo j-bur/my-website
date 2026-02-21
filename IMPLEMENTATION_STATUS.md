@@ -1,237 +1,131 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-20
-**Current Phase**: Pre-implementation (Planning Complete)
+**Current Phase**: Pre-Phase 0 (Documentation restructure complete, testing infrastructure next)
 
 ---
 
 ## Quick Status
 
-| Area | Status | Notes |
-|------|--------|-------|
-| Design Document | ✅ Complete | DESIGN.md is comprehensive |
-| Gap Analysis | ✅ Complete | GAP_ANALYSIS.md identifies all gaps |
-| Store: Character | 🟡 Partial | Missing Hit Dice |
-| Store: Siphon | 🟡 Needs Redesign | Missing Hand vs Selected Deck distinction |
-| Store: Manifold | ✅ Good | Minor UI work needed |
-| UI: Landing | ✅ Complete | Functional |
-| UI: Deck Builder | 🟡 Partial | Missing rest buttons, Hit Dice display |
-| UI: Combat View | 🔴 Major Rework | Layout doesn't match design |
-| UI: Settings | 🔴 Not Started | Not implemented |
-| Data: Features | ✅ Complete | All 42/42 features verified present |
-| Data: Manifold | ✅ Complete | 3 phases, 9 abilities |
-| Data: Surge Table | ✅ Complete | 100 entries |
+| Phase | Status | Gate |
+|-------|--------|------|
+| Documentation Restructure | ✅ Complete | CLAUDE.md lean, .claude/docs/ populated |
+| Phase 0: Testing Infrastructure | 🔴 Not Started | Need Vitest setup + 15+ utility tests |
+| Phase 1: Store Redesign | 🔴 Not Started | Blocked by Phase 0 |
+| Phase 2: Combat Layout | 🔴 Not Started | Blocked by Phase 1 |
+| Phase 3: Activation Flow | 🔴 Not Started | Blocked by Phase 2 |
+| Phase 4: Rest Mechanics | 🔴 Not Started | Blocked by Phase 3 |
+| Phase 5: Settings & Polish | 🔴 Not Started | Blocked by Phase 4 |
+| Phase 6: Ally System | 🔴 Not Started | Blocked by Phase 5 |
+| Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
 
 ---
 
-## Implementation Phases
+## Phase Specs
 
-### Phase 1: Store Redesign
-**Status**: 🔴 Not Started
-**Priority**: High — All UI work depends on this
+Each phase has a detailed spec in `.claude/docs/PHASE_SPECS/`. Read the spec before starting a phase.
 
-| Task | Status | File |
-|------|--------|------|
-| Add Hit Dice to characterStore | 🔴 TODO | `src/store/characterStore.ts` |
-| Add `spendHitDice()` method | 🔴 TODO | `src/store/characterStore.ts` |
-| Add `restoreAllHitDice()` method | 🔴 TODO | `src/store/characterStore.ts` |
-| Add `handCardIds` array | 🔴 TODO | `src/store/siphonStore.ts` |
-| Add `allies` array | 🔴 TODO | `src/store/siphonStore.ts` |
-| Add `allyBestowments` array | 🔴 TODO | `src/store/siphonStore.ts` |
-| Add `activeEffects` array | 🔴 TODO | `src/store/siphonStore.ts` |
-| Implement `bestowToSelf()` | 🔴 TODO | `src/store/siphonStore.ts` |
-| Implement `bestowToAlly()` | 🔴 TODO | `src/store/siphonStore.ts` |
-| Implement `activateFromHand()` | 🔴 TODO | `src/store/siphonStore.ts` |
-| Card returns to Selected deck after activation | 🔴 TODO | `src/store/siphonStore.ts` |
-| Update `longRest()` for new model | 🔴 TODO | `src/store/siphonStore.ts` |
-| Update `shortRest()` for new model | 🔴 TODO | `src/store/siphonStore.ts` |
+| Phase | Spec File | Sessions | Key Deliverables |
+|-------|-----------|----------|-----------------|
+| 0 | `phase-0-testing.md` | 1 | Vitest, 15+ utility tests |
+| 1 | `phase-1-stores.md` | 2 | Store redesign, 30+ store tests |
+| 2 | `phase-2-combat-layout.md` | 2 | Spatial layout, Deck, Hand, Effects panel |
+| 3 | `phase-3-activation.md` | 2 | Activation Panel, warp, macro |
+| 4 | `phase-4-rest.md` | 1 | Long Rest, Short Rest dialogs |
+| 5 | `phase-5-settings.md` | 2 | Settings modal, overrides, export |
+| 6 | `phase-6-allies.md` | 2 | Allies panel, bestowment overlay |
+| 7 | `phase-7-polish.md` | 2-3 | Animations, drag-drop, VFX |
 
 ---
 
-### Phase 2: Combat View Layout
-**Status**: 🔴 Not Started
-**Priority**: High
+## Discovered Issues
 
-| Task | Status | File |
-|------|--------|------|
-| Create SelectedDeck component | 🔴 TODO | `src/components/combat-hud/SelectedDeck.tsx` |
-| Create HandArea component | 🔴 TODO | `src/components/combat-hud/HandArea.tsx` |
-| Create ActiveEffectsPanel component | 🔴 TODO | `src/components/combat-hud/ActiveEffectsPanel.tsx` |
-| Create AlliesPanel component | 🔴 TODO | `src/components/combat-hud/AlliesPanel.tsx` |
-| Revise CombatHUD layout | 🔴 TODO | `src/components/combat-hud/CombatHUD.tsx` |
-| Implement Selected deck expand/collapse | 🔴 TODO | `src/components/combat-hud/SelectedDeck.tsx` |
-| Implement drag card to Hand (bestow to self) | 🔴 TODO | - |
-| Implement drag card to Ally (bestow to ally) | 🔴 TODO | - |
-| Implement drag-to-dismiss for Active Effects | 🔴 TODO | `src/components/combat-hud/ActiveEffectsPanel.tsx` |
-| Display phase abilities on left side | 🔴 TODO | `src/components/combat-hud/CombatHUD.tsx` |
-| Add Hit Dice display to resources | 🔴 TODO | - |
+_(Issues found during sessions that belong to a different phase. Format: `[DISCOVERY] description (found during Phase N, relevant to Phase M)`)_
 
----
-
-### Phase 3: Activation Flow
-**Status**: 🔴 Not Started
-**Priority**: High
-
-| Task | Status | File |
-|------|--------|------|
-| Create ActivationPanel component | 🔴 TODO | `src/components/combat-hud/ActivationPanel.tsx` |
-| Implement card staging (drag/double-click to activate) | 🔴 TODO | - |
-| Show cost preview in Activation Panel | 🔴 TODO | - |
-| Implement macro mode (copy macro, manual input) | 🔴 TODO | - |
-| Implement 3D dice mode toggle | 🔴 TODO | - |
-| Show Warp warning when applicable | 🔴 TODO | - |
-| Implement confirm/cancel flow | 🔴 TODO | - |
-| Card returns to Selected deck on confirm | 🔴 TODO | - |
-
----
-
-### Phase 4: Rest Mechanics
-**Status**: 🔴 Not Started
-**Priority**: Medium
-
-| Task | Status | File |
-|------|--------|------|
-| Add Short Rest button to Combat View | 🔴 TODO | `src/components/combat-hud/CombatHUD.tsx` |
-| Add Long Rest button to Combat View | 🔴 TODO | `src/components/combat-hud/CombatHUD.tsx` |
-| Implement Short Rest dialog | 🔴 TODO | - |
-| Implement Long Rest dialog | 🔴 TODO | - |
-| Hit Dice spending for phase switch | 🔴 TODO | - |
-| Hit Dice spending for Short Rest healing | 🔴 TODO | - |
-| Effect clearing toggle for Short Rest | 🔴 TODO | - |
-| Verify Long Rest mechanics match DESIGN.md | 🔴 TODO | - |
-
----
-
-### Phase 5: Settings & Polish
-**Status**: 🔴 Not Started
-**Priority**: Medium
-
-| Task | Status | File |
-|------|--------|------|
-| Create SettingsModal component | 🔴 TODO | `src/components/settings/SettingsModal.tsx` |
-| Add dice roll mode toggles | 🔴 TODO | - |
-| Add sound toggle | 🔴 TODO | - |
-| Add visual toggles (animations, reduced motion) | 🔴 TODO | - |
-| Add gameplay toggles | 🔴 TODO | - |
-| Add manual override controls | 🔴 TODO | - |
-| Implement Export/Import | 🔴 TODO | - |
-| Implement Reset Session | 🔴 TODO | - |
-| Add settings gear to header | 🔴 TODO | - |
-
----
-
-### Phase 6: Ally Bestowment View
-**Status**: 🔴 Not Started
-**Priority**: Medium
-
-| Task | Status | File |
-|------|--------|------|
-| Create AllyBestowmentView overlay | 🔴 TODO | `src/components/combat-hud/AllyBestowmentView.tsx` |
-| Show ally's bestowed cards | 🔴 TODO | - |
-| Cards from Selected deck (left) | 🔴 TODO | - |
-| Cards from All Features (right) | 🔴 TODO | - |
-| Silvery tendril effect | 🔴 TODO | - |
-| Click ally name to edit bestowments | 🔴 TODO | - |
-| Drag card away to remove bestowment | 🔴 TODO | - |
-
----
-
-### Phase 7: Polish & Animations
-**Status**: 🔴 Not Started
-**Priority**: Low
-
-| Task | Status | File |
-|------|--------|------|
-| Card flip animations | 🔴 TODO | - |
-| Card movement animations | 🔴 TODO | - |
-| Dice roll animations (if 3D mode) | 🔴 TODO | - |
-| Resource counter animations | 🔴 TODO | - |
-| Mote fill/empty animations | 🔴 TODO | - |
-| Phase transition animations | 🔴 TODO | - |
-| Glitch effects for negative EP | 🟡 Partial | `src/index.css` |
-| "Weavers watching" effect at high Focus | 🟡 Partial | `src/index.css` |
+_(none yet)_
 
 ---
 
 ## Completed Items
 
-### Documentation
-- [x] DESIGN.md — Comprehensive UI/UX specification
-- [x] GAP_ANALYSIS.md — Current vs target comparison
-- [x] CLAUDE.md — AI session guidance
+### Documentation (Pre-Phase 0)
+- [x] DESIGN.md — Comprehensive UI/UX specification (65KB)
+- [x] GAP_ANALYSIS.md — Current vs target comparison (to be deprecated after Phase 1)
 - [x] ARCHITECTURE.md — Technical overview
-- [x] IMPLEMENTATION_STATUS.md — This file
+- [x] CLAUDE.md — Lean AI session guidance (~72 lines)
+- [x] `.claude/docs/SESSION_PROTOCOL.md` — Mandatory session procedures
+- [x] `.claude/docs/RULES.md` — 40+ machine-readable verification rules
+- [x] `.claude/docs/CARD_LIFECYCLE.md` — Full Select/Bestow/Activate flow
+- [x] `.claude/docs/STORE_CONTRACTS.md` — Store interfaces and invariants
+- [x] `.claude/docs/SPECIAL_CASES.md` — Feature edge cases
+- [x] `.claude/docs/PHASE_SPECS/` — 8 phase spec files (0-7)
 
 ### Infrastructure
-- [x] Vite + React + TypeScript setup
+- [x] Vite + React 19 + TypeScript setup
 - [x] Tailwind CSS v4 configuration
-- [x] Zustand stores (basic structure)
+- [x] Zustand stores (basic structure -- needs Phase 1 redesign)
 - [x] React Router configuration
 - [x] Custom color palette in CSS
 
-### Data
-- [x] 37 Siphon Features transcribed (verify if complete)
-- [x] Echo Manifold phases and abilities
-- [x] Wild Echo Surge table (100 entries)
-- [x] Type definitions for all data
+### Data (Complete, Verified 2026-02-20)
+- [x] 42/42 Siphon Features (verified against PDF)
+- [x] 9 Manifold Abilities (3 phases, 3 each)
+- [x] 100 Wild Echo Surge entries (3 severity columns)
+- [x] All type definitions
 
-### Components (Existing, May Need Revision)
-- [x] LandingPage
-- [x] GlitchButton
-- [x] DeckBuilder
-- [x] CharacterSetup
-- [x] FilterControls
-- [x] SelectionSummary
+### Components (Existing, Need Revision in Phase 2+)
+- [x] LandingPage, GlitchButton
+- [x] DeckBuilder, CharacterSetup, FilterControls, SelectionSummary
 - [x] SiphonCard
-- [x] CombatHUD (needs major revision)
-- [x] EchoPointsBar
-- [x] FocusCounter
-- [x] SiphonCapacitanceTracker
-- [x] ActiveCardHand (needs revision)
-- [x] EchoManifold
-- [x] PhaseSelector
-- [x] MoteTracker
-- [x] ManifoldAbilityCard
+- [x] CombatHUD (needs Phase 2 layout revision)
+- [x] EchoPointsBar, FocusCounter, SiphonCapacitanceTracker
+- [x] ActiveCardHand (to be replaced by HandArea in Phase 2)
+- [x] EchoManifold, PhaseSelector, MoteTracker, ManifoldAbilityCard
 - [x] SurgeTableModal
 
 ---
 
-## Known Issues / Blockers
+## Known Blockers
 
 | Issue | Impact | Resolution |
 |-------|--------|------------|
-| Store model doesn't support Hand vs Selected deck | Blocks Phase 2 UI | Complete Phase 1 first |
-| No Hit Dice tracking | Blocks phase switch cost, short rest | Add to characterStore |
-| Feature count may be incomplete | Minor | Verify against PDF |
+| No test infrastructure | Cannot verify behavior | Phase 0 |
+| siphonStore doesn't support Hand vs Deck | Blocks all card flow | Phase 1 |
+| No Hit Dice in characterStore | Blocks phase switch, rest | Phase 1 |
+| Combat layout wrong | Blocks UI interaction | Phase 2 |
 
 ---
 
 ## Session Log
 
+### 2026-02-20 — Documentation Restructure
+- Restructured all documentation for AI-assisted development
+- Created `.claude/docs/` with 6 reference documents + 8 phase specs
+- Rewrote CLAUDE.md from 204 lines to 72 lines (lean, rules-only)
+- Created RULES.md with 40+ GIVEN/WHEN/THEN verification rules
+- Created STORE_CONTRACTS.md with full interface specs for all stores
+- Created SESSION_PROTOCOL.md with mandatory session procedures
+- Created CARD_LIFECYCLE.md with state diagrams for card flow
+- Created SPECIAL_CASES.md consolidating all edge cases
+- **Next**: Phase 0 (Testing Infrastructure)
+
 ### 2026-02-20 — Documentation Audit Session
-- Cross-referenced all 4 source PDFs against DESIGN.md, CLAUDE.md, ARCHITECTURE.md, GAP_ANALYSIS.md, and code
-- **Confirmed**: All 42/42 features correctly implemented in data file
-- **Fixed**: CSS color values now match DESIGN.md (Focus, Warp, Background, Surface, Card Border were wrong; Capacitance was missing)
-- **Fixed**: ARCHITECTURE.md warp trigger pseudo-code (was misleading)
-- **Added to CLAUDE.md**: 5 new "Common Mistakes" entries (Siphon Greed cost halving, Echo Intuition dual modifier, Superconduction exception, Manifestation self-replacement, Activation:None auto-activate)
-- **Added to DESIGN.md**: Echo Intuition modifier display, Capacitance acquisition window clarification, Supercapacitance worked example, Longing/Doublecast/Superconduction cost formulas, Activation:None and Superconduction bestow exceptions
-- **Added to GAP_ANALYSIS.md**: 5 new special feature interaction gaps, missing bestowFeature() validation
-- **Fixed data**: Spatial Flux "Static Capacitance" → "Siphon Capacitance" (confirmed typo), Distort Reality warp uses Wild Echo Surge (designer decision), surge table typos #88 and #91
-- **Next**: Begin Phase 1 (Store Redesign)
+- Cross-referenced all 4 source PDFs against all docs and code
+- Confirmed 42/42 features correct in data file
+- Fixed CSS colors, ARCHITECTURE.md warp pseudo-code
+- Added 5 "Common Mistakes" entries (now in SPECIAL_CASES.md)
+- Fixed data: Spatial Flux typo, Distort Reality warp, surge #88 and #91
 
 ### 2026-02-19 — Initial Planning Session
-- Created comprehensive DESIGN.md with all UI/UX specifications
-- Identified gaps between current code and design
-- Created GAP_ANALYSIS.md documenting all discrepancies
-- Created supporting documentation (CLAUDE.md, ARCHITECTURE.md, this file)
-- **Next**: Documentation audit before implementation
+- Created DESIGN.md, GAP_ANALYSIS.md, ARCHITECTURE.md, CLAUDE.md
 
 ---
 
 ## Notes for Next Session
 
-1. **Start with Phase 1** — Store changes are foundational
-2. **characterStore first** — Simpler changes, good warm-up
-3. **siphonStore is complex** — Take time to understand current bestow logic before revising
-4. **Test store changes** — Verify with console/devtools before building UI
-5. **Refer to DESIGN.md** — It's the source of truth for expected behavior
+1. **Start with Phase 0**: Read `.claude/docs/PHASE_SPECS/phase-0-testing.md`
+2. Install: `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`
+3. Create `vitest.config.ts`
+4. Write utility tests referencing `.claude/docs/RULES.md` for expected behaviors
+5. Target: 15+ test cases across 5 utility files
+6. Do NOT modify any existing source code in Phase 0
