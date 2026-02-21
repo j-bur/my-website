@@ -5,7 +5,7 @@ import { useCharacterStore } from '../../store';
 import { SiphonCard } from '../cards/SiphonCard';
 
 const ALL_TAGS = Array.from(
-  new Set(SIPHON_FEATURES.flatMap((f) => f.tags ?? []))
+  new Set(SIPHON_FEATURES.flatMap((f) => f.tags))
 ).sort();
 
 export function CollectionGrid() {
@@ -28,7 +28,7 @@ export function CollectionGrid() {
     let features = SIPHON_FEATURES;
 
     if (selectedTag !== 'All') {
-      features = features.filter((f) => f.tags?.includes(selectedTag));
+      features = features.filter((f) => f.tags.includes(selectedTag));
     }
 
     if (searchText.trim()) {

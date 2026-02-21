@@ -16,6 +16,7 @@ const makeFeature = (overrides: Partial<SiphonFeature> = {}): SiphonFeature => (
   activation: 'Action',
   description: 'A test feature description.',
   warpEffect: null,
+  tags: ['combat'],
   ...overrides,
 });
 

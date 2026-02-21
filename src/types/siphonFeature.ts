@@ -28,7 +28,7 @@ export interface SiphonFeature {
   description: string;
   warpEffect: string | null;        // null if no warp effect
   requiresConcentration?: boolean;
-  tags?: string[];                  // For filtering: 'combat', 'utility', 'healing', etc.
+  tags: string[];                   // For filtering: 'combat', 'utility', 'healing', etc.
 }
 
 export interface BestowedFeature {

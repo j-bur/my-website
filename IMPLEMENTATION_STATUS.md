@@ -63,6 +63,9 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - `[DISCOVERY]` Store methods that roll dice internally (`longRest`'s d4) are hard to test deterministically. Future store methods should accept roll results as parameters. (found during Phase 4)
 - `[RESOLVED]` Siphon Greed While Selected focus gain not implemented. → Added as Phase 5C. (found during Phase 4, resolved during Phase 4.5 spec writing)
 - `[DISCOVERY]` `siphonStore.selectCard(cardId, maxCards)` puts PB limit logic on the caller — every call site must know about Supercapacitance to compute `maxCards`. If future code calls `selectCard` (e.g., data import in Phase 5B, or a "restore deck" feature), it needs the same Supercapacitance-aware logic. Consider refactoring the store to own this internally by reading `proficiencyBonus` from characterStore + checking if `supercapacitance` is selected. Not urgent but a latent coupling. (found during Phase 4.5 spec writing, relevant to Phase 5B data import)
+- `[DISCOVERY]` `CombatHUD` now uses `useNavigate()` (added in Phase 4.5 for "Deck Builder" nav button). Any future test that renders `<CombatHUD />` directly will need a `createMemoryRouter` wrapper. Existing sub-component tests are unaffected since they test SelectedDeck, HandArea, etc. in isolation. (found during Phase 4.5, relevant to any future CombatHUD-level tests)
+- `[DISCOVERY]` `LongRestDialog` and `ShortRestDialog` live in `combat-hud/` but are reused by `deck-builder/SelectedPanel` via cross-directory import. If a third consumer appears, consider extracting them to a `shared/` or `dialogs/` directory. (found during Phase 4.5, relevant to Phase 5+)
+- `[FIXED]` `SiphonFeature.tags` was typed as optional (`tags?: string[]`) but all 42 features have tags. Made required to eliminate defensive optional chaining in filter code. (found and fixed during Phase 4.5)
 
 ---
 

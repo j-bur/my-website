@@ -520,7 +520,7 @@ export function getFeatureById(id: string): SiphonFeature | undefined {
 
 // Helper function to filter features by tags
 export function getFeaturesByTag(tag: string): SiphonFeature[] {
-  return SIPHON_FEATURES.filter(f => f.tags?.includes(tag));
+  return SIPHON_FEATURES.filter(f => f.tags.includes(tag));
 }
 
 // Helper function to get features by activation type

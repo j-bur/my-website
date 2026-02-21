@@ -63,7 +63,7 @@ describe('CollectionGrid', () => {
     fireEvent.change(select, { target: { value: 'healing' } });
 
     const healingFeatures = SIPHON_FEATURES.filter((f) =>
-      f.tags?.includes('healing')
+      f.tags.includes('healing')
     );
     const cards = screen.getAllByRole('button');
     expect(cards.length).toBe(healingFeatures.length);
