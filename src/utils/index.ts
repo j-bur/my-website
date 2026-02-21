@@ -4,3 +4,5 @@ export * from './focusCalculator';
 export * from './echoPointUtils';
 export * from './surgeRoller';
 export * from './durationParser';
+export * from './macroGenerator';
+export * from './whileSelectedCalculator';

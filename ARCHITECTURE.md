@@ -59,11 +59,19 @@ src/
 │   │   ├── AllyBestowmentView.tsx # Overlay showing ally's bestowed cards with remove
 │   │   └── index.ts              # Barrel export
 │   └── __tests__/                 # Component tests
-├── hooks/                           # Custom React hooks (Phase 7A)
+├── hooks/                           # Custom React hooks
 │   ├── useReducedMotion.ts          # Combines settings + OS prefers-reduced-motion
-│   └── useAnimatedNumber.ts         # Smooth number interpolation via rAF
+│   ├── useAnimatedNumber.ts         # Smooth number interpolation via rAF
+│   └── useCardDragDetection.ts      # Global card drag detection for drop zone highlighting
 ├── data/                          # Static game data (verified 2026-02-20)
-├── types/                         # TypeScript interfaces (includes dragData.ts for DnD)
+│   ├── siphonFeatures.ts            # 42 Siphon Features
+│   ├── featureConstants.ts          # FEATURE_MAP, TRIGGERED_FEATURE_IDS, WHILE_SELECTED_FEATURE_IDS
+│   ├── echoManifold.ts              # 9 Manifold Abilities (3 phases × 3)
+│   ├── wildEchoSurgeTable.ts        # 100 Wild Echo Surge entries
+│   └── index.ts                     # Barrel export
+├── types/                         # TypeScript interfaces
+│   ├── dragData.ts                  # CardDragData type + setCardDragData/getCardDragData/isCardDrag helpers
+│   └── index.ts                     # Barrel export
 ├── utils/                         # Helper functions
 ├── store/                         # Zustand state stores
 │   ├── characterStore.ts          # Character stats, HP, hit dice
@@ -166,7 +174,7 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 6 Complete)
+### Current Structure (Phase 7B Complete)
 
 ```
 App (layout wrapper with <Outlet />)
@@ -216,41 +224,6 @@ App (layout wrapper with <Outlet />)
     └── DataManagement (export/import/reset/clear)
 ```
 
-### Target Structure (Post-Phase 6: Ally System)
-
-```
-App (layout wrapper with <Outlet />)
-├── HomeRedirect (/ → /combat or /deck-builder)
-├── DeckBuilder (/deck-builder)
-│   ├── CharacterHeader (Level, Max HP, PB, EP Max inputs)
-│   ├── CollectionGrid (42 cards, filter + search)
-│   ├── SelectedPanel (selected cards, rest buttons, Enter Combat)
-│   ├── LongRestDialog (overlay, reused from combat-hud)
-│   └── ShortRestDialog (overlay, reused from combat-hud)
-└── CombatHUD (/combat)
-    ├── Header (character info, settings gear)
-    ├── TableArea
-    │   ├── EchoManifoldDeck (top-left)
-    │   │   ├── PhaseCard (face-up)
-    │   │   └── MoteTracker
-    │   ├── WildSurgeDeck (top-right)
-    │   ├── PhaseAbilities (left side, ×3)
-    │   ├── ActiveEffectsPanel (center)
-    │   ├── ResourceDisplay (right side)
-    │   │   ├── EchoPointsBar
-    │   │   ├── FocusCounter
-    │   │   ├── HitDiceDisplay
-    │   │   └── CapacitanceTracker
-    │   ├── AlliesPanel (above hand)
-    │   ├── SelectedDeck (bottom-left)
-    │   └── HandArea (bottom-center)
-    ├── ActivationPanel (overlay when activating)
-    ├── PhaseSelectionOverlay
-    ├── AllyBestowmentView (overlay when viewing ally)
-    ├── SurgeResultModal
-    └── SettingsModal
-```
-
 ---
 
 ## Routing
@@ -290,8 +263,18 @@ Custom colors defined in `src/index.css` via `@theme`:
 ### Animation Classes
 
 Defined in `src/index.css`:
+
+**Active (used by components):**
+- `.card-enter` — Slide-in animation for new hand cards (HandArea)
+- `.pip-fill` / `.pip-drain` — Scale+glow pulse for mote/capacitance pips (EchoManifoldDeck, SiphonCapacitanceTracker)
+- `.effect-dismiss` — Strikethrough + fade + collapse for dismissed effects (ActiveEffectsPanel)
+- `.drop-zone-glow` — Pulsing accent shadow for ambient drop zone highlighting (ActiveEffectsPanel)
+- `.reduce-motion` — Applied to root div; disables all animations when reduced motion is enabled
+
+**Reserved for Phase 7C (defined but not yet referenced by components):**
 - `.glitch-hover` — Subtle glitch effect on hover
 - `.chromatic-aberration` — Color distortion when EP negative
+- `.warp-active` — Warp visual effect
 - `.focus-pulse` — Pulse animation for Focus changes
 - `.weavers-watch` — Subtle effect at high Focus (50+)
 

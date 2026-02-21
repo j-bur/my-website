@@ -24,6 +24,7 @@
 | Post-Phase 6 Audit | ✅ Complete | 3 bugs fixed, dead code removed, constants consolidated |
 | Phase 7A: Core Animations | ✅ Complete | Card slide-in, animated counters, pip pulse, reduced motion |
 | Phase 7B: Drag-and-Drop | ✅ Complete | DnD bestow/activate, dismiss gesture, drop zone highlights |
+| Post-Phase 7 Audit | ✅ Complete | Hook extraction, dead code removal, docs updated |
 
 ---
 
@@ -89,6 +90,10 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - `[DISCOVERY]` HandArea's `setEnteringCards` in `useEffect` calls setState synchronously — same pattern the lint rule `react-hooks/set-state-in-effect` flagged in the pip components. Currently not flagged (lint may not catch all cases). If the rule gets stricter, HandArea will need the same "adjust state during render" refactor used in EchoManifoldDeck/SiphonCapacitanceTracker. (found during Phase 7A)
 - `[DISCOVERY]` `useAnimatedNumber` returns `target` directly when `skipAnimation` is true, but `displayed` state can drift if `skipAnimation` toggles mid-animation. Harmless in practice (nobody toggles settings mid-animation), but the state model isn't clean. A ref-based approach for `displayed` would be more robust. (found during Phase 7A)
 - `[DISCOVERY]` Pip animation uses React's "adjust state during render" pattern (`if (prev !== current) { setPrev; setAnimating }`) which triggers a double render per change. Correct per React docs but slightly wasteful. A `useMemo`+ref approach could avoid the extra render. Not a real perf issue with 5 pips. (found during Phase 7A)
+- `[FIXED]` Duplicated drag detection logic across HandArea, AlliesPanel, and ActiveEffectsPanel (3×17 lines). Extracted to `useCardDragDetection()` hook in `src/hooks/`. (found during Phase 7B, fixed during post-Phase 7 audit)
+- `[FIXED]` 5 unused exported data functions (`getFeatureById`, `getFeaturesByTag`, `getFeaturesByActivation`, `getAbilityById`, `getSurgeEntry`) and 1 unused constant (`SEVERITY_THRESHOLDS`) removed. (found during post-Phase 7 audit)
+- `[FIXED]` `macroGenerator` and `whileSelectedCalculator` not in `utils/index.ts` barrel export — inconsistent with other utilities. Added. (found during post-Phase 7 audit)
+- `[FIXED]` ARCHITECTURE.md stale — referenced "Phase 6 Complete", missing hooks/data/types directory details, missing Phase 7A/7B animation classes. Updated. (found during post-Phase 7 audit)
 
 ---
 
@@ -247,6 +252,14 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### Post-Phase 7 Audit
+- [x] **Refactor**: Extracted `useCardDragDetection(onDragEnd?)` hook from 3 components (HandArea, AlliesPanel, ActiveEffectsPanel) — eliminated 3×17 lines of duplicated window event listener code
+- [x] **Cleanup**: Removed 5 unused exported data functions (`getFeatureById`, `getFeaturesByTag`, `getFeaturesByActivation`, `getAbilityById`, `getSurgeEntry`) and 1 unused constant (`SEVERITY_THRESHOLDS`)
+- [x] **Cleanup**: Added `macroGenerator` and `whileSelectedCalculator` to `utils/index.ts` barrel export for consistency
+- [x] **Docs**: Updated ARCHITECTURE.md — phase label (6→7B), expanded directory structure (hooks, data, types), animation classes split into active vs reserved-for-7C, removed stale target structure section
+- [x] **Docs**: Updated phase-7-polish.md — marked duplicated drag detection issues as [FIXED]
+- [x] All changes verified: build passes, lint passes, 445 tests green
 
 ### Phase 7B: Drag-and-Drop
 - [x] `settingsStore.ts` — Added `highlightDropTargets` boolean (default: true) with setter

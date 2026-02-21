@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useSiphonStore, useSettingsStore } from '../../store';
 import { getCardDragData, isCardDrag } from '../../types/dragData';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { useCardDragDetection } from '../../hooks/useCardDragDetection';
 import type { SelfActiveEffect } from '../../types';
 
 interface ActiveEffectsPanelProps {
@@ -135,28 +136,9 @@ function EffectRow({ effect, panelRef }: EffectRowProps) {
 export function ActiveEffectsPanel({ onActivateCard }: ActiveEffectsPanelProps) {
   const activeEffects = useSiphonStore((s) => s.activeEffects);
   const highlightDropTargets = useSettingsStore((s) => s.highlightDropTargets);
-  const [isCardBeingDragged, setIsCardBeingDragged] = useState(false);
   const [isDragTarget, setIsDragTarget] = useState(false);
+  const isCardBeingDragged = useCardDragDetection(() => setIsDragTarget(false));
   const panelRef = useRef<HTMLDivElement>(null);
-
-  // Global drag listeners for drop zone highlighting
-  useEffect(() => {
-    const handleGlobalDragStart = (e: DragEvent) => {
-      if (e.dataTransfer?.types.includes('text/x-card-type')) {
-        setIsCardBeingDragged(true);
-      }
-    };
-    const handleGlobalDragEnd = () => {
-      setIsCardBeingDragged(false);
-      setIsDragTarget(false);
-    };
-    window.addEventListener('dragstart', handleGlobalDragStart);
-    window.addEventListener('dragend', handleGlobalDragEnd);
-    return () => {
-      window.removeEventListener('dragstart', handleGlobalDragStart);
-      window.removeEventListener('dragend', handleGlobalDragEnd);
-    };
-  }, []);
 
   const handleDragOver = (e: React.DragEvent) => {
     if (isCardDrag(e.dataTransfer)) {

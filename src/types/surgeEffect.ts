@@ -14,9 +14,3 @@ export interface SurgeResult {
   effect: string;
 }
 
-// Severity thresholds based on d20 roll
-export const SEVERITY_THRESHOLDS = {
-  extreme: { min: 1, max: 3 },      // 15% chance
-  moderate: { min: 4, max: 9 },     // 30% chance
-  nuisance: { min: 10, max: 20 },   // 55% chance
-} as const;

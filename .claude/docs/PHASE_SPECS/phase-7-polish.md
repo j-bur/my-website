@@ -100,6 +100,17 @@ Add card movement animations, resource counter animations, drag-and-drop interac
 - `src/components/combat-hud/AlliesPanel.tsx` (drop target)
 - `src/components/combat-hud/CombatHUD.tsx` (drag context if needed)
 
+### Post-Implementation Notes (7B)
+
+**Known issues:**
+- **[FIXED]** ~~Duplicated drag detection logic~~: Extracted to `useCardDragDetection()` hook in `src/hooks/` during post-Phase 7 audit.
+- **EffectRow dismiss state machine complexity**: The pointer-event state machine (`idle`→`grabbed`→`dragging`→`dismissing`) with dead zones, pointer capture, and bounding rect checks is the most complex interaction logic in the app. Tests require mocking both `getBoundingClientRect` and `setPointerCapture` (jsdom implements neither), making them fragile. Future modifications to ActiveEffectsPanel should carefully study the full state machine before changing dismiss behavior.
+- **`onActivateCard` prop threading**: CombatHUD passes `handleActivateCard` down to both HandArea and ActiveEffectsPanel. If more components need to trigger activation in future phases, consider extracting activation dispatch to a context or store action rather than adding more prop drilling.
+
+**Suboptimal choices:**
+- **[FIXED]** ~~No shared drag detection hook~~: Extracted to `useCardDragDetection(onDragEnd?)` in `src/hooks/useCardDragDetection.ts` during post-Phase 7 audit.
+- **Test count below plan estimate**: Plan estimated ~24 new tests, actual was 19. Some planned visual-state tests (e.g., explicit highlight ring class assertions during transient drag states) were impractical in jsdom. Behavioral tests (does the drop produce the correct store mutation?) were prioritized over CSS class assertions on ephemeral states. The coverage gap is cosmetic, not behavioral.
+
 ---
 
 ## Session 7C: Visual Effects

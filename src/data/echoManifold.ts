@@ -119,11 +119,6 @@ export function getAbilitiesByPhase(phase: ManifoldPhase): ManifoldAbility[] {
   return MANIFOLD_ABILITIES.filter(a => a.phase === phase);
 }
 
-// Helper to get ability by ID
-export function getAbilityById(id: string): ManifoldAbility | undefined {
-  return MANIFOLD_ABILITIES.find(a => a.id === id);
-}
-
 // Constants
 export const MAX_MOTES = 8;
 export const HIT_DICE_FOR_PHASE_SWITCH = 2;

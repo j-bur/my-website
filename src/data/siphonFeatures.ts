@@ -513,17 +513,3 @@ export const SIPHON_FEATURES: SiphonFeature[] = [
   },
 ];
 
-// Helper function to get a feature by ID
-export function getFeatureById(id: string): SiphonFeature | undefined {
-  return SIPHON_FEATURES.find(f => f.id === id);
-}
-
-// Helper function to filter features by tags
-export function getFeaturesByTag(tag: string): SiphonFeature[] {
-  return SIPHON_FEATURES.filter(f => f.tags.includes(tag));
-}
-
-// Helper function to get features by activation type
-export function getFeaturesByActivation(activation: SiphonFeature['activation']): SiphonFeature[] {
-  return SIPHON_FEATURES.filter(f => f.activation === activation);
-}

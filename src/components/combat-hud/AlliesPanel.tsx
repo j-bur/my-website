@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSiphonStore, useSettingsStore } from '../../store';
 import { getCardDragData, isCardDrag } from '../../types/dragData';
+import { useCardDragDetection } from '../../hooks/useCardDragDetection';
 import { FEATURE_MAP } from '../../data/featureConstants';
 
 interface AlliesPanelProps {
@@ -23,7 +24,7 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
   const [renamingAllyId, setRenamingAllyId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [chipDragOver, setChipDragOver] = useState<string | null>(null);
-  const [isCardBeingDragged, setIsCardBeingDragged] = useState(false);
+  const isCardBeingDragged = useCardDragDetection(() => setChipDragOver(null));
 
   const addInputRef = useRef<HTMLInputElement>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
@@ -49,25 +50,6 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
       if (hoverTimerRef.current) {
         clearTimeout(hoverTimerRef.current);
       }
-    };
-  }, []);
-
-  // Global drag listeners for ambient drop zone highlighting
-  useEffect(() => {
-    const handleGlobalDragStart = (e: DragEvent) => {
-      if (e.dataTransfer?.types.includes('text/x-card-type')) {
-        setIsCardBeingDragged(true);
-      }
-    };
-    const handleGlobalDragEnd = () => {
-      setIsCardBeingDragged(false);
-      setChipDragOver(null);
-    };
-    window.addEventListener('dragstart', handleGlobalDragStart);
-    window.addEventListener('dragend', handleGlobalDragEnd);
-    return () => {
-      window.removeEventListener('dragstart', handleGlobalDragStart);
-      window.removeEventListener('dragend', handleGlobalDragEnd);
     };
   }, []);
 

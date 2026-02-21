@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useSiphonStore, useSettingsStore } from '../../store';
 import { TRIGGERED_FEATURE_IDS, FEATURE_MAP } from '../../data/featureConstants';
 import { setCardDragData, getCardDragData, isCardDrag } from '../../types/dragData';
+import { useCardDragDetection } from '../../hooks/useCardDragDetection';
 import { SiphonCard } from '../cards/SiphonCard';
 
 interface HandAreaProps {
@@ -19,8 +20,8 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   const [enteringCards, setEnteringCards] = useState<Set<string>>(new Set());
   const prevHandRef = useRef<string[]>([]);
-  const [isCardBeingDragged, setIsCardBeingDragged] = useState(false);
   const [isDragTarget, setIsDragTarget] = useState(false);
+  const isCardBeingDragged = useCardDragDetection(() => setIsDragTarget(false));
 
   // Compute hand cards: explicit hand + triggered features in selected
   const handCards = useMemo(() => {
@@ -42,25 +43,6 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
     const timeout = setTimeout(() => setEnteringCards(new Set()), 350);
     return () => clearTimeout(timeout);
   }, [handCards]);
-
-  // Global drag listeners for drop zone highlighting
-  useEffect(() => {
-    const handleGlobalDragStart = (e: DragEvent) => {
-      if (e.dataTransfer?.types.includes('text/x-card-type')) {
-        setIsCardBeingDragged(true);
-      }
-    };
-    const handleGlobalDragEnd = () => {
-      setIsCardBeingDragged(false);
-      setIsDragTarget(false);
-    };
-    window.addEventListener('dragstart', handleGlobalDragStart);
-    window.addEventListener('dragend', handleGlobalDragEnd);
-    return () => {
-      window.removeEventListener('dragstart', handleGlobalDragStart);
-      window.removeEventListener('dragend', handleGlobalDragEnd);
-    };
-  }, []);
 
   const handleDragOver = (e: React.DragEvent) => {
     if (isCardDrag(e.dataTransfer)) {

@@ -603,7 +603,3 @@ export const WILD_ECHO_SURGE_TABLE: SurgeTableEntry[] = [
   }
 ];
 
-// Get a surge entry by roll number
-export function getSurgeEntry(roll: number): SurgeTableEntry | undefined {
-  return WILD_ECHO_SURGE_TABLE.find(e => e.roll === roll);
-}
