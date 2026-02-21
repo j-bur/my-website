@@ -152,12 +152,19 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 4 Complete)
+### Current Structure (Phase 4.5 Complete)
 
 ```
-App
-└── CombatHUD (CSS Grid layout)
-    ├── Header (grid: header) — rest buttons
+App (layout wrapper with <Outlet />)
+├── HomeRedirect (/ → /combat or /deck-builder)
+├── DeckBuilder (/deck-builder)
+│   ├── CharacterHeader (Level, Max HP, PB, EP Max inputs)
+│   ├── CollectionGrid (42 cards, filter + search)
+│   ├── SelectedPanel (selected cards, rest buttons, Enter Combat)
+│   ├── LongRestDialog (overlay, reused from combat-hud)
+│   └── ShortRestDialog (overlay, reused from combat-hud)
+└── CombatHUD (/combat, CSS Grid layout)
+    ├── Header (grid: header) — Deck Builder nav + rest buttons
     ├── EchoManifoldDeck (grid: manifold)
     │   └── Mote pips (8 interactive dots)
     ├── WildSurgeDeck (grid: surge)

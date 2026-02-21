@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 4 Complete (Phase 4.5 spec written, Deck Builder + Routing next)
+**Current Phase**: Phase 4.5 Complete (Phase 5: Settings & Polish next)
 
 ---
 
@@ -15,8 +15,8 @@
 | Phase 2: Combat Layout | ✅ Complete | 24 component tests + 162 prior = 186 total |
 | Phase 3: Activation Flow | ✅ Complete | 41 new tests (18 util + 23 component) = 227 total |
 | Phase 4: Rest Mechanics | ✅ Complete | 59 new tests (24 integration + 15 + 20 component) = 300 total |
-| Phase 4.5: Deck Builder + Routing | 🔴 Not Started | Blocked by Phase 4 |
-| Phase 5: Settings & Polish | 🔴 Not Started | Blocked by Phase 4.5 |
+| Phase 4.5: Deck Builder + Routing | ✅ Complete | 32 new tests (8+10+8+4+2) = 332 total |
+| Phase 5: Settings & Polish | 🔴 Not Started | Blocked by Phase 4.5 (now complete) |
 | Phase 6: Ally System | 🔴 Not Started | Blocked by Phase 5 |
 | Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
 
@@ -24,11 +24,10 @@
 
 ## Next Session
 
-1. **Start with Phase 4.5**: Read `.claude/docs/PHASE_SPECS/phase-4.5-deckbuilder.md`
-2. Hash router setup: `/#/` = HomeRedirect (→ `/#/combat` if deck exists, → `/#/deck-builder` if empty), `/#/combat` = CombatHUD, `/#/deck-builder` = DeckBuilder
-3. DeckBuilder view: CharacterHeader, CollectionGrid (filter + search), SelectedPanel
-4. Click-to-select cards, PB limit, Supercapacitance overflow, rest buttons, Enter Combat nav
-5. All stores already have the methods needed — no new store work required
+1. **Start with Phase 5**: Read `.claude/docs/PHASE_SPECS/phase-5-settings.md`
+2. Settings modal, gear icon in CombatHUD header
+3. Data export/import, dice mode overrides
+4. While Selected mechanics (Phase 5C): Siphon Greed/Supercapacitance EP cost at long rest
 
 ---
 
@@ -113,6 +112,24 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - [x] 100 Wild Echo Surge entries (3 severity columns)
 - [x] All type definitions
 
+### Phase 4.5: Deck Builder + Routing
+- [x] React Router setup: `createHashRouter` with `/#/`, `/#/combat`, `/#/deck-builder` routes
+- [x] `HomeRedirect.tsx` — Redirects `/` to `/combat` (if deck has cards) or `/deck-builder` (if empty)
+- [x] `App.tsx` — Converted to layout wrapper with `<Outlet />`
+- [x] `main.tsx` — Converted to `createHashRouter` + `RouterProvider`
+- [x] `DeckBuilder.tsx` — Flex column layout: CharacterHeader (top), CollectionGrid (scrollable), SelectedPanel (bottom)
+- [x] `CharacterHeader.tsx` — Level/Max HP inputs, PB auto-display, EP Max, Current Max HP with Echo Drain reduction
+- [x] `CollectionGrid.tsx` — All 42 features in responsive grid, tag filter dropdown, name search, click-to-select with glowing border, PB limit enforcement, Supercapacitance overflow support
+- [x] `SelectedPanel.tsx` — Selected cards (compact, horizontal scroll), N/PB counter with Supercapacitance overflow display, Short Rest/Long Rest/Enter Combat buttons, click-to-deselect
+- [x] `CombatHUD.tsx` — Added "Deck Builder" navigation button (left side of header), `useNavigate()` integration
+- [x] Barrel exports: `deck-builder/index.ts`
+- [x] 8 CharacterHeader tests: Level/Max HP inputs, store updates, level clamping, PB display, EP Max, Current Max HP, Echo Drain display
+- [x] 10 CollectionGrid tests: all 42 cards, tag filter, search, combined filter+search, select/deselect clicks, glowing border, PB limit, Supercapacitance overflow
+- [x] 8 SelectedPanel tests: empty counter, compact cards, counter updates, Supercapacitance counter, deselect click, Long Rest dialog, Short Rest dialog, Enter Combat navigation
+- [x] 4 DeckBuilder tests: renders all sections, full select/deselect flow, filter+search controls, rest+combat buttons
+- [x] 2 HomeRedirect tests: redirects to deck-builder when empty, redirects to combat when cards selected
+- [x] All exit conditions met: build passes, lint passes, 332 tests green
+
 ### Phase 4: Rest Mechanics
 - [x] `LongRestDialog.tsx` — Modal with EP recovery preview, Focus d4 reduction (macro/dice3d modes), motes/HD/bestowment/effect/capacitance clearing preview, cross-store coordination, completion summary
 - [x] `ShortRestDialog.tsx` — Modal with HD spending (+/- controls), healing amount input, effect clearing toggle (defaults from settings), phase switch restoration, completion summary
@@ -173,6 +190,21 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### 2026-02-21 — Phase 4.5: Deck Builder + Routing
+- Set up React Router: `createHashRouter` with 3 routes (`/` → HomeRedirect, `/combat` → CombatHUD, `/deck-builder` → DeckBuilder)
+- Converted App.tsx to layout wrapper with `<Outlet />`, main.tsx to `RouterProvider`
+- Created HomeRedirect: reads `selectedCardIds`, redirects to `/deck-builder` (empty) or `/combat` (has cards)
+- Created DeckBuilder.tsx: flex column layout (CharacterHeader top, CollectionGrid scrollable center, SelectedPanel bottom)
+- Created CharacterHeader.tsx: Level/Max HP number inputs, PB auto-calculated, EP Max = Level, Current Max HP with Echo Drain display
+- Created CollectionGrid.tsx: renders all 42 SIPHON_FEATURES in responsive CSS grid, tag filter dropdown (All + sorted unique tags), name search input, click-to-toggle select, selected cards get `ring-2 ring-ep-positive` glow, PB limit via `selectCard(id, maxCards)`, Supercapacitance overflow (maxCards=42 when selected)
+- Created SelectedPanel.tsx: compact SiphonCards in horizontal scroll, `Selected (N/PB)` counter with Supercapacitance `+M` overflow display, Short Rest/Long Rest buttons (reuse existing dialog components), Enter Combat button (`useNavigate` → `/combat`)
+- Added "Deck Builder" nav button to CombatHUD header (left side, rest buttons right)
+- Created barrel export: `deck-builder/index.ts`
+- Fixed `tags` optional type issue in CollectionGrid (`f.tags?.includes()`)
+- 32 new tests across 5 test files (8 CharacterHeader + 10 CollectionGrid + 8 SelectedPanel + 4 DeckBuilder + 2 HomeRedirect), total 332 tests passing
+- All exit conditions met: build passes, lint passes, 332 tests green
+- **Next**: Phase 5 (Settings & Polish)
 
 ### 2026-02-21 — Phase 4: Rest Mechanics
 - Created LongRestDialog.tsx: preview dialog showing EP recovery (+PB), Focus d4 reduction, motes/HD restoration, bestowment/effect/capacitance clearing; supports both dice3d (auto-roll) and macro (Roll in Foundry + manual entry) modes via settings; cross-store coordination (siphonStore.longRest + characterStore.restoreAllHitDice/restoreMaxHP + manifoldStore.resetMotesOnLongRest); completion summary

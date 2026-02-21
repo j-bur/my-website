@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { SurgeResult } from '../../types';
 import { SIPHON_FEATURES } from '../../data/siphonFeatures';
 import { EchoManifoldDeck } from './EchoManifoldDeck';
@@ -16,6 +17,7 @@ import { ShortRestDialog } from './ShortRestDialog';
 const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
 export function CombatHUD() {
+  const navigate = useNavigate();
   const [stagedCardId, setStagedCardId] = useState<string | null>(null);
   const [surgeResult, setSurgeResult] = useState<SurgeResult | null>(null);
   const [showLongRest, setShowLongRest] = useState(false);
@@ -57,13 +59,20 @@ export function CombatHUD() {
         `,
       }}
     >
-      {/* Header: Rest Buttons */}
+      {/* Header: Navigation + Rest Buttons */}
       <div
         style={{ gridArea: 'header' }}
-        className="flex justify-end gap-2"
+        className="flex items-center gap-2"
         role="toolbar"
-        aria-label="Rest actions"
+        aria-label="Navigation and rest actions"
       >
+        <button
+          className="px-3 py-1.5 text-xs rounded border border-siphon-border text-text-muted hover:border-siphon-accent/50 hover:text-siphon-accent transition-colors"
+          onClick={() => navigate('/deck-builder')}
+        >
+          Deck Builder
+        </button>
+        <div className="flex-1" />
         <button
           className="px-3 py-1.5 text-xs rounded border border-siphon-border text-text-muted hover:border-siphon-accent/50 hover:text-siphon-accent transition-colors"
           onClick={() => setShowShortRest(true)}

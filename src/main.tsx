@@ -1,10 +1,26 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { createHashRouter, RouterProvider } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
+import { HomeRedirect } from './components/HomeRedirect.tsx'
+import { CombatHUD } from './components/combat-hud'
+import { DeckBuilder } from './components/deck-builder'
+
+const router = createHashRouter([
+  {
+    path: '/',
+    element: <App />,
+    children: [
+      { index: true, element: <HomeRedirect /> },
+      { path: 'combat', element: <CombatHUD /> },
+      { path: 'deck-builder', element: <DeckBuilder /> },
+    ],
+  },
+]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </StrictMode>,
 )
