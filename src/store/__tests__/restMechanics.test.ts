@@ -254,6 +254,63 @@ describe('Rest Mechanics (Integration)', () => {
       expect(effects.map((e) => e.id)).toEqual(['long', 'permanent']);
     });
 
+    // Siphon Greed EPR scaling: multiplier = floor(abs(EP) / level)
+    it('Siphon Greed EPR: at EP=-10, level=5, multiplier=2 → EPR = PB*2', () => {
+      useCharacterStore.getState().setLevel(5); // PB=3
+      useSiphonStore.setState({
+        currentEP: -10,
+        selectedCardIds: ['siphon-greed'],
+      });
+
+      const result = performFullLongRest(1);
+
+      // multiplier = floor(10/5) = 2, EPR = 3*2 = 6
+      expect(result.epRecovered).toBe(6);
+      expect(useSiphonStore.getState().currentEP).toBe(-4); // -10 + 6
+    });
+
+    it('Siphon Greed EPR: at EP=-15, level=5, multiplier=3 → EPR = PB*3', () => {
+      useCharacterStore.getState().setLevel(5); // PB=3
+      useSiphonStore.setState({
+        currentEP: -15,
+        selectedCardIds: ['siphon-greed'],
+      });
+
+      const result = performFullLongRest(1);
+
+      // multiplier = floor(15/5) = 3, EPR = 3*3 = 9
+      expect(result.epRecovered).toBe(9);
+      expect(useSiphonStore.getState().currentEP).toBe(-6); // -15 + 9
+    });
+
+    it('Siphon Greed EPR: at EP=-5 (exactly echo drained), multiplier=1 → EPR = PB (no bonus)', () => {
+      useCharacterStore.getState().setLevel(5); // PB=3
+      useSiphonStore.setState({
+        currentEP: -5,
+        selectedCardIds: ['siphon-greed'],
+      });
+
+      const result = performFullLongRest(1);
+
+      // multiplier = floor(5/5) = 1, EPR = 3*1 = 3 (same as without greed)
+      expect(result.epRecovered).toBe(3);
+      expect(useSiphonStore.getState().currentEP).toBe(-2); // -5 + 3
+    });
+
+    it('Siphon Greed EPR: not echo drained, no multiplier', () => {
+      useCharacterStore.getState().setLevel(5); // PB=3
+      useSiphonStore.setState({
+        currentEP: -3, // Not echo drained (-3 > -5)
+        selectedCardIds: ['siphon-greed'],
+      });
+
+      const result = performFullLongRest(1);
+
+      // Not echo drained, so normal EPR = PB = 3
+      expect(result.epRecovered).toBe(3);
+      expect(useSiphonStore.getState().currentEP).toBe(0); // -3 + 3
+    });
+
     // Long rest restores max HP
     it('restores max HP equal to EP recovered', () => {
       useCharacterStore.getState().setLevel(5);
@@ -323,7 +380,7 @@ describe('Rest Mechanics (Integration)', () => {
     });
 
     // RULE-REST-006: Short Rest optionally clears short-duration effects
-    it('RULE-REST-006: clears effects < 1 hour when clearEffects=true', () => {
+    it('RULE-REST-006: clears effects <= 1 hour when clearEffects=true', () => {
       const now = Date.now();
       useSiphonStore.setState({
         activeEffects: [
@@ -359,6 +416,44 @@ describe('Rest Mechanics (Integration)', () => {
       const effects = useSiphonStore.getState().activeEffects;
       expect(effects).toHaveLength(1);
       expect(effects[0].id).toBe('long');
+    });
+
+    it('RULE-REST-006: clears effects with exactly 1 hour duration', () => {
+      const now = Date.now();
+      useSiphonStore.setState({
+        activeEffects: [
+          {
+            id: 'exactly-1h',
+            sourceType: 'siphon',
+            sourceId: 'a',
+            sourceName: 'One Hour',
+            description: 'Exactly 1 hour effect',
+            totalDuration: '1 hour',
+            durationMs: 3_600_000, // Exactly 1 hour
+            startedAt: now,
+            requiresConcentration: false,
+            warpActive: false,
+          },
+          {
+            id: 'over-1h',
+            sourceType: 'siphon',
+            sourceId: 'b',
+            sourceName: 'Over One Hour',
+            description: 'Over 1 hour effect',
+            totalDuration: '2 hours',
+            durationMs: 7_200_000,
+            startedAt: now,
+            requiresConcentration: false,
+            warpActive: false,
+          },
+        ],
+      });
+
+      performFullShortRest(0, 0, true);
+
+      const effects = useSiphonStore.getState().activeEffects;
+      expect(effects).toHaveLength(1);
+      expect(effects[0].id).toBe('over-1h'); // Exactly 1 hour was cleared
     });
 
     it('does not clear short-duration effects when clearEffects=false', () => {

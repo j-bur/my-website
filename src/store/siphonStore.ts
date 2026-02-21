@@ -434,10 +434,14 @@ export const useSiphonStore = create<SiphonStore>()(
       longRest: (pb, maxEP, focusRollOverride?) => {
         const state = get();
 
-        // 1. EP recovery. Siphon Greed 2x if applicable.
+        // 1. EP recovery. Siphon Greed scales EPR by integer multiples over Echo Drain threshold.
+        // At -Level (1x threshold): multiplier=1 (same as base). At -2*Level: multiplier=2, etc.
         const hasSiphonGreed = state.selectedCardIds.includes('siphon-greed');
         const isEchoDrained = state.currentEP <= -maxEP;
-        const epRecoveryBase = (hasSiphonGreed && isEchoDrained) ? pb * 2 : pb;
+        const greedMultiplier = (hasSiphonGreed && isEchoDrained)
+          ? Math.floor(Math.abs(state.currentEP) / maxEP)
+          : 1;
+        const epRecoveryBase = pb * greedMultiplier;
         const newEP = Math.min(maxEP, state.currentEP + epRecoveryBase);
         const epRecovered = newEP - state.currentEP;
 
@@ -480,7 +484,7 @@ export const useSiphonStore = create<SiphonStore>()(
 
         if (clearShortEffects) {
           remainingEffects = remainingEffects.filter(
-            (e) => e.durationMs === null || e.durationMs > ONE_HOUR_MS
+            (e) => e.durationMs === null || e.durationMs > ONE_HOUR_MS // Clears effects with duration <= 1 hour
           );
         }
 

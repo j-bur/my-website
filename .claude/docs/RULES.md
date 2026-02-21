@@ -142,6 +142,15 @@ Machine-readable behavioral rules for The Siphon Interface. Each rule maps direc
 - WHEN: getEffectiveCost(baseCost=1, level=5)
 - THEN: returns 1 (not 0)
 
+### RULE-GREED-005: Siphon Greed scales EP Recovery by integer multiples over Echo Drain
+- GIVEN: 'siphon-greed' in selectedCardIds, level = 5
+- WHEN: longRest(pb=3, maxEP=5)
+- THEN: EPR = pb * floor(abs(currentEP) / level)
+- EXAMPLE: EP = -10, multiplier = floor(10/5) = 2, EPR = 3 * 2 = 6
+- EXAMPLE: EP = -15, multiplier = floor(15/5) = 3, EPR = 3 * 3 = 9
+- EXAMPLE: EP = -5, multiplier = floor(5/5) = 1, EPR = 3 * 1 = 3 (same as base)
+- NOTE: At exactly echo drained (-Level), multiplier is 1 (no bonus). Bonus starts at -2*Level.
+
 ### RULE-INTUITION-001: Echo Intuition halves BOTH cost AND focus
 - GIVEN: echoIntuitionActive = true
 - WHEN: getEffectiveCost(baseCost=10, level=5)
@@ -198,7 +207,7 @@ Machine-readable behavioral rules for The Siphon Interface. Each rule maps direc
 - THEN: currentEP = -3, focus = 15
 
 ### RULE-REST-006: Short Rest optionally clears short-duration effects
-- GIVEN: activeEffects includes effect with durationMs < 3600000 (1 hour)
+- GIVEN: activeEffects includes effect with durationMs <= 3600000 (1 hour)
 - WHEN: shortRest(clearShortEffects=true)
 - THEN: that effect is removed
 

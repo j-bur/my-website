@@ -28,10 +28,10 @@ export function ShortRestDialog({ onClose }: ShortRestDialogProps) {
   const phaseSwitchAvailable = useManifoldStore((s) => s.phaseSwitchAvailable);
   const resetPhaseSwitchOnShortRest = useManifoldStore((s) => s.resetPhaseSwitchOnShortRest);
 
-  // Count effects that would be cleared (duration < 1 hour)
+  // Count effects that would be cleared (duration <= 1 hour)
   const ONE_HOUR_MS = 3600000;
   const shortEffects = activeEffects.filter(
-    (e) => e.durationMs !== null && e.durationMs < ONE_HOUR_MS
+    (e) => e.durationMs !== null && e.durationMs <= ONE_HOUR_MS
   );
 
   const handleConfirm = () => {

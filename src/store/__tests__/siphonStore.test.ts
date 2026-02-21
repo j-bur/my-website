@@ -776,7 +776,7 @@ describe('siphonStore', () => {
       vi.restoreAllMocks();
     });
 
-    it('Siphon Greed doubles EP recovery when echo drained', () => {
+    it('Siphon Greed scales EP recovery by integer multiples over echo drain', () => {
       useSiphonStore.setState({
         currentEP: -10,
         focus: 0,
@@ -785,7 +785,7 @@ describe('siphonStore', () => {
       });
       vi.spyOn(Math, 'random').mockReturnValue(0);
       const result = useSiphonStore.getState().longRest(3, 5);
-      // With siphon greed + echo drained: pb * 2 = 6
+      // Siphon Greed: multiplier = floor(abs(-10) / 5) = 2, EPR = 3 * 2 = 6
       // -10 + 6 = -4, capped at 5 but -4 < 5, so newEP = -4
       expect(result.epRecovered).toBe(6);
       expect(useSiphonStore.getState().currentEP).toBe(-4);

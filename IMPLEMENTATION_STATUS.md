@@ -14,7 +14,7 @@
 | Phase 1: Store Redesign | ✅ Complete | 94 store tests + 68 utility tests = 162 total |
 | Phase 2: Combat Layout | ✅ Complete | 24 component tests + 162 prior = 186 total |
 | Phase 3: Activation Flow | ✅ Complete | 41 new tests (18 util + 23 component) = 227 total |
-| Phase 4: Rest Mechanics | ✅ Complete | 54 new tests (19 integration + 15 + 20 component) = 295 total |
+| Phase 4: Rest Mechanics | ✅ Complete | 59 new tests (24 integration + 15 + 20 component) = 300 total |
 | Phase 5: Settings & Polish | 🔴 Not Started | Blocked by Phase 4 |
 | Phase 6: Ally System | 🔴 Not Started | Blocked by Phase 5 |
 | Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
@@ -54,6 +54,13 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - `[FIXED]` activateFromHand/returnCardToDeck could append duplicate IDs to selectedCardIds if called twice. Added dedup guard. (found during Phase 2, fixed in siphonStore.ts)
 - `[DISCOVERY]` Phases 4 and 5 reference `DeckBuilder.tsx` (rest buttons, gear icon) but no phase spec creates the Deck Builder component or sets up React Router routing. Need a dedicated phase or pre-task for this. (found during Phase 2, relevant to Phase 4+)
 - `[DEFERRED]` Rest buttons in DeckBuilder deferred — DeckBuilder.tsx doesn't exist yet. LongRestDialog and ShortRestDialog are reusable and can be wired in when DeckBuilder is created. (Phase 4, deferred by user choice)
+- `[FIXED]` Siphon Greed EPR formula was wrong — used flat `pb * 2` instead of scaling by `floor(abs(EP) / level)`. Fixed in siphonStore.ts, added RULE-GREED-005 to RULES.md. (found during Phase 4)
+- `[FIXED]` Short rest effect clearing threshold was `< 1 hour` instead of `<= 1 hour`. Fixed in siphonStore.ts and ShortRestDialog.tsx. Updated RULE-REST-006. (found during Phase 4)
+- `[DISCOVERY]` `characterStore.setLevel()` does not auto-restore hitDice — future UI should offer long rest option when leveling up. (found during Phase 4, relevant to DeckBuilder)
+- `[DISCOVERY]` Rest coordination is spread across 3 stores with no single orchestrator — consider extracting `performLongRest()` / `performShortRest()` utility functions to avoid duplication when DeckBuilder gets rest buttons. (found during Phase 4, relevant to DeckBuilder)
+- `[DISCOVERY]` Store methods that roll dice internally (`longRest`'s d4) are hard to test deterministically. Future store methods should accept roll results as parameters. (found during Phase 4)
+- `[DISCOVERY]` Siphon Greed: "The Focus for Siphon Greed is gained at the end of every long rest while this is Selected." This While Selected focus gain is NOT yet implemented (Phase 4 spec marks it out of scope as "Phase 4.5"). (found during Phase 4)
+- `[DISCOVERY]` No phase spec creates DeckBuilder.tsx or sets up React Router routing. DeckBuilder is needed soon — it handles card selection, character setup, and rest buttons. (confirmed during Phase 4)
 
 ---
 
