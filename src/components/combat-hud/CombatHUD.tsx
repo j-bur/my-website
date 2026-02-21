@@ -13,6 +13,7 @@ import { ActivationPanel } from './ActivationPanel';
 import { SurgeResultModal } from './SurgeResultModal';
 import { LongRestDialog } from './LongRestDialog';
 import { ShortRestDialog } from './ShortRestDialog';
+import { SettingsModal } from '../settings';
 
 const featureMap = new Map(SIPHON_FEATURES.map((f) => [f.id, f]));
 
@@ -22,6 +23,7 @@ export function CombatHUD() {
   const [surgeResult, setSurgeResult] = useState<SurgeResult | null>(null);
   const [showLongRest, setShowLongRest] = useState(false);
   const [showShortRest, setShowShortRest] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const stagedFeature = stagedCardId ? featureMap.get(stagedCardId) ?? null : null;
 
@@ -84,6 +86,13 @@ export function CombatHUD() {
           onClick={() => setShowLongRest(true)}
         >
           Long Rest
+        </button>
+        <button
+          className="px-2 py-1.5 text-sm rounded border border-siphon-border text-text-muted hover:border-siphon-accent/50 hover:text-siphon-accent transition-colors"
+          onClick={() => setShowSettings(true)}
+          aria-label="Settings"
+        >
+          &#x2699;
         </button>
       </div>
 
@@ -160,6 +169,11 @@ export function CombatHUD() {
       )}
       {showShortRest && (
         <ShortRestDialog onClose={() => setShowShortRest(false)} />
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsModal onClose={() => setShowSettings(false)} />
       )}
     </div>
   );

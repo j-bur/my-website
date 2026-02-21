@@ -31,6 +31,10 @@ src/
 │   │   ├── CollectionGrid.tsx       # All 42 features, filterable
 │   │   ├── SelectedPanel.tsx        # Selected cards + rest/nav buttons
 │   │   └── index.ts                 # Barrel export
+│   ├── settings/                     # Phase 5A: Settings modal
+│   │   ├── SettingsModal.tsx          # Modal with all settings sections
+│   │   ├── DiceModeToggle.tsx         # Reusable 3D/Macro toggle pair
+│   │   └── index.ts                   # Barrel export
 │   ├── combat-hud/
 │   │   ├── CombatHUD.tsx          # CSS Grid layout container
 │   │   ├── EchoManifoldDeck.tsx   # Phase card + mote pips (top-left)
@@ -152,7 +156,7 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 4.5 Complete)
+### Current Structure (Phase 5A Complete)
 
 ```
 App (layout wrapper with <Outlet />)
@@ -162,30 +166,35 @@ App (layout wrapper with <Outlet />)
 │   ├── CollectionGrid (42 cards, filter + search)
 │   ├── SelectedPanel (selected cards, rest buttons, Enter Combat)
 │   ├── LongRestDialog (overlay, reused from combat-hud)
-│   └── ShortRestDialog (overlay, reused from combat-hud)
-└── CombatHUD (/combat, CSS Grid layout)
-    ├── Header (grid: header) — Deck Builder nav + rest buttons
-    ├── EchoManifoldDeck (grid: manifold)
-    │   └── Mote pips (8 interactive dots)
-    ├── WildSurgeDeck (grid: surge)
-    ├── PhaseAbilities (grid: abilities)
-    │   └── 3 ability cards for current phase
-    ├── ActiveEffectsPanel (grid: effects)
-    │   └── Effect rows or "(drag cards here)" placeholder
-    ├── ResourceDisplay (grid: resources)
-    │   ├── FocusCounter
-    │   ├── EchoPointsBar
-    │   ├── HitDiceDisplay
-    │   └── SiphonCapacitanceTracker
-    ├── Allies placeholder (grid: allies)
-    ├── SelectedDeck (grid: deck)
-    │   └── SiphonCard (×N, when expanded)
-    ├── HandArea (grid: hand)
-    │   └── SiphonCard (×N, fanned)
-    ├── ActivationPanel (overlay)
-    ├── SurgeResultModal (overlay)
-    ├── LongRestDialog (overlay) — preview + cross-store rest
-    └── ShortRestDialog (overlay) — HD spending + effect clearing
+│   ├── ShortRestDialog (overlay, reused from combat-hud)
+│   └── SettingsModal (overlay, gear icon in header)
+├── CombatHUD (/combat, CSS Grid layout)
+│   ├── Header (grid: header) — Deck Builder nav + rest buttons + gear icon
+│   ├── EchoManifoldDeck (grid: manifold)
+│   │   └── Mote pips (8 interactive dots)
+│   ├── WildSurgeDeck (grid: surge)
+│   ├── PhaseAbilities (grid: abilities)
+│   │   └── 3 ability cards for current phase
+│   ├── ActiveEffectsPanel (grid: effects)
+│   │   └── Effect rows or "(drag cards here)" placeholder
+│   ├── ResourceDisplay (grid: resources)
+│   │   ├── FocusCounter
+│   │   ├── EchoPointsBar
+│   │   ├── HitDiceDisplay
+│   │   └── SiphonCapacitanceTracker
+│   ├── Allies placeholder (grid: allies)
+│   ├── SelectedDeck (grid: deck)
+│   │   └── SiphonCard (×N, when expanded)
+│   ├── HandArea (grid: hand)
+│   │   └── SiphonCard (×N, fanned)
+│   ├── ActivationPanel (overlay)
+│   ├── SurgeResultModal (overlay)
+│   ├── LongRestDialog (overlay) — preview + cross-store rest
+│   ├── ShortRestDialog (overlay) — HD spending + effect clearing
+│   └── SettingsModal (overlay, gear icon in header)
+└── SettingsModal (shared component in settings/)
+    ├── DiceModeToggle (×4, for each roll type)
+    └── BooleanToggle (×6, for sound/visual/gameplay settings)
 ```
 
 ### Target Structure (per DESIGN.md + Phase 4.5)

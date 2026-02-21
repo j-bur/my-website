@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-21
-**Current Phase**: Phase 4.5 Complete (Phase 5: Settings & Polish next)
+**Current Phase**: Phase 5A Complete (Phase 5B: Timer + Overrides + Data next)
 
 ---
 
@@ -16,7 +16,7 @@
 | Phase 3: Activation Flow | ✅ Complete | 41 new tests (18 util + 23 component) = 227 total |
 | Phase 4: Rest Mechanics | ✅ Complete | 59 new tests (24 integration + 15 + 20 component) = 300 total |
 | Phase 4.5: Deck Builder + Routing | ✅ Complete | 32 new tests (8+10+8+4+2) = 332 total |
-| Phase 5: Settings & Polish | 🔴 Not Started | Blocked by Phase 4.5 (now complete) |
+| Phase 5A: Settings Modal | ✅ Complete | 15 new tests, 347 total |
 | Phase 6: Ally System | 🔴 Not Started | Blocked by Phase 5 |
 | Phase 7: Animations | 🔴 Not Started | Blocked by Phase 6 |
 
@@ -24,10 +24,11 @@
 
 ## Next Session
 
-1. **Start with Phase 5**: Read `.claude/docs/PHASE_SPECS/phase-5-settings.md`
-2. Settings modal, gear icon in CombatHUD header
-3. Data export/import, dice mode overrides
-4. While Selected mechanics (Phase 5C): Siphon Greed/Supercapacitance EP cost at long rest
+1. **Start with Phase 5B**: Read `.claude/docs/PHASE_SPECS/phase-5-settings.md` (Session 5B section)
+2. Manual overrides (EP, Focus, Motes, HD, Max HP) in SettingsModal
+3. Data export/import, reset session, clear all data
+4. Capacitance timer UI with presets
+5. Then Phase 5C: While Selected mechanics (Siphon Greed/Supercapacitance EP cost at long rest)
 
 ---
 
@@ -115,6 +116,15 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - [x] 100 Wild Echo Surge entries (3 severity columns)
 - [x] All type definitions
 
+### Phase 5A: Settings Modal
+- [x] `DiceModeToggle.tsx` — Reusable [3D] [Macro] toggle pair with accent color active state, `aria-pressed` accessibility
+- [x] `SettingsModal.tsx` — Modal overlay: Dice Rolls (4 toggles), Sound (1 toggle), Visual (2 toggles), Gameplay (3 toggles); Escape/backdrop/X close; immediate persistence
+- [x] `settings/index.ts` — Barrel export
+- [x] Gear icon in CombatHUD header (right side, after rest buttons)
+- [x] Gear icon in DeckBuilder (absolute-positioned over CharacterHeader)
+- [x] 15 SettingsModal tests: section headings, all toggles render, dice mode toggle → store, boolean toggles → store (×6), close behaviors (backdrop, X, Escape, click-inside-no-close)
+- [x] All exit conditions met: build passes, lint passes, 347 tests green
+
 ### Phase 4.5: Deck Builder + Routing
 - [x] React Router setup: `createHashRouter` with `/#/`, `/#/combat`, `/#/deck-builder` routes
 - [x] `HomeRedirect.tsx` — Redirects `/` to `/combat` (if deck has cards) or `/deck-builder` (if empty)
@@ -193,6 +203,18 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### 2026-02-21 — Phase 5A: Settings Modal
+- Created `DiceModeToggle.tsx`: reusable 3D/Macro toggle pair with accent color active state
+- Created `SettingsModal.tsx`: modal overlay with 4 sections (Dice Rolls, Sound, Visual, Gameplay), Escape/backdrop/X close, immediate persistence via settingsStore
+- Created `settings/index.ts`: barrel export
+- Added gear icon (⚙) to CombatHUD header (right side, after rest buttons)
+- Added gear icon (⚙) to DeckBuilder (absolute-positioned in CharacterHeader area)
+- Skipped "Highlight drop targets when dragging" toggle — drag-drop is Phase 7, and phase spec says "DO NOT add settings for features not yet implemented"
+- 15 new SettingsModal tests: section headings, all toggles render, dice mode toggle updates store, boolean toggle updates store (sound, animations, reduced motion, confirm, auto-surge, short rest effects), backdrop/X/Escape close, click inside doesn't close
+- Total: 347 tests passing across 23 test files
+- All exit conditions met: build passes, lint passes, 347 tests green
+- **Next**: Phase 5B (Manual Overrides, Data Export/Import, Capacitance Timer)
 
 ### 2026-02-21 — Phase 4.5: Deck Builder + Routing
 - Set up React Router: `createHashRouter` with 3 routes (`/` → HomeRedirect, `/combat` → CombatHUD, `/deck-builder` → DeckBuilder)
