@@ -14,8 +14,14 @@ interface SiphonStore {
   currentEP: number;
   focus: number;
   siphonCapacitance: number;
+  /** @deprecated Vestigial — stores Date.now() (real-world ms) but no UI reads it.
+   *  Use capacitanceInGameTime/capacitanceExpiresAt instead (in-game minutes since midnight).
+   *  Kept only because addCapacitance() still sets it and existing tests check it.
+   *  Safe to remove once those tests are updated. */
   capacitanceTimerStart: number | null;
+  /** In-game time in minutes since midnight (0-1439), set by user via time picker. */
   capacitanceInGameTime: number | null;
+  /** In-game expiry time in minutes (can exceed 1440 for next-day wrap). */
   capacitanceExpiresAt: number | null;
 
   // Card Zones
