@@ -137,15 +137,18 @@ describe('dataExport', () => {
       expect(state.activeEffects).toEqual([]);
     });
 
-    it('preserves selected cards', () => {
+    it('preserves selected cards and returns hand cards to selected', () => {
       useSiphonStore.getState().selectCard('discharge', 6);
       useSiphonStore.getState().selectCard('siphon-flux', 6);
+      useSiphonStore.getState().bestowToSelf('discharge'); // Moves to hand
 
       resetSession(3);
 
-      // Selected cards should still be there (minus any that were in hand)
       const state = useSiphonStore.getState();
       expect(state.selectedCardIds).toContain('siphon-flux');
+      // discharge was in hand, should be returned to selected
+      expect(state.selectedCardIds).toContain('discharge');
+      expect(state.handCardIds).toEqual([]);
     });
 
     it('sets motes to 0 and resets manifold combat state', () => {

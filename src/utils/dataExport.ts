@@ -79,6 +79,9 @@ export function resetAllStores(): void {
  * Per DESIGN.md: EP → PB, Focus → 0, bestowments cleared, motes → 0.
  */
 export function resetSession(proficiencyBonus: number): void {
+  const siphonState = useSiphonStore.getState();
+  // Return hand cards to selected deck (same as longRest does)
+  const restoredSelected = [...new Set([...siphonState.selectedCardIds, ...siphonState.handCardIds])];
   useSiphonStore.setState({
     currentEP: proficiencyBonus,
     focus: 0,
@@ -86,6 +89,7 @@ export function resetSession(proficiencyBonus: number): void {
     capacitanceTimerStart: null,
     capacitanceInGameTime: null,
     capacitanceExpiresAt: null,
+    selectedCardIds: restoredSelected,
     handCardIds: [],
     allyBestowments: [],
     activeEffects: [],
