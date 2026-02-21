@@ -107,6 +107,53 @@ other features — only Superconduction has this dual-target behavior.
 - DO NOT implement silvery tendril animation (Phase 7)
 - DO NOT implement ally-side activation tracking (allies activate on their own turns)
 
+## Post-Implementation Fixes Needed
+
+The following issues were identified during Phase 6B review and need to be fixed by a future session. They are **not** blockers for Phase 7 but should be addressed before user-facing release.
+
+### Fix 1: AllyBestowmentView misclassifies hand cards (bug)
+
+**File**: `src/components/combat-hud/AllyBestowmentView.tsx` (lines 27-34)
+
+The grouping logic uses `selectedCardIds` to decide "From Selected Deck" vs "From All Features". But `bestowToSelf()` removes a card from `selectedCardIds` when it moves to `handCardIds`. So if a card is in the player's hand AND bestowed to an ally, it incorrectly appears under "From All Features" even though it's still part of the daily selection.
+
+**Fix**: The `selectedSet` memo should include both `selectedCardIds` and `handCardIds`:
+```tsx
+const inDailySelection = useMemo(
+  () => new Set([...selectedCardIds, ...handCardIds]),
+  [selectedCardIds, handCardIds]
+);
+```
+Then use `inDailySelection` instead of `selectedSet` for the `fromSelected`/`fromAllFeatures` split. Also need to add the `handCardIds` selector from the store.
+
+**Test to update**: The existing "shows only From All Features when no bestowed cards are in selected deck" test may need adjustment since the logic changes.
+
+### Fix 2: `onMouseLeave` on full-screen overlay is non-functional (dead code)
+
+**File**: `src/components/combat-hud/AllyBestowmentView.tsx` (lines 42, 65)
+
+The `onMouseLeave={onDismiss}` is attached to a `fixed inset-0` element (full-screen backdrop). The mouse can never leave a full-screen div during normal use, so this handler never fires. Dismissal works via backdrop click only.
+
+The DESIGN.md spec envisions a positioned overlay near the ally chip (not a full-screen modal), where mouseLeave would make sense. Two options:
+1. **Remove `onMouseLeave`** — accept the full-screen modal approach, dismiss via backdrop click only.
+2. **Rework to positioned overlay** — render near the ally chip (like a tooltip/popover), where mouseLeave on the overlay+chip area dismisses naturally. This is more work but matches DESIGN.md intent.
+
+### Fix 3: No visual feedback on special-cost hand cards when ally is selected (UX inconsistency)
+
+**File**: `src/components/combat-hud/HandArea.tsx` (line 85)
+
+In `SelectedDeck`, special cost cards get `isUnplayable` styling + a "Cannot bestow to allies" label when an ally is selected. In `HandArea`, special cost cards just silently have no `onClick` handler — no dimming, no explanatory label. Users see no indication why clicking does nothing.
+
+**Fix**: Add the same treatment as SelectedDeck — pass `isUnplayable={true}` to SiphonCard for special cost features when `selectedAllyId` is set, and optionally render a "Cannot bestow to allies" overlay label.
+
+### Fix 4: Documentation test count drift
+
+**Files**: `IMPLEMENTATION_STATUS.md`, memory file
+
+Phase 6B documentation says "423 tests" but the actual count after the hand→ally bestow fix is **425 tests** across 30 test files. Update the Phase 6B session log entry and Quick Status table to reflect 425.
+
+---
+
 ## Key References
 - `.claude/docs/RULES.md` -- RULE-ALLY-001, RULE-ALLY-002
 - `.claude/docs/STORE_CONTRACTS.md` -- Ally Management methods
