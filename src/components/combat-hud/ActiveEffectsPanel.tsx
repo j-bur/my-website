@@ -166,7 +166,7 @@ export function ActiveEffectsPanel({ onActivateCard }: ActiveEffectsPanelProps) 
   return (
     <div
       ref={panelRef}
-      className={`border rounded-lg bg-siphon-surface/30 p-3 min-h-24 transition-all ${
+      className={`border rounded-lg bg-siphon-surface/30 p-3 min-h-24 h-full flex flex-col transition-all ${
         showActiveHighlight
           ? 'border-siphon-accent shadow-[0_0_20px_rgba(0,212,170,0.3)]'
           : showAmbientHighlight
@@ -184,11 +184,11 @@ export function ActiveEffectsPanel({ onActivateCard }: ActiveEffectsPanelProps) 
       </div>
 
       {activeEffects.length === 0 ? (
-        <div className="flex items-center justify-center h-16 text-text-muted/50 text-xs italic">
+        <div className="flex items-center justify-center flex-1 text-text-muted/50 text-xs italic">
           (drag cards here to activate)
         </div>
       ) : (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 flex-1 overflow-y-auto">
           {activeEffects.map((effect) => (
             <EffectRow key={effect.id} effect={effect} panelRef={panelRef} />
           ))}

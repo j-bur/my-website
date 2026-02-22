@@ -141,7 +141,7 @@ export function SelectedDeck({ onActivateCard, selectedAllyId, onAllyBestowed }:
       {/* Deck icon */}
       <button
         className={`
-          w-28 h-36 border-2 rounded-lg flex flex-col items-center justify-center gap-1
+          w-36 h-44 border-2 rounded-lg flex flex-col items-center justify-center gap-1
           transition-all cursor-pointer
           ${isExpanded
             ? 'border-siphon-accent bg-siphon-accent/10'

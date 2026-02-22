@@ -33,7 +33,7 @@ export function EchoManifoldDeck() {
     <div className="flex flex-col gap-2">
       {/* Phase card (face-up) */}
       <div
-        className="w-36 border border-siphon-border rounded-lg bg-card-bg p-3 cursor-pointer hover:border-siphon-accent/60 transition-colors"
+        className="w-44 border border-siphon-border rounded-lg bg-card-bg p-3 cursor-pointer hover:border-siphon-accent/60 transition-colors"
         role="button"
         tabIndex={0}
         aria-label={`Echo Manifold: ${phaseInfo.name}`}
@@ -57,7 +57,7 @@ export function EchoManifoldDeck() {
           return (
             <button
               key={i}
-              className={`w-3.5 h-3.5 rounded-full border transition-all duration-200 ${
+              className={`w-4 h-4 rounded-full border transition-all duration-200 ${
                 isFilled
                   ? 'bg-siphon-accent border-siphon-accent shadow-sm shadow-siphon-accent/40'
                   : 'bg-transparent border-siphon-border/60 hover:border-siphon-accent/40'

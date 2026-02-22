@@ -57,10 +57,10 @@ export function CombatHUD() {
 
   return (
     <div
-      className="grid gap-3 p-4 min-h-screen w-full max-w-5xl mx-auto"
+      className="grid gap-4 p-4 min-h-screen w-full max-w-[1800px] mx-auto"
       style={{
         gridTemplateColumns: 'auto 1fr 1fr auto',
-        gridTemplateRows: 'auto auto auto auto 1fr',
+        gridTemplateRows: 'auto auto 1fr auto auto',
         gridTemplateAreas: `
           "header    header     header     header"
           "manifold  .          .          surge"
@@ -116,17 +116,17 @@ export function CombatHUD() {
       </div>
 
       {/* Left: Phase Abilities */}
-      <div style={{ gridArea: 'abilities' }} className="flex items-start">
+      <div style={{ gridArea: 'abilities' }} className="flex items-start self-start">
         <PhaseAbilities />
       </div>
 
       {/* Center: Active Effects */}
-      <div style={{ gridArea: 'effects' }}>
+      <div style={{ gridArea: 'effects' }} className="min-h-0">
         <ActiveEffectsPanel onActivateCard={handleActivateCard} />
       </div>
 
       {/* Right: Resources */}
-      <div style={{ gridArea: 'resources' }} className="w-48">
+      <div style={{ gridArea: 'resources' }} className="w-56 self-start">
         <ResourceDisplay />
       </div>
 

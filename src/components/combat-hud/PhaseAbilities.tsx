@@ -10,7 +10,7 @@ export function PhaseAbilities() {
       {abilities.map((ability) => (
         <div
           key={ability.id}
-          className="w-36 border border-siphon-border rounded-lg bg-card-bg p-2 cursor-pointer hover:border-siphon-accent/60 transition-colors"
+          className="w-44 border border-siphon-border rounded-lg bg-card-bg p-2 cursor-pointer hover:border-siphon-accent/60 transition-colors"
           role="listitem"
         >
           <div className="flex items-center justify-between mb-1">

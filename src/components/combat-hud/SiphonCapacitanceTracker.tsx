@@ -71,7 +71,7 @@ export function SiphonCapacitanceTracker() {
           return (
             <div
               key={i}
-              className={`w-3 h-3 rounded-sm border transition-all duration-200 ${
+              className={`w-4 h-4 rounded-sm border transition-all duration-200 ${
                 i < capacitance
                   ? 'bg-capacitance border-capacitance shadow-sm shadow-capacitance/30'
                   : 'bg-transparent border-siphon-border/60'

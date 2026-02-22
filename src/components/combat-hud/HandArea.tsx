@@ -95,7 +95,7 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
 
   // Overlap calculation: compress when hand is large
   const isLargeHand = handCards.length > 7;
-  const overlapPx = isLargeHand ? -80 : -20;
+  const overlapPx = isLargeHand ? -96 : -24;
 
   return (
     <div

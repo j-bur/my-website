@@ -38,7 +38,7 @@ export function SiphonCard({
         ${isRaised ? 'border-siphon-accent shadow-lg shadow-siphon-accent/20 -translate-y-2 z-10' : 'border-card-border'}
         ${isUnplayable ? 'opacity-40 saturate-50' : ''}
         ${isDragging ? 'opacity-50' : ''}
-        ${compact ? 'w-28 min-h-36' : 'w-40 min-h-48'}
+        ${compact ? 'w-36 min-h-44' : 'w-48 min-h-56'}
         ${isDraggable && !isUnplayable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
         bg-card-bg hover:border-siphon-accent/60
       `}
