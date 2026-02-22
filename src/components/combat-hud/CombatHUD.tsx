@@ -20,7 +20,7 @@ export function CombatHUD() {
   const [showShortRest, setShowShortRest] = useState(false);
   const [selectedAllyId, setSelectedAllyId] = useState<string | null>(null);
   const [hoveredAllyId, setHoveredAllyId] = useState<string | null>(null);
-  const [warpPulse, setWarpPulse] = useState(false);
+  const [warpPulseCount, setWarpPulseCount] = useState(0);
 
   const allies = useSiphonStore((s) => s.allies);
   const hoveredAlly = useMemo(
@@ -29,15 +29,15 @@ export function CombatHUD() {
   );
 
   const handleWarpTriggered = useCallback(() => {
-    setWarpPulse(true);
+    setWarpPulseCount((c) => c + 1);
   }, []);
 
-  // Auto-clear warp pulse after duration
+  // Auto-clear warp pulse after duration (re-triggers on rapid warps)
   useEffect(() => {
-    if (!warpPulse) return;
-    const timer = setTimeout(() => setWarpPulse(false), WARP_PULSE_DURATION);
+    if (warpPulseCount === 0) return;
+    const timer = setTimeout(() => setWarpPulseCount(0), WARP_PULSE_DURATION);
     return () => clearTimeout(timer);
-  }, [warpPulse]);
+  }, [warpPulseCount]);
 
   return (
     <div
@@ -99,7 +99,7 @@ export function CombatHUD() {
         className="flex flex-col gap-4 min-h-0"
       >
         <ResourceDisplay />
-        <WildSurgeDeck warpPulse={warpPulse} />
+        <WildSurgeDeck warpPulse={warpPulseCount > 0} />
         <div className="flex flex-col gap-2">
           <button
             className="px-3 py-1.5 text-xs rounded border border-siphon-border text-text-muted hover:border-siphon-accent/50 hover:text-siphon-accent transition-colors"

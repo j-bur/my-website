@@ -101,6 +101,11 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - `[FIXED]` 5 unused exported data functions (`getFeatureById`, `getFeaturesByTag`, `getFeaturesByActivation`, `getAbilityById`, `getSurgeEntry`) and 1 unused constant (`SEVERITY_THRESHOLDS`) removed. (found during post-Phase 7 audit)
 - `[FIXED]` `macroGenerator` and `whileSelectedCalculator` not in `utils/index.ts` barrel export — inconsistent with other utilities. Added. (found during post-Phase 7 audit)
 - `[FIXED]` ARCHITECTURE.md stale — referenced "Phase 6 Complete", missing hooks/data/types directory details, missing Phase 7A/7B animation classes. Updated. (found during post-Phase 7 audit)
+- `[FIXED]` Warp pulse used boolean state — rapid warps within 3s were swallowed (second `setWarpPulse(true)` was a no-op). Changed to counter (`warpPulseCount`); each warp increments, useEffect restarts the 3s timer on every change. (found during Phase 8D review, fixed same session)
+- `[DISCOVERY]` `setActiveDragData`/`getActiveDragData` in `dragData.ts` is module-level mutable state outside React/Zustand — NOT reactive. Safe only in event handlers (dragover/drop). Do not use in JSX, selectors, or render paths. (found during Phase 8D)
+- `[DISCOVERY]` `activateFeature()` always auto-rolls focus dice, ignoring `diceMode.siphonFeature`. `LongRestDialog` still respects `diceMode.focusReduction` with its own inline macro UI. These two dice systems are intentionally inconsistent per user design decision. Unifying would require a macro-mode inline form in ActiveEffectsPanel. (found during Phase 8D)
+- `[DISCOVERY]` Varies-cost features cannot be activated via double-click in HandArea — only via drag-to-ActiveEffectsPanel where `VariesActivationForm` exists. No inline cost input UI in HandArea. (found during Phase 8D)
+- `[DISCOVERY]` No features in the dataset have `duration === 'Instant'`. The `activateFeature` code branch for Instant (skip active effect) is implemented but untested against real data. Test uses Triggered features as proxy. (found during Phase 8D)
 
 ---
 
