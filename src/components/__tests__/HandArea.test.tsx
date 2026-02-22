@@ -165,6 +165,34 @@ describe('HandArea', () => {
     expect(screen.getByLabelText('Recursion').getAttribute('draggable')).not.toBe('true');
   });
 
+  it('centers cards with justify-center', () => {
+    useSiphonStore.setState({
+      handCardIds: ['subtle-luck', 'temporal-surge'],
+    });
+
+    render(<HandArea />);
+
+    const cardRow = screen.getByRole('list', { name: /hand: 2 cards/i });
+    expect(cardRow.className).toContain('justify-center');
+  });
+
+  it('renders many cards without error', () => {
+    // Supercapacitance scenario: 8 cards in hand
+    useSiphonStore.setState({
+      handCardIds: [
+        'subtle-luck', 'temporal-surge', 'echo-relocation',
+        'reject-fate', 'resonant-weapon', 'altered-form',
+        'paracast', 'superconduction',
+      ],
+    });
+
+    render(<HandArea />);
+
+    expect(screen.getByRole('list', { name: /hand: 8 cards/i })).toBeInTheDocument();
+    expect(screen.getByText('Subtle Luck')).toBeInTheDocument();
+    expect(screen.getByText('Superconduction')).toBeInTheDocument();
+  });
+
   it('does not highlight when highlightDropTargets is false', () => {
     useSettingsStore.getState().setHighlightDropTargets(false);
     useSiphonStore.setState({

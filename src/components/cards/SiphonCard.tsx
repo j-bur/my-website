@@ -38,7 +38,7 @@ export function SiphonCard({
         ${isRaised ? 'border-siphon-accent shadow-lg shadow-siphon-accent/20 -translate-y-2 z-10' : 'border-card-border'}
         ${isUnplayable ? 'opacity-40 saturate-50' : ''}
         ${isDragging ? 'opacity-50' : ''}
-        ${compact ? 'w-36 min-h-44' : 'w-48 min-h-56'}
+        ${compact ? 'w-[160px] min-h-[224px]' : 'w-[200px] min-h-[280px]'}
         ${isDraggable && !isUnplayable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
         bg-card-bg hover:border-siphon-accent/60
       `}
@@ -61,14 +61,14 @@ export function SiphonCard({
       }}
     >
       {/* Name */}
-      <div className="px-2 py-1.5 border-b border-card-border text-center">
-        <span className="text-xs font-bold tracking-wide uppercase text-text-primary">
+      <div className="px-3 py-2 border-b border-card-border text-center">
+        <span className={`font-bold tracking-wide uppercase text-text-primary ${compact ? 'text-xs' : 'text-sm'}`}>
           {feature.name}
         </span>
       </div>
 
       {/* Stats */}
-      <div className="px-2 py-1.5 text-xs space-y-0.5">
+      <div className={`px-3 py-2 space-y-1 ${compact ? 'text-xs' : 'text-sm'}`}>
         <div className="flex justify-between">
           <span className="text-text-muted">Cost</span>
           <span className="text-ep-positive font-medium">{costDisplay}</span>
@@ -93,26 +93,26 @@ export function SiphonCard({
 
       {/* Description (only when not compact) */}
       {!compact && (
-        <div className="px-2 py-1.5 border-t border-card-border flex-1">
-          <p className="text-[10px] leading-tight text-text-secondary line-clamp-4">
+        <div className="px-3 py-2 border-t border-card-border flex-1">
+          <p className="text-xs leading-snug text-text-secondary line-clamp-5">
             {feature.description}
           </p>
         </div>
       )}
 
-      {/* Warp effect */}
-      {!compact && feature.warpEffect && (
-        <div className="px-2 py-1 border-t border-warp/30 bg-warp/5">
-          <p className="text-[10px] leading-tight text-warp/80 line-clamp-2">
-            <span className="font-bold">WARP:</span> {feature.warpEffect}
-          </p>
+      {/* Warp badge */}
+      {feature.warpEffect && (
+        <div className={`px-3 ${compact ? 'py-1' : 'py-1.5'} border-t border-warp/30 bg-warp/5`}>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-warp/80">
+            Warp
+          </span>
         </div>
       )}
 
       {/* Ally bestowed badge */}
       {allyName && (
-        <div className="px-2 py-0.5 border-t border-siphon-border/30 bg-siphon-surface/20">
-          <span className="text-[9px] text-text-muted">
+        <div className="px-3 py-1 border-t border-siphon-border/30 bg-siphon-surface/20">
+          <span className="text-[10px] text-text-muted">
             &rarr; {allyName}
           </span>
         </div>

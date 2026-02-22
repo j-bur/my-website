@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-22
-**Current Phase**: Phase 8A Complete (Phase 8B: Card Sizing + Restyling next)
+**Current Phase**: Phase 8B Complete (Phase 8C: Grimoire Navigation next)
 
 ---
 
@@ -26,15 +26,16 @@
 | Phase 7B: Drag-and-Drop | ✅ Complete | DnD bestow/activate, dismiss gesture, drop zone highlights |
 | Post-Phase 7 Audit | ✅ Complete | Hook extraction, dead code removal, docs updated |
 | Phase 8A: Three-Column Grid Layout | ✅ Complete | Sidebar layout, header removed, rest buttons moved |
+| Phase 8B: Card Sizing + Restyling | ✅ Complete | 14 new tests (6 PhaseAbilities + 6 WildSurgeDeck + 2 HandArea), 459 total |
 
 ---
 
 ## Next Session
 
-1. **Phase 8B: Card Sizing + Restyling** — Read `.claude/docs/PHASE_SPECS/phase-8-combat-view-redesign.md`
-2. Hand cards to 200×280px, phase abilities to compact info bars, wild surge to macro widget, hand overlap for Supercapacitance
-3. Or alternatively: Phase 8C (Grimoire Navigation) or Phase 8D (Inline Activation) — all depend on 8A (now complete) but are independent of each other
-4. All 445 tests passing; CombatHUD now uses three-column sidebar layout
+1. **Phase 8C: Grimoire Navigation** — Read `.claude/docs/PHASE_SPECS/phase-8-combat-view-redesign.md`
+2. CSS book/tome component in right sidebar, navigates to Deck Builder on click
+3. Or alternatively: Phase 8D (Inline Activation) — both depend on 8A (complete) but are independent of each other
+4. All 459 tests passing; cards now 200×280px, phase abilities are compact bars, wild surge is macro/roll widget
 
 > **Note**: Phase 7C (Visual Effects) was originally next but has been deferred. Phase 8 redesigns the layout, so adding per-component VFX before the restructure would require rework. Phase 7C effects (warp visual, chromatic aberration, high focus warning) can be revisited after Phase 8 is complete.
 > **Note**: Navigation from Combat → Deck Builder is temporarily unavailable (8A removed Deck Builder button; Grimoire in 8C will replace it). Deck Builder → Combat still works.
@@ -256,6 +257,17 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### Phase 8B: Card Sizing + Component Restyling
+- [x] `SiphonCard.tsx` — Resized from `w-48 min-h-56` (192×224) to `w-[200px] min-h-[280px]` (200×280); compact from `w-36 min-h-44` to `w-[160px] min-h-[224px]`; text sizes bumped up (name: `text-sm`, stats: `text-sm`); warp section changed from multi-line text to compact "Warp" badge visible in both modes; increased padding for larger card
+- [x] `PhaseAbilities.tsx` — Replaced card-based layout with compact horizontal info bars (~50px height); each bar shows mote cost, ability name, and activation type badge (A/BA/R/—); muted styling subordinate to hand cards; description available via title attribute
+- [x] `WildSurgeDeck.tsx` — Replaced card visual with macro/roll widget; supports dice3d mode (Roll d100 button with random result display) and macro mode (click-to-copy `/r 1d100`); reads `diceMode.wildSurge` from settingsStore
+- [x] `HandArea.tsx` — Added `justify-center` to card row; replaced fixed overlap values with dynamic ResizeObserver-based algorithm (measures container width, calculates overlap offset per card count); cards use gap-4 when they fit, negative margins when overlapping; `compact` prop now driven by `needsOverlap` instead of hardcoded `isLargeHand > 7`
+- [x] `setupTests.ts` — Added `ResizeObserver` mock for jsdom (no-op observer, constructor accepts callback)
+- [x] New test file `PhaseAbilities.test.tsx` — 6 tests: compact bars, ability names, mote costs, activation badges, phase change reactivity, accessible list structure
+- [x] New test file `WildSurgeDeck.test.tsx` — 6 tests: label, Roll d100 button, macro mode text, result display, copy macro, accessible region
+- [x] `HandArea.test.tsx` — 2 new tests: justify-center class, many cards render without error
+- [x] All exit conditions met: build passes, lint passes, 459 tests green
 
 ### Phase 8A: Three-Column Grid Layout
 - [x] `CombatHUD.tsx` — Replaced 4-column/5-row grid with 3-column/3-row sidebar layout (`260px 1fr 260px`)

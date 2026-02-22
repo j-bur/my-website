@@ -1,32 +1,37 @@
 import { useManifoldStore } from '../../store';
 import { getAbilitiesByPhase } from '../../data/echoManifold';
 
+const ACTIVATION_ABBREV: Record<string, string> = {
+  'Action': 'A',
+  'Bonus Action': 'BA',
+  'Reaction': 'R',
+  'None': '—',
+};
+
 export function PhaseAbilities() {
   const currentPhase = useManifoldStore((s) => s.currentPhase);
   const abilities = getAbilitiesByPhase(currentPhase);
 
   return (
-    <div className="flex gap-2" role="list" aria-label="Phase abilities">
+    <div className="flex flex-col gap-1.5" role="list" aria-label="Phase abilities">
       {abilities.map((ability) => (
         <div
           key={ability.id}
-          className="w-44 border border-siphon-border rounded-lg bg-card-bg p-2 cursor-pointer hover:border-siphon-accent/60 transition-colors"
+          className="flex items-center justify-between px-3 py-2.5 border border-siphon-border/50 rounded bg-card-bg/50 min-h-[50px]"
           role="listitem"
+          title={ability.description}
         >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wide text-text-primary truncate">
-              {ability.name}
-            </span>
-            <span className="text-[10px] text-siphon-accent font-medium ml-1 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs text-siphon-accent font-medium shrink-0">
               {ability.moteCost}m
             </span>
+            <span className="text-xs font-medium text-text-secondary truncate">
+              {ability.name}
+            </span>
           </div>
-          <div className="text-[10px] text-text-muted mb-1">
-            {ability.activation}
-          </div>
-          <p className="text-[10px] leading-tight text-text-secondary line-clamp-3">
-            {ability.description}
-          </p>
+          <span className="text-[10px] uppercase tracking-wider text-text-muted bg-siphon-surface/30 px-1.5 py-0.5 rounded shrink-0 ml-2">
+            {ACTIVATION_ABBREV[ability.activation] ?? ability.activation}
+          </span>
         </div>
       ))}
     </div>

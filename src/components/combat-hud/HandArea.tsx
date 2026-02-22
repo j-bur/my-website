@@ -1,9 +1,12 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useSiphonStore, useSettingsStore } from '../../store';
 import { TRIGGERED_FEATURE_IDS, FEATURE_MAP } from '../../data/featureConstants';
 import { setCardDragData, getCardDragData, isCardDrag } from '../../types/dragData';
 import { useCardDragDetection } from '../../hooks/useCardDragDetection';
 import { SiphonCard } from '../cards/SiphonCard';
+
+const CARD_WIDTH = 200;
+const CARD_GAP = 16; // gap-4
 
 interface HandAreaProps {
   onActivateCard?: (featureId: string) => void;
@@ -22,6 +25,21 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
   const prevHandRef = useRef<string[]>([]);
   const [isDragTarget, setIsDragTarget] = useState(false);
   const isCardBeingDragged = useCardDragDetection(() => setIsDragTarget(false));
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  // Measure container width for overlap calculation
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Compute hand cards: explicit hand + triggered features in selected
   const handCards = useMemo(() => {
@@ -43,6 +61,22 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
     const timeout = setTimeout(() => setEnteringCards(new Set()), 350);
     return () => clearTimeout(timeout);
   }, [handCards]);
+
+  // Overlap logic: do cards fit normally, or do we need to compress?
+  const cardCount = handCards.length;
+  const normalWidth = cardCount * CARD_WIDTH + (cardCount - 1) * CARD_GAP;
+  const needsOverlap = containerWidth > 0 && normalWidth > containerWidth;
+
+  const getMarginLeft = useCallback(
+    (index: number) => {
+      if (index === 0) return 0;
+      if (!needsOverlap) return CARD_GAP;
+      // Overlap mode: spread cards evenly across available width
+      const overlapOffset = (containerWidth - CARD_WIDTH) / (cardCount - 1);
+      return overlapOffset - CARD_WIDTH;
+    },
+    [needsOverlap, containerWidth, cardCount]
+  );
 
   const handleDragOver = (e: React.DragEvent) => {
     if (isCardDrag(e.dataTransfer)) {
@@ -76,7 +110,8 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
   if (handCards.length === 0) {
     return (
       <div
-        className={`flex items-end h-full min-h-36 rounded-lg transition-all ${
+        ref={containerRef}
+        className={`flex items-center justify-center h-full min-h-36 rounded-lg transition-all ${
           showActiveHighlight ? 'ring-2 ring-ep-positive/60 ring-inset bg-ep-positive/5' :
           showAmbientHighlight ? 'ring-2 ring-ep-positive/30 ring-inset' : ''
         }`}
@@ -86,20 +121,17 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <div className="text-text-muted/30 text-xs italic px-4 pb-4">
+        <div className="text-text-muted/30 text-xs italic">
           No cards in hand. Bestow features from the Selected deck.
         </div>
       </div>
     );
   }
 
-  // Overlap calculation: compress when hand is large
-  const isLargeHand = handCards.length > 7;
-  const overlapPx = isLargeHand ? -96 : -24;
-
   return (
     <div
-      className={`flex flex-col justify-end h-full min-h-36 px-2 pb-2 rounded-lg transition-all ${
+      ref={containerRef}
+      className={`flex flex-col justify-end h-full min-h-36 pb-2 rounded-lg transition-all ${
         showActiveHighlight ? 'ring-2 ring-ep-positive/60 ring-inset bg-ep-positive/5' :
         showAmbientHighlight ? 'ring-2 ring-ep-positive/30 ring-inset' : ''
       }`}
@@ -113,7 +145,7 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
         </div>
       )}
       <div
-        className="flex items-end"
+        className="flex items-end justify-center"
         role="list"
         aria-label={`Hand: ${handCards.length} cards`}
       >
@@ -130,7 +162,7 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
             key={cardId}
             className={`relative transition-all duration-300 ease-out${enteringCards.has(cardId) ? ' card-enter' : ''}`}
             style={{
-              marginLeft: index === 0 ? 0 : overlapPx,
+              marginLeft: index === 0 ? 0 : getMarginLeft(index),
               zIndex: isHovered ? 50 : index,
             }}
             onMouseEnter={() => setHoveredCardId(cardId)}
@@ -139,7 +171,7 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
             <SiphonCard
               feature={feature}
               isRaised={isHovered}
-              compact={isLargeHand && !isHovered}
+              compact={needsOverlap && !isHovered}
               isUnplayable={isUnplayable}
               onClick={selectedAllyId && !feature.isSpecialCost ? () => {
                 bestowToAlly(cardId, selectedAllyId);

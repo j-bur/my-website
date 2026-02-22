@@ -14,3 +14,13 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: () => false,
   }),
 });
+
+// Mock ResizeObserver for jsdom (not available by default)
+globalThis.ResizeObserver = class ResizeObserver {
+  constructor(_cb: ResizeObserverCallback) {
+    // no-op: jsdom has no layout engine
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};

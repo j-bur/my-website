@@ -174,7 +174,7 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 8A Complete)
+### Current Structure (Phase 8B Complete)
 
 ```
 App (layout wrapper with <Outlet />)
@@ -192,21 +192,21 @@ App (layout wrapper with <Outlet />)
 ├── CombatHUD (/combat, 3-column CSS Grid: 260px 1fr 260px)
 │   ├── Left Sidebar (flex column, rows 1-2)
 │   │   ├── EchoManifoldDeck — phase card + mote pips
-│   │   └── PhaseAbilities — 3 ability cards for current phase
+│   │   └── PhaseAbilities — compact info bars (name + activation badge)
 │   ├── SelectedDeck (grid: deck, row 3 col 1, aligned with hand)
 │   │   └── SiphonCard (×N, when expanded)
 │   ├── Center Column
 │   │   ├── ActiveEffectsPanel (row 1, 1fr) — effect rows + drop target
 │   │   ├── AlliesPanel (row 2, auto) — ally chips, bestow target, hover→overlay
-│   │   └── HandArea (row 3, auto) — fanned hand cards
-│   │       └── SiphonCard (×N, fanned)
+│   │   └── HandArea (row 3, auto) — centered cards with dynamic overlap
+│   │       └── SiphonCard (×N, 200×280px, compact when overlapping)
 │   ├── Right Sidebar (flex column, spans all rows)
 │   │   ├── ResourceDisplay — Focus, EP, HD, Capacitance
 │   │   │   ├── FocusCounter
 │   │   │   ├── EchoPointsBar
 │   │   │   ├── HitDiceDisplay
 │   │   │   └── SiphonCapacitanceTracker (with in-game timer)
-│   │   ├── WildSurgeDeck — surge deck
+│   │   ├── WildSurgeDeck — macro/roll widget (dice3d or macro mode)
 │   │   └── Rest Buttons — Short Rest / Long Rest
 │   ├── ActivationPanel (overlay)
 │   ├── SurgeResultModal (overlay)
