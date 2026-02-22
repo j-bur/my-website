@@ -120,181 +120,274 @@ gridTemplateAreas: `
 
 ---
 
-## Component Changes
+## Sub-Phases
 
-### Card Content Simplification (SiphonCard)
-
-The app manages all mechanics (EP cost, focus rolls, warp triggers). Card text should be a **functional summary** of what the feature does, not a full mechanical explanation. Each card shows:
-
-- **Name** (serif, bold, uppercase)
-- **EP Cost** (number or "Special"/"Varies")
-- **Focus Dice** (e.g., "1d4", "2d8")
-- **Activation** (Action / Bonus Action / Reaction / None)
-- **Duration** (time or "Triggered"/"Instant"/"Special")
-- **1-2 sentence functional description** (what it *does*, not how the engine processes it)
-- **Warp indicator** (compact — badge or icon, not full warp text)
-
-Current card descriptions are copied from source PDFs and explain full mechanics. These should be rewritten for the app context where the user just needs to understand the feature's purpose.
-
-### Activation Flow (No Modal)
-
-**Current**: Drag card to Active Effects → modal appears → confirm → activate
-**New**: Drag card over Active Effects → **ghost preview row** appears inline → drop card → **immediately activate**
-
-The ghost preview row shows:
-- Feature name, EP cost, Focus dice
-- EP state change: "EP: -2 → -6 (WARP)" in crimson if warp triggers
-- Styled with dashed border and pulsing glow to distinguish from real effect rows
-
-On drop: cost deducted, focus rolled, effect row becomes real. If warp triggers, surge handling is inline (macro/roll display), not a modal.
-
-### Hand Overflow (Supercapacitance)
-
-When hand has more cards than fit at full spacing:
-- Cards remain in a **single horizontal row** (never wrap to second row)
-- Gaps decrease, then cards overlap (each showing enough of the left edge to identify)
-- Hovering/clicking a card separates it from neighbors for inspection
-- Implementation: calculate available width, divide by card count, set overlap via negative margin or CSS
-
-### Phase Abilities (Info Badges)
-
-Phase abilities are **not playable** in the app — they're reference information only. No drag/drop, no activation, no tracking in Active Effects.
-
-Each phase ability renders as a **compact horizontal bar** (full sidebar width × ~50px):
-- Ability name (left-aligned)
-- Activation type badge (right-aligned, e.g., "BA", "1m", "None")
-- Muted border, clearly subordinate to hand cards in visual hierarchy
-
-### Selected Deck
-
-**Resting state**: Face-down card stack with count badge (e.g., "7") in bottom-left sidebar.
-
-**Expanded state** (on click): Cards spread out, overlaying the center area. User drags a card from the spread to:
-- **Hand area** → bestow to self
-- **Ally chip** → bestow to ally
-
-The spread closes after a bestow action or clicking away. Detailed expansion interaction design is TBD during implementation.
-
-### Grimoire (Siphon Features → Deck Builder)
-
-A **CSS-only book/tome** visual in the bottom-right sidebar. Clicking it navigates to the Deck Builder view (`/#/deck-builder`).
-
-Visual treatment (all pure CSS, no images):
-- Rectangular book shape (~180 × 130px)
-- Spine on left edge (darker strip with subtle ridge lines via repeating gradient)
-- Cover with dark leather-like gradient (dark browns/purples)
-- Decorative border lines in gold/amber on cover
-- Page edges visible on right side (thin lighter strip)
-- Circular gold/amber seal in center showing feature count ("42")
-- Text label "Siphon Features" below
-- Hover: amber glow, slight scale-up, cursor pointer
-- Must feel "browsable/inviting", clearly distinct from playable card stacks
-
-### Wild Surge (Simplified)
-
-The app does **NOT** look up Wild Echo Surge table results. The Wild Surge area provides:
-- A macro string to copy (e.g., `/r 1d100`) in a monospace copyable box
-- A "Roll" button that rolls dice and displays the numeric result
-- That's it — the user interprets the result using their own surge table
-
-### Rest Buttons
-
-"Short Rest" and "Long Rest" buttons in the right sidebar, below Wild Surge.
-
-**Rest flow design is deferred** — the current modal-based rest dialogs will be replaced with a separate view/route in a future phase. The vision: clicking a rest button triggers a **view transition** that feels like "retreating inward" — a subconscious/meditative space where the player confirms rest details before returning to combat. Design details TBD.
-
-### Settings
-
-Settings gear **removed from Combat View entirely**. Settings lives only in the Deck Builder view. All current settings (character level, PB, animations, data management) are setup/management concerns, not combat-critical.
-
-### Header
-
-**Removed**. The "Deck Builder" text button is replaced by the grimoire. Rest buttons move to the right sidebar. Settings moves to Deck Builder. Nothing remains for a header row.
+### Dependencies
+```
+8A (Grid Layout) ──→ 8B (Card Sizing + Restyling)
+                ──→ 8C (Grimoire Navigation)
+                ──→ 8D (Inline Activation)
+```
+8A is the foundation. 8B, 8C, and 8D all depend on 8A but are independent of each other and can be done in any order. The recommended order is 8A → 8B → 8C → 8D (simplest to most complex).
 
 ---
 
-## File Changes
+## Phase 8A: Three-Column Grid Layout
 
-### Modified Files
-1. **`CombatHUD.tsx`** — New three-column grid layout, no header, sidebar wrappers, remove settings state/button, add grimoire navigation
-2. **`SiphonCard.tsx`** — Update card dimensions to 200×280 (was 192×224), simplify content layout, add warp badge (replacing warp text block)
-3. **`PhaseAbilities.tsx`** — Replace card-based layout with compact horizontal info bars
-4. **`EchoManifoldDeck.tsx`** — Remove fixed width, let sidebar constrain
-5. **`WildSurgeDeck.tsx`** — Simplify to macro copy + roll button (remove card visual), remove fixed width/alignment
-6. **`HandArea.tsx`** — Center cards in wide column, add overlap logic for Supercapacitance
-7. **`ActiveEffectsPanel.tsx`** — Add ghost preview row for drag-over activation UX
-8. **`SelectedDeck.tsx`** — Update to face-down stack visual with expansion overlay
-9. **`ResourceDisplay.tsx`** — Remove internal width constraints (sidebar constrains)
+**Goal**: Restructure CombatHUD from row-based grid to three-column sidebar layout. Reposition all existing components — no component internals change.
 
-### New Files
-10. **`Grimoire.tsx`** — New component: CSS book/tome visual, click navigates to Deck Builder
-11. **`index.css`** — New keyframes: `ghost-glow` (preview row pulse), grimoire hover effects
+### Scope
+- Replace CombatHUD's grid definition with the new three-column layout
+- Wrap left sidebar components (EchoManifoldDeck, PhaseAbilities, SelectedDeck) in a flex column
+- Wrap right sidebar components (ResourceDisplay, WildSurgeDeck, rest buttons) in a flex column
+- Remove the header row entirely:
+  - Remove "Deck Builder" navigation button (grimoire replaces it in 8C; for 8A, navigation to Deck Builder is temporarily unavailable from Combat View)
+  - Remove settings gear button and `showSettings` state (settings moves to Deck Builder only)
+  - Remove `SettingsModal` import and rendering from CombatHUD
+- Move rest buttons ("Short Rest", "Long Rest") into the right sidebar below WildSurgeDeck
+- Remove `w-56` and `self-start` from ResourceDisplay wrapper (sidebar constrains width)
 
-### Files NOT Modified
-- Store files — no state shape changes in this phase
-- Test files — update only as needed for changed component interfaces
-- `ActivationPanel.tsx` — **Removed or gutted** (modal activation replaced by inline preview)
+### What Does NOT Change in 8A
+- Card sizes (SiphonCard stays w-48/w-36 until 8B)
+- PhaseAbilities layout (stays as cards until 8B)
+- WildSurgeDeck appearance (stays as card until 8B)
+- EchoManifoldDeck internal layout (just remove fixed width)
+- ActiveEffectsPanel (no changes)
+- No new components
+- Store interfaces
+
+### Files Modified
+1. **`CombatHUD.tsx`** — New grid layout, sidebar wrappers, remove header/settings, move rest buttons
+2. **`EchoManifoldDeck.tsx`** — Remove `w-44` from card div (let sidebar constrain width)
+3. **`WildSurgeDeck.tsx`** — Remove `w-44` and `self-start justify-self-end` (sidebar positions it)
+4. **`ResourceDisplay.tsx`** — Remove internal width constraints if any
+
+### Test Impact
+- CombatHUD tests: update for removed header elements (Deck Builder button, settings gear)
+- Component tests with `useNavigate()` wrappers may need updates if header assertions exist
+- All 445 existing tests should still pass after updates
+
+### Verification
+1. `npm run build` succeeds
+2. `npm run lint` passes
+3. `npm run test` — all tests pass
+4. Visual check:
+   - Three-column layout visible
+   - Left sidebar: Manifold + Phase Abilities + Selected Deck stacked vertically
+   - Center: Active Effects (fills space) + Allies + Hand
+   - Right sidebar: Resources + Wild Surge + Rest buttons stacked vertically
+   - No header row visible
+   - All existing interactions work (drag-drop bestow, activation, rest dialogs, deck expansion)
 
 ---
 
-## Implementation Notes
+## Phase 8B: Card Sizing + Component Restyling
 
-### Card Overlap Algorithm (HandArea)
-```
-availableWidth = container width
-cardWidth = 200
-gap = 16
+**Goal**: Make all elements the correct size and style per the mockup. Cards to 200×280, phase abilities to compact bars, hand overlap for Supercapacitance, wild surge simplified.
 
-if (cardCount * cardWidth + (cardCount - 1) * gap <= availableWidth):
-  // Normal spacing — cards fit without overlap
-  use flex with gap-4
-else:
-  // Overlap mode — compress cards to fit
-  overlapOffset = (availableWidth - cardWidth) / (cardCount - 1)
-  each card gets: marginLeft = overlapOffset - cardWidth (negative)
-  first card: marginLeft = 0
-```
+### Scope
 
-### Grimoire CSS Approach
-Build entirely from CSS gradients, shadows, and borders:
-- `background: linear-gradient(...)` for leather texture
-- `box-shadow` for depth
-- `::before` pseudo-element for spine
-- `::after` pseudo-element for page edges
-- Hover state: `filter: drop-shadow(0 0 8px var(--capacitance))`
+**SiphonCard (200 × 280px)**:
+- Change from `w-48 min-h-56` (192×224) to `w-[200px] min-h-[280px]` (200×280)
+- Compact variant: scale proportionally (e.g., `w-[160px] min-h-[224px]`)
+- Simplify content layout:
+  - Card content is a **functional summary**, not full mechanical description
+  - Warp effect section: replace multi-line text with compact warp badge/indicator
+- Card text should be larger and more readable at the new size
 
-### Ghost Preview Row
-- Appears in ActiveEffectsPanel when a card is dragged over the panel
+**PhaseAbilities → Info Bars**:
+- Replace card-based layout with compact horizontal bars
+- Each bar: full sidebar width × ~50px
+- Content: ability name (left), activation type badge (right, e.g., "BA", "1m", "None")
+- Container: `flex flex-col gap-2` (vertical stack)
+- Muted styling — clearly subordinate to hand cards
+
+**EchoManifoldDeck**:
+- Let sidebar constrain width (already done in 8A)
+- Verify visual at sidebar width
+
+**WildSurgeDeck → Macro/Roll Widget**:
+- Remove card visual entirely
+- Replace with compact widget: macro text in monospace copyable box + "Roll" button
+- The app does NOT look up surge table results
+- Display: label "Wild Surge", macro text (`/r 1d100`), roll button, result display area
+
+**HandArea → Centered + Overlap**:
+- Center cards in the wide center column (`justify-center`)
+- Add overlap logic for Supercapacitance (7+ cards):
+  ```
+  availableWidth = container width
+  cardWidth = 200
+  gap = 16
+
+  if (cardCount * cardWidth + (cardCount - 1) * gap <= availableWidth):
+    // Normal spacing
+    use flex with gap-4
+  else:
+    // Overlap mode
+    overlapOffset = (availableWidth - cardWidth) / (cardCount - 1)
+    each card: marginLeft = overlapOffset - cardWidth (negative)
+    first card: marginLeft = 0
+  ```
+- Hovering a card in overlap mode should separate it from neighbors (z-index + translate)
+
+### Files Modified
+1. **`SiphonCard.tsx`** — New dimensions (200×280), simplified content, warp badge
+2. **`PhaseAbilities.tsx`** — Replace card layout with compact horizontal info bars
+3. **`WildSurgeDeck.tsx`** — Replace card visual with macro/roll widget
+4. **`HandArea.tsx`** — Center cards, add overlap algorithm
+
+### Test Impact
+- SiphonCard tests: update assertions for new dimensions/class names
+- PhaseAbilities tests: update for new bar-based rendering (no longer renders SiphonCard)
+- WildSurgeDeck tests: update for new widget rendering
+- HandArea tests: add tests for overlap behavior with many cards
+
+### Verification
+1. `npm run build` succeeds
+2. `npm run lint` passes
+3. `npm run test` — all tests pass
+4. Visual check:
+   - Hand cards are 200×280px, readable, properly spaced
+   - Phase abilities render as compact sidebar bars
+   - Wild Surge area shows macro + roll button (no card)
+   - With 7+ hand cards, overlap compresses to single row
+   - Hovering overlapped card raises it for inspection
+
+---
+
+## Phase 8C: Grimoire Navigation
+
+**Goal**: Add the grimoire (CSS book/tome) to the right sidebar as navigation to the Deck Builder.
+
+### Scope
+
+**New `Grimoire.tsx` component**:
+- CSS-only book/tome visual (~180 × 130px)
+- Visual treatment (no images, pure CSS):
+  - Spine on left edge: darker strip (~15px) with subtle ridge lines via `repeating-linear-gradient`
+  - Cover: dark leather-like gradient (dark browns/purples)
+  - Decorative border lines in gold/amber on cover
+  - Page edges on right side: thin lighter strip suggesting paper
+  - Circular gold/amber seal in center showing feature count (read from `FEATURE_MAP.size`)
+  - CSS approach:
+    - `background: linear-gradient(...)` for leather texture
+    - `box-shadow` for depth
+    - `::before` pseudo-element for spine
+    - `::after` pseudo-element for page edges
+- Text label "Siphon Features" below the book
+- `onClick`: `useNavigate()` to `'/deck-builder'`
+- Hover: amber glow (`filter: drop-shadow(0 0 8px var(--capacitance))`), slight scale-up, cursor pointer
+- Must feel "browsable/inviting" — clearly distinct from playable card stacks
+
+**CombatHUD integration**:
+- Add `<Grimoire />` to the right sidebar, pinned to bottom (below rest buttons)
+- Use `margin-top: auto` on grimoire to push it to the bottom of the sidebar
+
+**CSS additions** (in `index.css` or component-scoped):
+- Grimoire hover glow animation
+
+### Files Modified/Created
+1. **NEW: `src/components/combat-hud/Grimoire.tsx`** — CSS book/tome component
+2. **`CombatHUD.tsx`** — Add Grimoire to right sidebar
+
+### Test Impact
+- New tests for Grimoire component (renders, shows count, navigates on click)
+- CombatHUD tests: verify grimoire is present in right sidebar
+- Grimoire uses `useNavigate()` so tests need `createMemoryRouter` wrapper
+
+### Verification
+1. `npm run build` succeeds
+2. `npm run lint` passes
+3. `npm run test` — all tests pass
+4. Visual check:
+   - Grimoire appears at bottom of right sidebar
+   - Looks like a physical book/tome, not a button
+   - Shows feature count ("42") in a seal
+   - Hover produces amber glow + slight scale
+   - Click navigates to Deck Builder (`/#/deck-builder`)
+   - Visually distinct from the Selected Deck stack on the left
+
+---
+
+## Phase 8D: Inline Activation Flow
+
+**Goal**: Replace modal-based card activation with inline drag-preview-drop. Eliminate the ActivationPanel modal and SurgeResultModal.
+
+### Scope
+
+**Ghost Preview Row (ActiveEffectsPanel)**:
+- When a card is dragged over the Active Effects panel, a **ghost preview row** appears at the bottom of the effect list
 - Uses `onDragOver`/`onDragLeave` events on the panel
-- Row styled with `border: 1px dashed`, pulsing glow via CSS animation
-- Shows feature name, EP cost, focus dice, and EP state change
-- EP state change calculated from current EP minus card cost
-- If resulting EP < 0: show "(WARP)" in crimson
+- Read the dragged card's feature ID from drag data (existing `getCardDragData()`)
+- Ghost row displays:
+  - Feature name, EP cost, Focus dice
+  - EP state change: current EP → resulting EP (e.g., "EP: -2 → -6")
+  - If resulting EP < 0: show "(WARP)" in crimson
+- Styling: dashed border, pulsing glow via `ghost-glow` CSS animation
+- Row disappears when drag leaves the panel
+
+**Drop-to-Activate (Immediate)**:
+- On drop: immediately activate the card (no modal confirmation)
+  - Deduct EP cost
+  - Roll focus dice
+  - Add effect row to Active Effects
+  - Return card to Selected Deck (per existing activation flow)
+- If warp triggers (EP negative after cost):
+  - Focus gain doubles (existing rule)
+  - Inline warp indicator on the new effect row (brief flash/highlight)
+  - Wild Surge handling: the Wild Surge widget in the right sidebar highlights/pulses to indicate a roll is needed — the user handles it there
+
+**Remove ActivationPanel Modal**:
+- Remove `ActivationPanel.tsx` component (or gut it)
+- Remove `stagedCardId`/`stagedFeature` state from CombatHUD
+- Remove the `ActivationPanel` overlay rendering
+- The activation logic (EP deduction, focus roll, warp check) moves into the drop handler or a shared utility
+
+**Remove SurgeResultModal**:
+- Remove `SurgeResultModal.tsx` or repurpose
+- Remove `surgeResult` state from CombatHUD
+- Surge results are no longer displayed as a modal — the Wild Surge widget handles this
+
+**CSS additions**:
+- `ghost-glow` keyframe animation for the preview row pulsing effect
+- Warp flash animation for newly-activated effect rows
+
+### Important: Activation Logic Extraction
+The current `ActivationPanel` contains activation logic (EP deduction, focus roll, warp check, surge trigger). This logic must be extracted into a reusable function or moved into the drop handler before removing the modal. Do NOT lose this logic — it enforces the Three Critical Rules.
+
+### Files Modified
+1. **`ActiveEffectsPanel.tsx`** — Add ghost preview row on drag-over, add drop-to-activate handler
+2. **`CombatHUD.tsx`** — Remove `stagedCardId`, `stagedFeature`, `surgeResult` state; remove ActivationPanel and SurgeResultModal rendering
+3. **`ActivationPanel.tsx`** — Remove or gut (extract activation logic first)
+4. **`SurgeResultModal.tsx`** — Remove or repurpose
+5. **`index.css`** — Add `ghost-glow` keyframe, warp flash animation
+
+### Test Impact
+- ActiveEffectsPanel tests: add tests for ghost preview row (drag-over shows preview, drag-leave hides it, drop triggers activation)
+- CombatHUD tests: remove assertions for ActivationPanel modal and SurgeResultModal
+- New tests for activation logic utility (EP deduction, focus roll, warp trigger)
+- Existing activation flow tests need migration from modal-based to drop-based
+
+### Verification
+1. `npm run build` succeeds
+2. `npm run lint` passes
+3. `npm run test` — all tests pass
+4. Visual check:
+   - Dragging a hand card over Active Effects shows ghost preview row
+   - Preview row shows correct EP cost and warp warning
+   - Dropping the card immediately activates (no modal)
+   - Effect row appears in Active Effects
+   - Warp indicator shows when EP goes negative
+   - No modals appear during any activation flow
+   - Wild Surge widget highlights when a surge roll is needed
 
 ---
 
 ## Deferred to Future Phases
 
-- **Rest view design** — replacing rest modals with a separate view/route
+- **Rest view design** — replacing rest modals with a separate view/route ("retreating inward" transition)
 - **Card description rewriting** — simplifying all 42 feature descriptions for app context
 - **Selected Deck expansion animation** — detailed interaction design for the card spread overlay
 - **Responsive/mobile layout** — this phase targets 1080p desktop only
 - **Sound design** — card interactions, resource changes, warp triggers
-
----
-
-## Verification
-
-1. `npm run build` — must succeed
-2. `npm run lint` — must pass
-3. `npm run test` — all existing tests must pass (update tests for changed component interfaces)
-4. Visual check against `mockup-combat-redesign.html`:
-   - Three-column layout matches mockup proportions
-   - Left sidebar: Manifold + Phase Ability bars + Selected Deck stack at bottom
-   - Center: Active Effects (fills space) + Allies row + Hand (centered, single row)
-   - Right sidebar: Resources + Wild Surge + Rest buttons + Grimoire at bottom
-   - Hand cards are 200×280px, legible, with simplified content
-   - Ghost preview row appears when simulating drag-over on Active Effects
-   - Grimoire looks like a book/tome, navigates to Deck Builder on click
-   - No header row, no settings gear in Combat View
-   - With 7+ hand cards, overlap compression keeps cards in a single row
