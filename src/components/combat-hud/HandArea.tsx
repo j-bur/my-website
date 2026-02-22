@@ -32,6 +32,8 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    // Synchronous initial read to avoid first-frame layout shift
+    setContainerWidth(el.clientWidth);
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         setContainerWidth(entry.contentRect.width);
