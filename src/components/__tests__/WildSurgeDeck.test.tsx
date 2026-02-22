@@ -66,4 +66,60 @@ describe('WildSurgeDeck', () => {
 
     expect(screen.getByRole('region', { name: 'Wild Surge' })).toBeInTheDocument();
   });
+
+  // --- Persistent warp notification ---
+
+  it('shows "Roll Needed!" when pendingWarps > 0', () => {
+    render(<WildSurgeDeck pendingWarps={1} />);
+
+    expect(screen.getByText(/roll needed/i)).toBeInTheDocument();
+  });
+
+  it('does NOT show "Roll Needed!" when pendingWarps is 0', () => {
+    render(<WildSurgeDeck pendingWarps={0} />);
+
+    expect(screen.queryByText(/roll needed/i)).not.toBeInTheDocument();
+  });
+
+  it('shows count badge when pendingWarps > 1', () => {
+    render(<WildSurgeDeck pendingWarps={3} />);
+
+    expect(screen.getByText('3')).toBeInTheDocument();
+  });
+
+  it('does NOT show count badge when pendingWarps is 1', () => {
+    render(<WildSurgeDeck pendingWarps={1} />);
+
+    // Only "Roll Needed!" text, no numeric badge
+    expect(screen.queryByText('1')).not.toBeInTheDocument();
+  });
+
+  it('calls onDismissWarp when Roll is clicked', () => {
+    const onDismiss = vi.fn();
+    render(<WildSurgeDeck pendingWarps={2} onDismissWarp={onDismiss} />);
+
+    fireEvent.click(screen.getByText('Roll d100'));
+
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onDismissWarp when macro is copied', () => {
+    useSettingsStore.getState().setDiceMode('wildSurge', 'macro');
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    const onDismiss = vi.fn();
+    render(<WildSurgeDeck pendingWarps={1} onDismissWarp={onDismiss} />);
+
+    fireEvent.click(screen.getByText('/r 1d100'));
+
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies warp-pulse class when pendingWarps > 0', () => {
+    render(<WildSurgeDeck pendingWarps={1} />);
+
+    const region = screen.getByRole('region', { name: 'Wild Surge' });
+    expect(region.className).toContain('warp-pulse');
+  });
 });

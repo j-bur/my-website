@@ -2,17 +2,20 @@ import { useState, useCallback } from 'react';
 import { useSettingsStore } from '../../store';
 
 interface WildSurgeDeckProps {
-  warpPulse?: boolean;
+  pendingWarps?: number;
+  onDismissWarp?: () => void;
 }
 
-export function WildSurgeDeck({ warpPulse }: WildSurgeDeckProps) {
+export function WildSurgeDeck({ pendingWarps = 0, onDismissWarp }: WildSurgeDeckProps) {
   const wildSurgeDiceMode = useSettingsStore((s) => s.diceMode.wildSurge);
   const [result, setResult] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
   const macroText = '/r 1d100';
+  const hasWarps = pendingWarps > 0;
 
   const handleCopy = useCallback(async () => {
+    onDismissWarp?.();
     try {
       await navigator.clipboard.writeText(macroText);
       setCopied(true);
@@ -20,29 +23,35 @@ export function WildSurgeDeck({ warpPulse }: WildSurgeDeckProps) {
     } catch {
       // Clipboard access denied — silently ignore
     }
-  }, [macroText]);
+  }, [macroText, onDismissWarp]);
 
   const handleRoll = useCallback(() => {
     const roll = Math.floor(Math.random() * 100) + 1;
     setResult(roll);
-  }, []);
+    onDismissWarp?.();
+  }, [onDismissWarp]);
 
   return (
     <div
       aria-label="Wild Surge"
       role="region"
-      className={warpPulse ? 'warp-pulse' : ''}
+      className={hasWarps ? 'warp-pulse' : ''}
     >
-      <div className={`text-[10px] uppercase tracking-widest mb-2 ${
-        warpPulse ? 'text-warp font-bold' : 'text-text-muted'
+      <div className={`text-[10px] uppercase tracking-widest mb-2 flex items-center gap-2 ${
+        hasWarps ? 'text-warp font-bold' : 'text-text-muted'
       }`}>
-        Wild Surge{warpPulse ? ' \u2014 Roll Needed!' : ''}
+        <span>Wild Surge{hasWarps ? ' \u2014 Roll Needed!' : ''}</span>
+        {pendingWarps > 1 && (
+          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-warp text-siphon-bg text-[9px] font-bold">
+            {pendingWarps}
+          </span>
+        )}
       </div>
 
       {wildSurgeDiceMode === 'macro' ? (
         <button
           className={`w-full text-left px-2 py-1.5 rounded border bg-siphon-bg font-mono text-xs transition-colors ${
-            warpPulse
+            hasWarps
               ? 'border-warp/60 text-warp hover:border-warp/80'
               : 'border-siphon-border/50 text-warp hover:border-warp/40'
           }`}
@@ -54,7 +63,7 @@ export function WildSurgeDeck({ warpPulse }: WildSurgeDeckProps) {
       ) : (
         <button
           className={`w-full px-3 py-2 rounded border bg-siphon-bg text-xs transition-colors ${
-            warpPulse
+            hasWarps
               ? 'border-warp/60 text-warp hover:border-warp/80 hover:bg-warp/10'
               : 'border-siphon-border/50 text-warp hover:border-warp/40 hover:bg-warp/5'
           }`}
