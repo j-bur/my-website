@@ -1,7 +1,7 @@
 export function WildSurgeDeck() {
   return (
     <div
-      className="w-44 border border-siphon-border rounded-lg bg-card-bg p-3 cursor-pointer hover:border-warp/60 transition-colors self-start justify-self-end"
+      className="border border-siphon-border rounded-lg bg-card-bg p-3 cursor-pointer hover:border-warp/60 transition-colors"
       role="button"
       tabIndex={0}
       aria-label="Wild Surge deck"

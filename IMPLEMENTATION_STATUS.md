@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-22
-**Current Phase**: Phase 7B Complete (Phase 8: Combat View Redesign next)
+**Current Phase**: Phase 8A Complete (Phase 8B: Card Sizing + Restyling next)
 
 ---
 
@@ -25,18 +25,19 @@
 | Phase 7A: Core Animations | ✅ Complete | Card slide-in, animated counters, pip pulse, reduced motion |
 | Phase 7B: Drag-and-Drop | ✅ Complete | DnD bestow/activate, dismiss gesture, drop zone highlights |
 | Post-Phase 7 Audit | ✅ Complete | Hook extraction, dead code removal, docs updated |
+| Phase 8A: Three-Column Grid Layout | ✅ Complete | Sidebar layout, header removed, rest buttons moved |
 
 ---
 
 ## Next Session
 
-1. **Phase 8A: Three-Column Grid Layout** — Read `.claude/docs/PHASE_SPECS/phase-8-combat-view-redesign.md`
-2. Restructure CombatHUD from row-based grid to three-column sidebar layout
-3. Remove header row (settings gear, Deck Builder button); move rest buttons to right sidebar
-4. Reference mockup: `mockup-combat-redesign.html` (open in browser for visual target)
-5. All Phase 7B drag-and-drop operational; 445 tests passing
+1. **Phase 8B: Card Sizing + Restyling** — Read `.claude/docs/PHASE_SPECS/phase-8-combat-view-redesign.md`
+2. Hand cards to 200×280px, phase abilities to compact info bars, wild surge to macro widget, hand overlap for Supercapacitance
+3. Or alternatively: Phase 8C (Grimoire Navigation) or Phase 8D (Inline Activation) — all depend on 8A (now complete) but are independent of each other
+4. All 445 tests passing; CombatHUD now uses three-column sidebar layout
 
 > **Note**: Phase 7C (Visual Effects) was originally next but has been deferred. Phase 8 redesigns the layout, so adding per-component VFX before the restructure would require rework. Phase 7C effects (warp visual, chromatic aberration, high focus warning) can be revisited after Phase 8 is complete.
+> **Note**: Navigation from Combat → Deck Builder is temporarily unavailable (8A removed Deck Builder button; Grimoire in 8C will replace it). Deck Builder → Combat still works.
 
 ---
 
@@ -73,7 +74,7 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - `[DISCOVERY]` Store methods that roll dice internally (`longRest`'s d4) are hard to test deterministically. Future store methods should accept roll results as parameters. (found during Phase 4)
 - `[RESOLVED]` Siphon Greed While Selected focus gain not implemented. → Added as Phase 5C. (found during Phase 4, resolved during Phase 4.5 spec writing)
 - `[DISCOVERY]` `siphonStore.selectCard(cardId, maxCards)` puts PB limit logic on the caller — every call site must know about Supercapacitance to compute `maxCards`. If future code calls `selectCard` (e.g., data import in Phase 5B, or a "restore deck" feature), it needs the same Supercapacitance-aware logic. Consider refactoring the store to own this internally by reading `proficiencyBonus` from characterStore + checking if `supercapacitance` is selected. Not urgent but a latent coupling. (found during Phase 4.5 spec writing, relevant to Phase 5B data import)
-- `[DISCOVERY]` `CombatHUD` now uses `useNavigate()` (added in Phase 4.5 for "Deck Builder" nav button). Any future test that renders `<CombatHUD />` directly will need a `createMemoryRouter` wrapper. Existing sub-component tests are unaffected since they test SelectedDeck, HandArea, etc. in isolation. (found during Phase 4.5, relevant to any future CombatHUD-level tests)
+- `[RESOLVED]` `CombatHUD` previously used `useNavigate()` for the "Deck Builder" nav button. Removed in Phase 8A (header row eliminated). CombatHUD no longer requires `createMemoryRouter` in tests. (found during Phase 4.5, resolved during Phase 8A)
 - `[DISCOVERY]` `LongRestDialog` and `ShortRestDialog` live in `combat-hud/` but are reused by `deck-builder/SelectedPanel` via cross-directory import. If a third consumer appears, consider extracting them to a `shared/` or `dialogs/` directory. (found during Phase 4.5, relevant to Phase 5+)
 - `[FIXED]` `SiphonFeature.tags` was typed as optional (`tags?: string[]`) but all 42 features have tags. Made required to eliminate defensive optional chaining in filter code. (found and fixed during Phase 4.5)
 - `[FIXED]` `resetSession()` cleared `handCardIds` without returning them to `selectedCardIds`, causing bestowed cards to vanish. Fixed to merge hand cards back into selected (same pattern as `longRest()`). (found during Phase 5B self-review, fixed in dataExport.ts)
@@ -92,6 +93,7 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - `[DISCOVERY]` HandArea's `setEnteringCards` in `useEffect` calls setState synchronously — same pattern the lint rule `react-hooks/set-state-in-effect` flagged in the pip components. Currently not flagged (lint may not catch all cases). If the rule gets stricter, HandArea will need the same "adjust state during render" refactor used in EchoManifoldDeck/SiphonCapacitanceTracker. (found during Phase 7A)
 - `[DISCOVERY]` `useAnimatedNumber` returns `target` directly when `skipAnimation` is true, but `displayed` state can drift if `skipAnimation` toggles mid-animation. Harmless in practice (nobody toggles settings mid-animation), but the state model isn't clean. A ref-based approach for `displayed` would be more robust. (found during Phase 7A)
 - `[DISCOVERY]` Pip animation uses React's "adjust state during render" pattern (`if (prev !== current) { setPrev; setAnimating }`) which triggers a double render per change. Correct per React docs but slightly wasteful. A `useMemo`+ref approach could avoid the extra render. Not a real perf issue with 5 pips. (found during Phase 7A)
+- `[FIXED]` SelectedDeck was placed inside the `left` sidebar div (rows 1-2) but the grid template defines `deck` as a separate area in row 3. SelectedDeck appeared misaligned above the hand instead of beside it. Fixed by extracting SelectedDeck to its own `gridArea: 'deck'` div. **Lesson**: When a CSS grid template defines named areas, each area needs its own element — don't nest children inside a spanning area and assume `mt-auto` will push them into adjacent rows. (found during Phase 8A visual review, fixed same session)
 - `[FIXED]` Duplicated drag detection logic across HandArea, AlliesPanel, and ActiveEffectsPanel (3×17 lines). Extracted to `useCardDragDetection()` hook in `src/hooks/`. (found during Phase 7B, fixed during post-Phase 7 audit)
 - `[FIXED]` 5 unused exported data functions (`getFeatureById`, `getFeaturesByTag`, `getFeaturesByActivation`, `getAbilityById`, `getSurgeEntry`) and 1 unused constant (`SEVERITY_THRESHOLDS`) removed. (found during post-Phase 7 audit)
 - `[FIXED]` `macroGenerator` and `whileSelectedCalculator` not in `utils/index.ts` barrel export — inconsistent with other utilities. Added. (found during post-Phase 7 audit)
@@ -185,7 +187,7 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 - [x] `CharacterHeader.tsx` — Level/Max HP inputs, PB auto-display, EP Max, Current Max HP with Echo Drain reduction
 - [x] `CollectionGrid.tsx` — All 42 features in responsive grid, tag filter dropdown, name search, click-to-select with glowing border, PB limit enforcement, Supercapacitance overflow support
 - [x] `SelectedPanel.tsx` — Selected cards (compact, horizontal scroll), N/PB counter with Supercapacitance overflow display, Short Rest/Long Rest/Enter Combat buttons, click-to-deselect
-- [x] `CombatHUD.tsx` — Added "Deck Builder" navigation button (left side of header), `useNavigate()` integration
+- [x] `CombatHUD.tsx` — Added "Deck Builder" navigation button (left side of header), `useNavigate()` integration [removed in Phase 8A]
 - [x] Barrel exports: `deck-builder/index.ts`
 - [x] 8 CharacterHeader tests: Level/Max HP inputs, store updates, level clamping, PB display, EP Max, Current Max HP, Echo Drain display
 - [x] 10 CollectionGrid tests: all 42 cards, tag filter, search, combined filter+search, select/deselect clicks, glowing border, PB limit, Supercapacitance overflow
@@ -254,6 +256,20 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### Phase 8A: Three-Column Grid Layout
+- [x] `CombatHUD.tsx` — Replaced 4-column/5-row grid with 3-column/3-row sidebar layout (`260px 1fr 260px`)
+- [x] Left sidebar (flex column): EchoManifoldDeck + PhaseAbilities (rows 1-2); SelectedDeck in own `deck` grid area (row 3, aligned with hand)
+- [x] Right sidebar (flex column): ResourceDisplay + WildSurgeDeck + rest buttons (Short Rest / Long Rest)
+- [x] Center: ActiveEffectsPanel (row 1, fills space) + AlliesPanel (row 2) + HandArea (row 3)
+- [x] Removed header row entirely: Deck Builder nav button, settings gear, `showSettings` state, `SettingsModal` import
+- [x] Removed `useNavigate` import from CombatHUD (no longer needed without Deck Builder button)
+- [x] `EchoManifoldDeck.tsx` — Removed `w-44` fixed width (sidebar constrains)
+- [x] `WildSurgeDeck.tsx` — Removed `w-44`, `self-start`, `justify-self-end` (sidebar constrains and positions)
+- [x] `ResourceDisplay.tsx` — No changes needed (no internal width constraints to remove)
+- [x] `max-w-[1800px] mx-auto` removed from grid container (sidebars define max width)
+- [x] No test changes needed — no CombatHUD-level tests exist; all 445 component tests pass unchanged
+- [x] All exit conditions met: build passes, lint passes, 445 tests green
 
 ### Post-Phase 7 Audit
 - [x] **Refactor**: Extracted `useCardDragDetection(onDragEnd?)` hook from 3 components (HandArea, AlliesPanel, ActiveEffectsPanel) — eliminated 3×17 lines of duplicated window event listener code

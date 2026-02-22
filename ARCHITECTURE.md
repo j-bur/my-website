@@ -174,7 +174,7 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 7B Complete)
+### Current Structure (Phase 8A Complete)
 
 ```
 App (layout wrapper with <Outlet />)
@@ -189,35 +189,32 @@ App (layout wrapper with <Outlet />)
 │       ├── DiceModeToggle (×4), BooleanToggle (×6)
 │       ├── ManualOverrides (EP, Focus, Motes, HD, Max HP Reduction)
 │       └── DataManagement (Export, Import, Reset Session, Clear All)
-├── CombatHUD (/combat, CSS Grid layout)
-│   ├── Header (grid: header) — Deck Builder nav + rest buttons + gear icon
-│   ├── EchoManifoldDeck (grid: manifold)
-│   │   └── Mote pips (8 interactive dots)
-│   ├── WildSurgeDeck (grid: surge)
-│   ├── PhaseAbilities (grid: abilities)
-│   │   └── 3 ability cards for current phase
-│   ├── ActiveEffectsPanel (grid: effects)
-│   │   └── Effect rows or "(drag cards here)" placeholder
-│   ├── ResourceDisplay (grid: resources)
-│   │   ├── FocusCounter
-│   │   ├── EchoPointsBar
-│   │   ├── HitDiceDisplay
-│   │   │   └── SiphonCapacitanceTracker (with in-game timer)
-│   ├── AlliesPanel (grid: allies) — ally chips, add/rename/remove, bestow target, hover→overlay
-│   ├── SelectedDeck (grid: deck) — bestow to self or ally
+├── CombatHUD (/combat, 3-column CSS Grid: 260px 1fr 260px)
+│   ├── Left Sidebar (flex column, rows 1-2)
+│   │   ├── EchoManifoldDeck — phase card + mote pips
+│   │   └── PhaseAbilities — 3 ability cards for current phase
+│   ├── SelectedDeck (grid: deck, row 3 col 1, aligned with hand)
 │   │   └── SiphonCard (×N, when expanded)
-│   ├── HandArea (grid: hand)
-│   │   └── SiphonCard (×N, fanned)
+│   ├── Center Column
+│   │   ├── ActiveEffectsPanel (row 1, 1fr) — effect rows + drop target
+│   │   ├── AlliesPanel (row 2, auto) — ally chips, bestow target, hover→overlay
+│   │   └── HandArea (row 3, auto) — fanned hand cards
+│   │       └── SiphonCard (×N, fanned)
+│   ├── Right Sidebar (flex column, spans all rows)
+│   │   ├── ResourceDisplay — Focus, EP, HD, Capacitance
+│   │   │   ├── FocusCounter
+│   │   │   ├── EchoPointsBar
+│   │   │   ├── HitDiceDisplay
+│   │   │   └── SiphonCapacitanceTracker (with in-game timer)
+│   │   ├── WildSurgeDeck — surge deck
+│   │   └── Rest Buttons — Short Rest / Long Rest
 │   ├── ActivationPanel (overlay)
 │   ├── SurgeResultModal (overlay)
 │   ├── AllyBestowmentView (overlay) — ally bestowed cards view with remove
 │   ├── LongRestDialog (overlay) — preview + cross-store rest
-│   ├── ShortRestDialog (overlay) — HD spending + effect clearing
-│   └── SettingsModal (overlay, gear icon in header)
-│       ├── DiceModeToggle (×4), BooleanToggle (×6)
-│       ├── ManualOverrides (EP, Focus, Motes, HD, Max HP Reduction)
-│       └── DataManagement (Export, Import, Reset Session, Clear All)
-└── SettingsModal (shared component in settings/)
+│   └── ShortRestDialog (overlay) — HD spending + effect clearing
+│   [No header row — settings/nav removed; Grimoire nav planned for 8C]
+└── SettingsModal (shared component in settings/, accessed from Deck Builder only)
     ├── DiceModeToggle (×4, for each roll type)
     ├── BooleanToggle (×6, for sound/visual/gameplay settings)
     ├── ManualOverrides (direct value editing)
@@ -239,7 +236,7 @@ App (layout wrapper with <Outlet />)
 Navigation flow:
 1. App loads → `HomeRedirect` → Deck Builder (if no deck) or Combat (if deck exists)
 2. Deck Builder → "Enter Combat" → Combat
-3. Combat → "Deck Builder" button → Deck Builder
+3. Combat → Deck Builder: temporarily unavailable (Phase 8A removed nav button; Grimoire in 8C will restore this)
 
 ---
 

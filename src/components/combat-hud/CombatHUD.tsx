@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { SurgeResult } from '../../types';
 import { useSiphonStore } from '../../store';
 import { FEATURE_MAP } from '../../data/featureConstants';
@@ -16,15 +15,12 @@ import { LongRestDialog } from './LongRestDialog';
 import { ShortRestDialog } from './ShortRestDialog';
 import { AlliesPanel } from './AlliesPanel';
 import { AllyBestowmentView } from './AllyBestowmentView';
-import { SettingsModal } from '../settings';
 
 export function CombatHUD() {
-  const navigate = useNavigate();
   const [stagedCardId, setStagedCardId] = useState<string | null>(null);
   const [surgeResult, setSurgeResult] = useState<SurgeResult | null>(null);
   const [showLongRest, setShowLongRest] = useState(false);
   const [showShortRest, setShowShortRest] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [selectedAllyId, setSelectedAllyId] = useState<string | null>(null);
   const [hoveredAllyId, setHoveredAllyId] = useState<string | null>(null);
 
@@ -57,77 +53,38 @@ export function CombatHUD() {
 
   return (
     <div
-      className="grid gap-4 p-4 min-h-screen w-full max-w-[1800px] mx-auto"
+      className="grid gap-4 p-4 min-h-screen w-full"
       style={{
-        gridTemplateColumns: 'auto 1fr 1fr auto',
-        gridTemplateRows: 'auto auto 1fr auto auto',
+        gridTemplateColumns: '260px 1fr 260px',
+        gridTemplateRows: '1fr auto auto',
         gridTemplateAreas: `
-          "header    header     header     header"
-          "manifold  .          .          surge"
-          "abilities abilities  effects    resources"
-          "allies    allies     allies     allies"
-          "deck      hand       hand       hand"
+          "left    effects  right"
+          "left    allies   right"
+          "deck    hand     right"
         `,
       }}
     >
-      {/* Header: Navigation + Rest Buttons */}
+      {/* Left Sidebar: Echo Manifold + Phase Abilities */}
       <div
-        style={{ gridArea: 'header' }}
-        className="flex items-center gap-2"
-        role="toolbar"
-        aria-label="Navigation and rest actions"
+        style={{ gridArea: 'left' }}
+        className="flex flex-col gap-4 min-h-0"
       >
-        <button
-          className="px-3 py-1.5 text-xs rounded border border-siphon-border text-text-muted hover:border-siphon-accent/50 hover:text-siphon-accent transition-colors"
-          onClick={() => navigate('/deck-builder')}
-        >
-          Deck Builder
-        </button>
-        <div className="flex-1" />
-        <button
-          className="px-3 py-1.5 text-xs rounded border border-siphon-border text-text-muted hover:border-siphon-accent/50 hover:text-siphon-accent transition-colors"
-          onClick={() => setShowShortRest(true)}
-        >
-          Short Rest
-        </button>
-        <button
-          className="px-3 py-1.5 text-xs rounded border border-siphon-border text-text-muted hover:border-siphon-accent/50 hover:text-siphon-accent transition-colors"
-          onClick={() => setShowLongRest(true)}
-        >
-          Long Rest
-        </button>
-        <button
-          className="px-2 py-1.5 text-sm rounded border border-siphon-border text-text-muted hover:border-siphon-accent/50 hover:text-siphon-accent transition-colors"
-          onClick={() => setShowSettings(true)}
-          aria-label="Settings"
-        >
-          &#x2699;
-        </button>
-      </div>
-
-      {/* Top Left: Echo Manifold */}
-      <div style={{ gridArea: 'manifold' }}>
         <EchoManifoldDeck />
-      </div>
-
-      {/* Top Right: Wild Surge */}
-      <div style={{ gridArea: 'surge' }} className="flex justify-end">
-        <WildSurgeDeck />
-      </div>
-
-      {/* Left: Phase Abilities */}
-      <div style={{ gridArea: 'abilities' }} className="flex items-start self-start">
         <PhaseAbilities />
+      </div>
+
+      {/* Bottom Left: Selected Deck (aligned with hand row) */}
+      <div style={{ gridArea: 'deck' }} className="flex items-end">
+        <SelectedDeck
+          onActivateCard={handleActivateCard}
+          selectedAllyId={selectedAllyId}
+          onAllyBestowed={() => setSelectedAllyId(null)}
+        />
       </div>
 
       {/* Center: Active Effects */}
       <div style={{ gridArea: 'effects' }} className="min-h-0">
         <ActiveEffectsPanel onActivateCard={handleActivateCard} />
-      </div>
-
-      {/* Right: Resources */}
-      <div style={{ gridArea: 'resources' }} className="w-56 self-start">
-        <ResourceDisplay />
       </div>
 
       {/* Allies row */}
@@ -139,22 +96,36 @@ export function CombatHUD() {
         />
       </div>
 
-      {/* Bottom Left: Selected Deck */}
-      <div style={{ gridArea: 'deck' }} className="flex items-end">
-        <SelectedDeck
-          onActivateCard={handleActivateCard}
-          selectedAllyId={selectedAllyId}
-          onAllyBestowed={() => setSelectedAllyId(null)}
-        />
-      </div>
-
-      {/* Bottom: Hand */}
+      {/* Center bottom: Hand */}
       <div style={{ gridArea: 'hand' }}>
         <HandArea
           onActivateCard={handleActivateCard}
           selectedAllyId={selectedAllyId}
           onAllyBestowed={() => setSelectedAllyId(null)}
         />
+      </div>
+
+      {/* Right Sidebar: Resources + Wild Surge + Rest Buttons */}
+      <div
+        style={{ gridArea: 'right' }}
+        className="flex flex-col gap-4 min-h-0"
+      >
+        <ResourceDisplay />
+        <WildSurgeDeck />
+        <div className="flex flex-col gap-2">
+          <button
+            className="px-3 py-1.5 text-xs rounded border border-siphon-border text-text-muted hover:border-siphon-accent/50 hover:text-siphon-accent transition-colors"
+            onClick={() => setShowShortRest(true)}
+          >
+            Short Rest
+          </button>
+          <button
+            className="px-3 py-1.5 text-xs rounded border border-siphon-border text-text-muted hover:border-siphon-accent/50 hover:text-siphon-accent transition-colors"
+            onClick={() => setShowLongRest(true)}
+          >
+            Long Rest
+          </button>
+        </div>
       </div>
 
       {/* Activation Panel overlay */}
@@ -180,11 +151,6 @@ export function CombatHUD() {
       )}
       {showShortRest && (
         <ShortRestDialog onClose={() => setShowShortRest(false)} />
-      )}
-
-      {/* Settings Modal */}
-      {showSettings && (
-        <SettingsModal onClose={() => setShowSettings(false)} />
       )}
 
       {/* Ally Bestowment View overlay */}
