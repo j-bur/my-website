@@ -222,6 +222,55 @@ body {
   animation: drop-zone-glow 1.5s ease-in-out infinite;
 }
 
+/* Ghost glow for activation preview row */
+@keyframes ghost-glow {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(0, 212, 170, 0.15);
+    border-color: rgba(0, 212, 170, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(0, 212, 170, 0.35);
+    border-color: rgba(0, 212, 170, 0.6);
+  }
+}
+
+.ghost-glow {
+  animation: ghost-glow 1.5s ease-in-out infinite;
+}
+
+/* Warp flash for newly activated effect rows */
+@keyframes warp-flash {
+  0% {
+    background-color: rgba(209, 25, 209, 0.3);
+    box-shadow: 0 0 12px rgba(209, 25, 209, 0.4);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+.warp-flash {
+  animation: warp-flash 800ms ease-out;
+}
+
+/* Warp pulse for Wild Surge widget */
+@keyframes warp-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(209, 25, 209, 0.2);
+    border-color: rgba(209, 25, 209, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(209, 25, 209, 0.5);
+    border-color: rgba(209, 25, 209, 0.8);
+  }
+}
+
+.warp-pulse {
+  animation: warp-pulse 1s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
 /* Programmatic reduced motion (applied via settingsStore) */
 .reduce-motion * {
   transition-duration: 0ms !important;
@@ -232,7 +281,10 @@ body {
 .reduce-motion .pip-drain,
 .reduce-motion .focus-pulse,
 .reduce-motion .effect-dismiss,
-.reduce-motion .drop-zone-glow {
+.reduce-motion .drop-zone-glow,
+.reduce-motion .ghost-glow,
+.reduce-motion .warp-flash,
+.reduce-motion .warp-pulse {
   animation: none !important;
 }
 
@@ -244,6 +296,9 @@ body {
   .focus-pulse,
   .effect-dismiss,
   .drop-zone-glow,
+  .ghost-glow,
+  .warp-flash,
+  .warp-pulse,
   .glitch-hover:hover,
   .chromatic-aberration:hover,
   .warp-active:hover {

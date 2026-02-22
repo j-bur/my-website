@@ -1,20 +1,22 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useSiphonStore, useSettingsStore } from '../../store';
 import { TRIGGERED_FEATURE_IDS, FEATURE_MAP } from '../../data/featureConstants';
-import { setCardDragData, getCardDragData, isCardDrag } from '../../types/dragData';
+import { setCardDragData, getCardDragData, isCardDrag, setActiveDragData } from '../../types/dragData';
 import { useCardDragDetection } from '../../hooks/useCardDragDetection';
+import { activateFeature } from '../../utils/activateFeature';
+import { isVariableCost } from '../../utils/costCalculator';
 import { SiphonCard } from '../cards/SiphonCard';
 
 const CARD_WIDTH = 200;
 const CARD_GAP = 16; // gap-4
 
 interface HandAreaProps {
-  onActivateCard?: (featureId: string) => void;
+  onWarpTriggered?: () => void;
   selectedAllyId?: string | null;
   onAllyBestowed?: () => void;
 }
 
-export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: HandAreaProps) {
+export function HandArea({ onWarpTriggered, selectedAllyId, onAllyBestowed }: HandAreaProps) {
   const handCardIds = useSiphonStore((s) => s.handCardIds);
   const selectedCardIds = useSiphonStore((s) => s.selectedCardIds);
   const bestowToSelf = useSiphonStore((s) => s.bestowToSelf);
@@ -101,8 +103,22 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
       bestowToSelf(data.featureId);
       // Activation:None auto-activate after bestow
       if (feature.activation === 'None') {
-        onActivateCard?.(data.featureId);
+        const result = activateFeature(data.featureId);
+        if (result?.warpTriggered) {
+          onWarpTriggered?.();
+        }
       }
+    }
+  };
+
+  const handleDoubleClickActivate = (cardId: string) => {
+    const feature = FEATURE_MAP.get(cardId);
+    if (!feature) return;
+    // Varies cost features cannot be activated via double-click
+    if (isVariableCost(feature.cost)) return;
+    const result = activateFeature(cardId);
+    if (result?.warpTriggered) {
+      onWarpTriggered?.();
     }
   };
 
@@ -158,6 +174,7 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
         const isHovered = hoveredCardId === cardId;
         const isUnplayable = !!selectedAllyId && feature.isSpecialCost;
         const isDraggable = !isUnplayable;
+        const dragData = { type: 'card' as const, featureId: cardId, source: 'hand' as const };
 
         return (
           <div
@@ -179,14 +196,14 @@ export function HandArea({ onActivateCard, selectedAllyId, onAllyBestowed }: Han
                 bestowToAlly(cardId, selectedAllyId);
                 onAllyBestowed?.();
               } : undefined}
-              onDoubleClick={selectedAllyId ? undefined : () => onActivateCard?.(cardId)}
+              onDoubleClick={selectedAllyId ? undefined : () => handleDoubleClickActivate(cardId)}
               draggable={isDraggable}
               onDragStart={(e) => {
-                setCardDragData(e.dataTransfer, {
-                  type: 'card',
-                  featureId: cardId,
-                  source: 'hand',
-                });
+                setCardDragData(e.dataTransfer, dragData);
+                setActiveDragData(dragData);
+              }}
+              onDragEnd={() => {
+                setActiveDragData(null);
               }}
             />
             {isUnplayable && (

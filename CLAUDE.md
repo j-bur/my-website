@@ -4,7 +4,7 @@
 **Tech Stack**: React 19 + TypeScript + Vite + Tailwind CSS v4 + Zustand + React Router 7
 **Aesthetic**: Dark, atmospheric card game. No bright colors. Cards have no illustrations — typography and iconography only.
 
-**Current State**: Phase 8C complete (Phase 8D next). All 4 stores, 464 tests passing across 33 files. CombatHUD: 3-column sidebar layout (260px/1fr/260px), cards 200×280px, Grimoire in right sidebar navigates to Deck Builder. Check `IMPLEMENTATION_STATUS.md` for the current phase and next steps.
+**Current State**: Phase 8 complete (all sub-phases 8A-8D). All 4 stores, 458 tests passing across 33 files. CombatHUD: 3-column sidebar layout (260px/1fr/260px), cards 200×280px, inline activation via drag-to-ActiveEffects (no modal), Grimoire in right sidebar navigates to Deck Builder. Check `IMPLEMENTATION_STATUS.md` for the current phase and next steps.
 
 ---
 

@@ -50,9 +50,6 @@ src/
 │   │   ├── SiphonCapacitanceTracker.tsx # Capacitance pips + in-game timer
 │   │   ├── SelectedDeck.tsx       # Deck with expand/collapse (bottom-left)
 │   │   ├── HandArea.tsx           # Fanned hand cards (bottom)
-│   │   ├── ActivationPanel.tsx    # Feature activation overlay
-│   │   ├── MacroDisplay.tsx       # Copyable macro + result input
-│   │   ├── SurgeResultModal.tsx   # Wild surge result display
 │   │   ├── LongRestDialog.tsx     # Long rest preview + execution
 │   │   ├── ShortRestDialog.tsx    # Short rest with HD spending
 │   │   ├── AlliesPanel.tsx        # Ally chips, add/rename/remove, bestow target, hover trigger
@@ -175,7 +172,7 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 8C Complete)
+### Current Structure (Phase 8D Complete)
 
 ```
 App (layout wrapper with <Outlet />)
@@ -210,8 +207,6 @@ App (layout wrapper with <Outlet />)
 │   │   ├── WildSurgeDeck — macro/roll widget (dice3d or macro mode)
 │   │   ├── Rest Buttons — Short Rest / Long Rest
 │   │   └── Grimoire — CSS book/tome, navigates to Deck Builder
-│   ├── ActivationPanel (overlay)
-│   ├── SurgeResultModal (overlay)
 │   ├── AllyBestowmentView (overlay) — ally bestowed cards view with remove
 │   ├── LongRestDialog (overlay) — preview + cross-store rest
 │   └── ShortRestDialog (overlay) — HD spending + effect clearing
@@ -268,6 +263,9 @@ Defined in `src/index.css`:
 - `.pip-fill` / `.pip-drain` — Scale+glow pulse for mote/capacitance pips (EchoManifoldDeck, SiphonCapacitanceTracker)
 - `.effect-dismiss` — Strikethrough + fade + collapse for dismissed effects (ActiveEffectsPanel)
 - `.drop-zone-glow` — Pulsing accent shadow for ambient drop zone highlighting (ActiveEffectsPanel)
+- `.ghost-glow` — Pulsing accent glow for ghost preview row during drag-over (ActiveEffectsPanel)
+- `.warp-flash` — Purple flash on newly activated effect rows with warp (ActiveEffectsPanel)
+- `.warp-pulse` — Pulsing warp glow on WildSurgeDeck when surge roll is needed
 - `.reduce-motion` — Applied to root div; disables all animations when reduced motion is enabled
 
 **Reserved for Phase 7C (defined but not yet referenced by components):**

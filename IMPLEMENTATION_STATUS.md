@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-22
-**Current Phase**: Phase 8C Complete (Phase 8D: Inline Activation next)
+**Current Phase**: Phase 8D Complete (Phase 8 Complete)
 
 ---
 
@@ -28,17 +28,18 @@
 | Phase 8A: Three-Column Grid Layout | ✅ Complete | Sidebar layout, header removed, rest buttons moved |
 | Phase 8B: Card Sizing + Restyling | ✅ Complete | 14 new tests (6 PhaseAbilities + 6 WildSurgeDeck + 2 HandArea), 459 total |
 | Phase 8C: Grimoire Navigation | ✅ Complete | 5 new tests (Grimoire), 464 total |
+| Phase 8D: Inline Activation | ✅ Complete | -6 tests (removed ActivationPanel tests, added activateFeature + updated ActiveEffectsPanel tests), 458 total |
 
 ---
 
 ## Next Session
 
-1. **Phase 8D: Inline Activation** — Read `.claude/docs/PHASE_SPECS/phase-8-combat-view-redesign.md`
-2. Replace modal-based card activation with inline drag-preview-drop
-3. Ghost preview row in Active Effects, drop-to-activate, remove ActivationPanel/SurgeResultModal
-4. All 464 tests passing across 33 test files; Grimoire navigation now restores Combat→DeckBuilder nav
+1. **Phase 7C: Visual Effects** — Warp visual, chromatic aberration, high focus warning (deferred from Phase 7)
+2. Or begin Phase 9 planning if applicable
+3. All 458 tests passing across 33 test files
+4. Phase 8 is fully complete (8A-8D)
 
-> **Note**: Phase 7C (Visual Effects) was originally next but has been deferred. Phase 8 redesigns the layout, so adding per-component VFX before the restructure would require rework. Phase 7C effects (warp visual, chromatic aberration, high focus warning) can be revisited after Phase 8 is complete.
+> **Note**: Phase 7C (Visual Effects) was originally next but deferred until after Phase 8. Phase 8 is now complete, so Phase 7C effects (warp visual, chromatic aberration, high focus warning) can proceed.
 > **Note**: Combat → Deck Builder navigation restored via Grimoire (right sidebar bottom, CSS book/tome). Deck Builder → Combat via "Enter Combat" button.
 
 ---
@@ -258,6 +259,22 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### Phase 8D: Inline Activation Flow
+- [x] `activateFeature.ts` (new utility) — `activateFeature(featureId, options?)` and `computeActivationPreview(feature, chosenCost?)` extracted from removed ActivationPanel; always auto-rolls focus dice; handles EP deduction, focus gain, warp detection, active effect creation, card return to deck
+- [x] `dragData.ts` — Added `setActiveDragData()`/`getActiveDragData()` module-level state for dragover preview (workaround for `getData()` restriction during dragover events)
+- [x] `ActiveEffectsPanel.tsx` — Major rewrite: `GhostPreviewRow` sub-component shows EP change + warp warning during drag-over; `VariesActivationForm` sub-component for inline cost input after dropping Varies-cost cards; drop handler calls `activateFeature()` directly; new effect tracking for `warp-flash` animation on newly added rows; props changed from `onActivateCard` to `onWarpTriggered`
+- [x] `HandArea.tsx` — Sets active drag data on drag start/end; double-click activates via `activateFeature()` directly (blocks Varies-cost features); Activation:None auto-activate uses `activateFeature()`; props changed from `onActivateCard` to `onWarpTriggered`
+- [x] `SelectedDeck.tsx` — Sets active drag data on drag start/end; Activation:None auto-activate uses `activateFeature()`; props changed from `onActivateCard` to `onWarpTriggered`
+- [x] `WildSurgeDeck.tsx` — Added `warpPulse` prop; shows "Roll Needed!" text and `warp-pulse` animation when pulsing
+- [x] `CombatHUD.tsx` — Removed `stagedCardId`/`surgeResult` state, removed ActivationPanel/SurgeResultModal; added `warpPulse` state with 3s auto-clear and `handleWarpTriggered` callback passed to children
+- [x] Deleted `ActivationPanel.tsx`, `SurgeResultModal.tsx`, `MacroDisplay.tsx`; updated barrel exports
+- [x] `index.css` — Added `ghost-glow`, `warp-flash`, `warp-pulse` keyframe animations; added to `.reduce-motion` and `@media (prefers-reduced-motion)` blocks
+- [x] 13 new `activateFeature.test.ts` tests: EP deduction, focus gain, warp trigger, card return, active effect for duration-based, no effect for Triggered, Varies cost, unknown feature, Echo Intuition halving, preview tests
+- [x] 19 rewritten `ActiveEffectsPanel.test.tsx` tests: ghost preview on drag-over, drop-to-activate, Varies cost form, warp-flash class on new effects, dismiss gesture, settings toggle
+- [x] Deleted `ActivationPanel.test.tsx` (23 tests removed); updated HandArea/SelectedDeck tests for new auto-activate behavior
+- [x] **Design decisions**: Always auto-roll focus dice (no macro mode for activation); Varies cost shows inline form in ghost preview row
+- [x] All exit conditions met: build passes, lint passes, 458 tests green across 33 test files
 
 ### Phase 8C: Grimoire Navigation
 - [x] `Grimoire.tsx` (new) — CSS-only book/tome visual (200×280px, matching card height); spine with ridge lines via `repeating-linear-gradient`; dark leather cover with `linear-gradient`; page edges on right side; decorative gold/amber border lines; "Siphon Features" title text on cover; circular seal showing feature count from `FEATURE_MAP.size`; `useNavigate('/deck-builder')` on click; hover amber glow + scale-up via `group-hover`

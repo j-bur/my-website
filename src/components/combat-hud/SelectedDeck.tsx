@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSiphonStore } from '../../store';
 import { FEATURE_MAP, TRIGGERED_FEATURE_IDS, WHILE_SELECTED_FEATURE_IDS } from '../../data/featureConstants';
-import { setCardDragData } from '../../types/dragData';
+import { setCardDragData, setActiveDragData } from '../../types/dragData';
+import { activateFeature } from '../../utils/activateFeature';
 import { SiphonCard } from '../cards/SiphonCard';
 
 interface SelectedDeckProps {
-  onActivateCard?: (featureId: string) => void;
+  onWarpTriggered?: () => void;
   selectedAllyId?: string | null;
   onAllyBestowed?: () => void;
 }
 
-export function SelectedDeck({ onActivateCard, selectedAllyId, onAllyBestowed }: SelectedDeckProps) {
+export function SelectedDeck({ onWarpTriggered, selectedAllyId, onAllyBestowed }: SelectedDeckProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const selectedCardIds = useSiphonStore((s) => s.selectedCardIds);
   const handCardIds = useSiphonStore((s) => s.handCardIds);
@@ -77,9 +78,12 @@ export function SelectedDeck({ onActivateCard, selectedAllyId, onAllyBestowed }:
       setIsExpanded(false);
     }
 
-    // Activation:None features auto-open the activation panel after bestow
-    if (feature.activation === 'None' && onActivateCard) {
-      onActivateCard(featureId);
+    // Activation:None features auto-activate after bestow
+    if (feature.activation === 'None') {
+      const result = activateFeature(featureId);
+      if (result?.warpTriggered) {
+        onWarpTriggered?.();
+      }
     }
   };
 
@@ -106,6 +110,7 @@ export function SelectedDeck({ onActivateCard, selectedAllyId, onAllyBestowed }:
             const isSpecialCostBlocked = selectedAllyId != null && feature.isSpecialCost;
             const isUnplayable = isWhileSelected || isSpecialCostBlocked;
             const isDraggable = !isUnplayable;
+            const dragData = { type: 'card' as const, featureId: cardId, source: 'deck' as const };
             return (
               <div key={cardId} className="relative">
                 <SiphonCard
@@ -115,11 +120,11 @@ export function SelectedDeck({ onActivateCard, selectedAllyId, onAllyBestowed }:
                   onClick={isUnplayable ? undefined : () => handleCardClick(cardId)}
                   draggable={isDraggable}
                   onDragStart={(e) => {
-                    setCardDragData(e.dataTransfer, {
-                      type: 'card',
-                      featureId: cardId,
-                      source: 'deck',
-                    });
+                    setCardDragData(e.dataTransfer, dragData);
+                    setActiveDragData(dragData);
+                  }}
+                  onDragEnd={() => {
+                    setActiveDragData(null);
                   }}
                 />
                 {isSpecialCostBlocked && (

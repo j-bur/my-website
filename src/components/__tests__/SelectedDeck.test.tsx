@@ -101,18 +101,19 @@ describe('SelectedDeck', () => {
   });
 
   it('clicking a card calls bestowToSelf and moves card to hand', () => {
+    // Use gravity-well (Bonus Action activation) so it stays in hand after bestow
     useSiphonStore.setState({
-      selectedCardIds: ['subtle-luck', 'temporal-surge'],
+      selectedCardIds: ['gravity-well', 'temporal-surge'],
     });
 
     render(<SelectedDeck />);
 
     fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
-    fireEvent.click(screen.getByLabelText('Subtle Luck'));
+    fireEvent.click(screen.getByLabelText('Gravity Well'));
 
     const state = useSiphonStore.getState();
-    expect(state.handCardIds).toContain('subtle-luck');
-    expect(state.selectedCardIds).not.toContain('subtle-luck');
+    expect(state.handCardIds).toContain('gravity-well');
+    expect(state.selectedCardIds).not.toContain('gravity-well');
   });
 
   it('deck count excludes hand cards and triggered features', () => {
@@ -129,34 +130,36 @@ describe('SelectedDeck', () => {
 
   // --- Activation:None auto-activate ---
 
-  it('calls onActivateCard for Activation:None features after bestow', () => {
-    // 'subtle-luck' has activation: 'None'
+  it('auto-activates Activation:None features after bestow (deducts EP)', () => {
+    // 'subtle-luck' has activation: 'None', cost: 2
     useSiphonStore.setState({
+      currentEP: 10,
       selectedCardIds: ['subtle-luck', 'temporal-surge'],
     });
 
-    const onActivateCard = vi.fn();
-    render(<SelectedDeck onActivateCard={onActivateCard} />);
+    render(<SelectedDeck />);
 
     fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
     fireEvent.click(screen.getByLabelText('Subtle Luck'));
 
-    expect(onActivateCard).toHaveBeenCalledWith('subtle-luck');
+    // EP should be deducted (activation happened inline)
+    expect(useSiphonStore.getState().currentEP).toBeLessThan(10);
   });
 
-  it('does NOT call onActivateCard for non-None activation features', () => {
+  it('does NOT auto-activate non-None activation features', () => {
     // 'gravity-well' has activation: 'Bonus Action'
     useSiphonStore.setState({
+      currentEP: 10,
       selectedCardIds: ['gravity-well', 'temporal-surge'],
     });
 
-    const onActivateCard = vi.fn();
-    render(<SelectedDeck onActivateCard={onActivateCard} />);
+    render(<SelectedDeck />);
 
     fireEvent.click(screen.getByRole('button', { name: /selected deck/i }));
     fireEvent.click(screen.getByLabelText('Gravity Well'));
 
-    expect(onActivateCard).not.toHaveBeenCalled();
+    // EP should be unchanged (no activation)
+    expect(useSiphonStore.getState().currentEP).toBe(10);
   });
 
   // --- While Selected protection ---

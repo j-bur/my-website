@@ -102,8 +102,9 @@ describe('HandArea', () => {
   // --- Drag-and-drop ---
 
   it('bestows to self when deck card is dropped on hand', () => {
+    // Use gravity-well (Bonus Action activation) so it stays in hand after bestow
     useSiphonStore.setState({
-      selectedCardIds: ['subtle-luck', 'temporal-surge'],
+      selectedCardIds: ['gravity-well', 'temporal-surge'],
     });
 
     render(<HandArea />);
@@ -115,22 +116,22 @@ describe('HandArea', () => {
     fireEvent.drop(handArea, {
       dataTransfer: {
         types: ['text/x-card-type', 'application/json'],
-        getData: () => JSON.stringify({ type: 'card', featureId: 'subtle-luck', source: 'deck' }),
+        getData: () => JSON.stringify({ type: 'card', featureId: 'gravity-well', source: 'deck' }),
       },
     });
 
     const state = useSiphonStore.getState();
-    expect(state.handCardIds).toContain('subtle-luck');
+    expect(state.handCardIds).toContain('gravity-well');
   });
 
-  it('auto-activates None-activation cards on drop', () => {
-    // subtle-luck has activation: 'None'
+  it('auto-activates None-activation cards on drop (deducts EP)', () => {
+    // subtle-luck has activation: 'None', cost: 2
     useSiphonStore.setState({
+      currentEP: 10,
       selectedCardIds: ['subtle-luck', 'temporal-surge'],
     });
 
-    const onActivateCard = vi.fn();
-    render(<HandArea onActivateCard={onActivateCard} />);
+    render(<HandArea />);
 
     const handArea = screen.getByRole('list', { name: /hand \(empty\)/i });
     fireEvent.drop(handArea, {
@@ -140,7 +141,8 @@ describe('HandArea', () => {
       },
     });
 
-    expect(onActivateCard).toHaveBeenCalledWith('subtle-luck');
+    // EP should be deducted (activation happened)
+    expect(useSiphonStore.getState().currentEP).toBeLessThan(10);
   });
 
   it('hand cards have draggable attribute', () => {

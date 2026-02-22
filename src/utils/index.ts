@@ -6,3 +6,4 @@ export * from './surgeRoller';
 export * from './durationParser';
 export * from './macroGenerator';
 export * from './whileSelectedCalculator';
+export * from './activateFeature';

@@ -27,3 +27,19 @@ export function getCardDragData(dt: DataTransfer): CardDragData | null {
 export function isCardDrag(dt: DataTransfer): boolean {
   return dt.types.includes('text/x-card-type');
 }
+
+/**
+ * Module-level state for the currently dragged card.
+ * Needed because dragover events restrict getData() access —
+ * the drop target can't read drag data during dragover.
+ * Set in onDragStart, cleared in onDragEnd.
+ */
+let _activeDragData: CardDragData | null = null;
+
+export function setActiveDragData(data: CardDragData | null): void {
+  _activeDragData = data;
+}
+
+export function getActiveDragData(): CardDragData | null {
+  return _activeDragData;
+}

@@ -1,7 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useSettingsStore } from '../../store';
 
-export function WildSurgeDeck() {
+interface WildSurgeDeckProps {
+  warpPulse?: boolean;
+}
+
+export function WildSurgeDeck({ warpPulse }: WildSurgeDeckProps) {
   const wildSurgeDiceMode = useSettingsStore((s) => s.diceMode.wildSurge);
   const [result, setResult] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
@@ -24,14 +28,24 @@ export function WildSurgeDeck() {
   }, []);
 
   return (
-    <div aria-label="Wild Surge" role="region">
-      <div className="text-[10px] uppercase tracking-widest text-text-muted mb-2">
-        Wild Surge
+    <div
+      aria-label="Wild Surge"
+      role="region"
+      className={warpPulse ? 'warp-pulse' : ''}
+    >
+      <div className={`text-[10px] uppercase tracking-widest mb-2 ${
+        warpPulse ? 'text-warp font-bold' : 'text-text-muted'
+      }`}>
+        Wild Surge{warpPulse ? ' \u2014 Roll Needed!' : ''}
       </div>
 
       {wildSurgeDiceMode === 'macro' ? (
         <button
-          className="w-full text-left px-2 py-1.5 rounded border border-siphon-border/50 bg-siphon-bg font-mono text-xs text-warp hover:border-warp/40 transition-colors"
+          className={`w-full text-left px-2 py-1.5 rounded border bg-siphon-bg font-mono text-xs transition-colors ${
+            warpPulse
+              ? 'border-warp/60 text-warp hover:border-warp/80'
+              : 'border-siphon-border/50 text-warp hover:border-warp/40'
+          }`}
           onClick={handleCopy}
           title="Click to copy macro"
         >
@@ -39,7 +53,11 @@ export function WildSurgeDeck() {
         </button>
       ) : (
         <button
-          className="w-full px-3 py-2 rounded border border-siphon-border/50 bg-siphon-bg text-xs text-warp hover:border-warp/40 hover:bg-warp/5 transition-colors"
+          className={`w-full px-3 py-2 rounded border bg-siphon-bg text-xs transition-colors ${
+            warpPulse
+              ? 'border-warp/60 text-warp hover:border-warp/80 hover:bg-warp/10'
+              : 'border-siphon-border/50 text-warp hover:border-warp/40 hover:bg-warp/5'
+          }`}
           onClick={handleRoll}
         >
           Roll d100
