@@ -57,6 +57,7 @@ src/
 │   │   ├── ShortRestDialog.tsx    # Short rest with HD spending
 │   │   ├── AlliesPanel.tsx        # Ally chips, add/rename/remove, bestow target, hover trigger
 │   │   ├── AllyBestowmentView.tsx # Overlay showing ally's bestowed cards with remove
+│   │   ├── Grimoire.tsx         # CSS book/tome navigation to Deck Builder
 │   │   └── index.ts              # Barrel export
 │   └── __tests__/                 # Component tests
 ├── hooks/                           # Custom React hooks
@@ -174,7 +175,7 @@ Four Zustand stores manage application state. All stores persist to localStorage
 
 ## Component Hierarchy
 
-### Current Structure (Phase 8B Complete)
+### Current Structure (Phase 8C Complete)
 
 ```
 App (layout wrapper with <Outlet />)
@@ -207,13 +208,14 @@ App (layout wrapper with <Outlet />)
 │   │   │   ├── HitDiceDisplay
 │   │   │   └── SiphonCapacitanceTracker (with in-game timer)
 │   │   ├── WildSurgeDeck — macro/roll widget (dice3d or macro mode)
-│   │   └── Rest Buttons — Short Rest / Long Rest
+│   │   ├── Rest Buttons — Short Rest / Long Rest
+│   │   └── Grimoire — CSS book/tome, navigates to Deck Builder
 │   ├── ActivationPanel (overlay)
 │   ├── SurgeResultModal (overlay)
 │   ├── AllyBestowmentView (overlay) — ally bestowed cards view with remove
 │   ├── LongRestDialog (overlay) — preview + cross-store rest
 │   └── ShortRestDialog (overlay) — HD spending + effect clearing
-│   [No header row — settings/nav removed; Grimoire nav planned for 8C]
+│   [No header row — settings accessed from Deck Builder only]
 └── SettingsModal (shared component in settings/, accessed from Deck Builder only)
     ├── DiceModeToggle (×4, for each roll type)
     ├── BooleanToggle (×6, for sound/visual/gameplay settings)
@@ -236,7 +238,7 @@ App (layout wrapper with <Outlet />)
 Navigation flow:
 1. App loads → `HomeRedirect` → Deck Builder (if no deck) or Combat (if deck exists)
 2. Deck Builder → "Enter Combat" → Combat
-3. Combat → Deck Builder: temporarily unavailable (Phase 8A removed nav button; Grimoire in 8C will restore this)
+3. Combat → Grimoire (right sidebar bottom) → Deck Builder
 
 ---
 

@@ -17,3 +17,4 @@ export { LongRestDialog } from './LongRestDialog';
 export { ShortRestDialog } from './ShortRestDialog';
 export { AlliesPanel } from './AlliesPanel';
 export { AllyBestowmentView } from './AllyBestowmentView';
+export { Grimoire } from './Grimoire';

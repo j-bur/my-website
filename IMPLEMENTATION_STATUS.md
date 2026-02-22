@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-22
-**Current Phase**: Phase 8B Complete (Phase 8C: Grimoire Navigation next)
+**Current Phase**: Phase 8C Complete (Phase 8D: Inline Activation next)
 
 ---
 
@@ -27,18 +27,19 @@
 | Post-Phase 7 Audit | ✅ Complete | Hook extraction, dead code removal, docs updated |
 | Phase 8A: Three-Column Grid Layout | ✅ Complete | Sidebar layout, header removed, rest buttons moved |
 | Phase 8B: Card Sizing + Restyling | ✅ Complete | 14 new tests (6 PhaseAbilities + 6 WildSurgeDeck + 2 HandArea), 459 total |
+| Phase 8C: Grimoire Navigation | ✅ Complete | 5 new tests (Grimoire), 464 total |
 
 ---
 
 ## Next Session
 
-1. **Phase 8C: Grimoire Navigation** — Read `.claude/docs/PHASE_SPECS/phase-8-combat-view-redesign.md`
-2. CSS book/tome component in right sidebar, navigates to Deck Builder on click
-3. Or alternatively: Phase 8D (Inline Activation) — both depend on 8A (complete) but are independent of each other
-4. All 459 tests passing; cards now 200×280px, phase abilities are compact bars, wild surge is macro/roll widget
+1. **Phase 8D: Inline Activation** — Read `.claude/docs/PHASE_SPECS/phase-8-combat-view-redesign.md`
+2. Replace modal-based card activation with inline drag-preview-drop
+3. Ghost preview row in Active Effects, drop-to-activate, remove ActivationPanel/SurgeResultModal
+4. All 464 tests passing across 33 test files; Grimoire navigation now restores Combat→DeckBuilder nav
 
 > **Note**: Phase 7C (Visual Effects) was originally next but has been deferred. Phase 8 redesigns the layout, so adding per-component VFX before the restructure would require rework. Phase 7C effects (warp visual, chromatic aberration, high focus warning) can be revisited after Phase 8 is complete.
-> **Note**: Navigation from Combat → Deck Builder is temporarily unavailable (8A removed Deck Builder button; Grimoire in 8C will replace it). Deck Builder → Combat still works.
+> **Note**: Combat → Deck Builder navigation restored via Grimoire (right sidebar bottom, CSS book/tome). Deck Builder → Combat via "Enter Combat" button.
 
 ---
 
@@ -257,6 +258,14 @@ _(Issues found during sessions that belong to a different phase. Format: `[DISCO
 ---
 
 ## Session Log
+
+### Phase 8C: Grimoire Navigation
+- [x] `Grimoire.tsx` (new) — CSS-only book/tome visual (200×280px, matching card height); spine with ridge lines via `repeating-linear-gradient`; dark leather cover with `linear-gradient`; page edges on right side; decorative gold/amber border lines; "Siphon Features" title text on cover; circular seal showing feature count from `FEATURE_MAP.size`; `useNavigate('/deck-builder')` on click; hover amber glow + scale-up via `group-hover`
+- [x] `CombatHUD.tsx` — Added `<Grimoire />` to right sidebar, pinned to bottom via `mt-auto` on component wrapper
+- [x] `index.ts` — Added `Grimoire` to barrel export
+- [x] New test file `Grimoire.test.tsx` — 5 tests: accessible label, feature count display, "Siphon Features" label, navigation on click, hover title
+- [x] `ARCHITECTURE.md` — Updated component hierarchy (Phase 8C complete), added Grimoire to directory listing and right sidebar, updated navigation flow
+- [x] All exit conditions met: build passes, lint passes, 464 tests green across 33 test files
 
 ### Phase 8B: Card Sizing + Component Restyling
 - [x] `SiphonCard.tsx` — Resized from `w-48 min-h-56` (192×224) to `w-[200px] min-h-[280px]` (200×280); compact from `w-36 min-h-44` to `w-[160px] min-h-[224px]`; text sizes bumped up (name: `text-sm`, stats: `text-sm`); warp section changed from multi-line text to compact "Warp" badge visible in both modes; increased padding for larger card

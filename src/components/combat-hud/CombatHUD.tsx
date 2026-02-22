@@ -15,6 +15,7 @@ import { LongRestDialog } from './LongRestDialog';
 import { ShortRestDialog } from './ShortRestDialog';
 import { AlliesPanel } from './AlliesPanel';
 import { AllyBestowmentView } from './AllyBestowmentView';
+import { Grimoire } from './Grimoire';
 
 export function CombatHUD() {
   const [stagedCardId, setStagedCardId] = useState<string | null>(null);
@@ -126,6 +127,7 @@ export function CombatHUD() {
             Long Rest
           </button>
         </div>
+        <Grimoire />
       </div>
 
       {/* Activation Panel overlay */}
