@@ -1,7 +1,7 @@
 # Implementation Status
 
-**Last Updated**: 2026-02-21
-**Current Phase**: Phase 7B Complete (Phase 7C: Visual Effects next)
+**Last Updated**: 2026-02-22
+**Current Phase**: Phase 7B Complete (Phase 8: Combat View Redesign next)
 
 ---
 
@@ -30,12 +30,13 @@
 
 ## Next Session
 
-1. **Phase 7C: Visual Effects** — Read `.claude/docs/PHASE_SPECS/phase-7-polish.md` Session 7C section
-2. Warp visual effects (screen edge tint, chromatic aberration pulse)
-3. Echo Drain warning (persistent screen-edge darkening, EP bar pulse)
-4. Silvery tendril effect (ally bestowments)
-5. High Focus warning (weavers watching effect)
-6. All Phase 7B drag-and-drop operational; 445 tests passing
+1. **Phase 8A: Three-Column Grid Layout** — Read `.claude/docs/PHASE_SPECS/phase-8-combat-view-redesign.md`
+2. Restructure CombatHUD from row-based grid to three-column sidebar layout
+3. Remove header row (settings gear, Deck Builder button); move rest buttons to right sidebar
+4. Reference mockup: `mockup-combat-redesign.html` (open in browser for visual target)
+5. All Phase 7B drag-and-drop operational; 445 tests passing
+
+> **Note**: Phase 7C (Visual Effects) was originally next but has been deferred. Phase 8 redesigns the layout, so adding per-component VFX before the restructure would require rework. Phase 7C effects (warp visual, chromatic aberration, high focus warning) can be revisited after Phase 8 is complete.
 
 ---
 
@@ -54,6 +55,7 @@ Each phase has a detailed spec in `.claude/docs/PHASE_SPECS/`. Read the spec bef
 | 5 | `phase-5-settings.md` | 3 | Settings modal, overrides, export, While Selected mechanics |
 | 6 | `phase-6-allies.md` | 2 | Allies panel, bestowment overlay |
 | 7 | `phase-7-polish.md` | 2-3 | Animations, drag-drop, VFX |
+| 8 | `phase-8-combat-view-redesign.md` | 4 | Three-column layout, card resize, grimoire nav, inline activation |
 
 ---
 

@@ -4,7 +4,7 @@
 **Tech Stack**: React 19 + TypeScript + Vite + Tailwind CSS v4 + Zustand + React Router 7
 **Aesthetic**: Dark, atmospheric card game. No bright colors. Cards have no illustrations — typography and iconography only.
 
-**Current State**: Phase 7B complete (Phase 7C next). All 4 stores, 445 tests passing across 30 files. Combat HUD, Deck Builder, Settings, rest mechanics, While Selected mechanics, allies, animations, and drag-and-drop all operational. Check `IMPLEMENTATION_STATUS.md` for the current phase and next steps.
+**Current State**: Phase 7B complete (Phase 8 next). All 4 stores, 445 tests passing across 30 files. Combat HUD, Deck Builder, Settings, rest mechanics, While Selected mechanics, allies, animations, and drag-and-drop all operational. Check `IMPLEMENTATION_STATUS.md` for the current phase and next steps.
 
 ---
 
@@ -87,4 +87,4 @@ See `.claude/docs/SESSION_PROTOCOL.md` for the full protocol.
 | `.claude/docs/STORE_CONTRACTS.md` | Full store interfaces, cost types, focus dice |
 | `.claude/docs/SPECIAL_CASES.md` | Superconduction, Manifestation, Echo Intuition, Siphon Greed, FoundryVTT |
 | `.claude/docs/SESSION_PROTOCOL.md` | Mandatory session start/end procedures |
-| `.claude/docs/PHASE_SPECS/` | One spec per implementation phase (0-7) |
+| `.claude/docs/PHASE_SPECS/` | One spec per implementation phase (0-8) |
