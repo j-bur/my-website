@@ -17,6 +17,7 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock ResizeObserver for jsdom (not available by default)
 globalThis.ResizeObserver = class ResizeObserver {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(_cb: ResizeObserverCallback) {
     // no-op: jsdom has no layout engine
   }

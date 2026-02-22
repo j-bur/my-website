@@ -102,7 +102,7 @@ export function SiphonCard({
 
       {/* Warp badge */}
       {feature.warpEffect && (
-        <div className={`px-3 ${compact ? 'py-1' : 'py-1.5'} border-t border-warp/30 bg-warp/5`}>
+        <div className={`px-3 ${compact ? 'py-1' : 'py-1.5'} border-t border-warp/30 bg-warp/5`} title={feature.warpEffect}>
           <span className="text-[10px] font-bold uppercase tracking-wider text-warp/80">
             Warp
           </span>

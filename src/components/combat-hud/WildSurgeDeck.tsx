@@ -9,9 +9,13 @@ export function WildSurgeDeck() {
   const macroText = '/r 1d100';
 
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(macroText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    try {
+      await navigator.clipboard.writeText(macroText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard access denied — silently ignore
+    }
   }, [macroText]);
 
   const handleRoll = useCallback(() => {
