@@ -7,7 +7,7 @@ export function FocusCounter() {
 
   // Glow intensity scales with focus value
   const glowIntensity = Math.min(1, focus / 30);
-  const isHighFocus = focus >= 15;
+  // const isHighFocus = focus >= 15;
 
   return (
     <div className="flex flex-col gap-1" role="group" aria-label={`Focus: ${focus}`}>
