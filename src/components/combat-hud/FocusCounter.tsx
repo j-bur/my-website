@@ -24,11 +24,11 @@ export function FocusCounter() {
           {displayedFocus}
         </span>
       </div>
-      {isHighFocus && (
+      {/* {isHighFocus && (
         <div className="text-[10px] text-focus-warning">
           The Weavers are watching...
         </div>
-      )}
+      )} */}
     </div>
   );
 }
