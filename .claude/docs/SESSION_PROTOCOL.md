@@ -1,17 +1,19 @@
 # Session Protocol
 
-Every AI session working on The Siphon Interface must follow this protocol. No exceptions.
+Every AI session working on this project must follow this protocol. No exceptions.
 
 ---
 
 ## At Session Start (MANDATORY)
 
 ### 1. Identify Your Work
-**Phase work**: Read the phase spec file for your assigned phase:
+Read the feature-specific `CLAUDE.md` for the area you're working on (e.g., `src/siphon/CLAUDE.md`).
+
+**Phase work** (Siphon): Read the phase spec file for your assigned phase:
 ```
-.claude/docs/PHASE_SPECS/phase-N-*.md
+.claude/docs/siphon/PHASE_SPECS/phase-N-*.md
 ```
-**Backlog work**: Read `BACKLOG.md` and identify the item(s) the user wants addressed. If none specified, suggest the highest-priority open items.
+**Backlog work** (Siphon): Read `docs/siphon/BACKLOG.md` and identify the item(s) the user wants addressed. If none specified, suggest the highest-priority open items.
 
 If neither a phase nor backlog items are assigned, ask the user what to work on.
 
@@ -19,7 +21,7 @@ If neither a phase nor backlog items are assigned, ask the user what to work on.
 Every phase spec has Entry Conditions. Verify each one. If ANY condition fails, **STOP and report to the user**. Do not attempt workarounds.
 
 ### 3. Read Session Context
-- Read `IMPLEMENTATION_STATUS.md` for what previous sessions completed
+- Read `docs/siphon/IMPLEMENTATION_STATUS.md` for what previous sessions completed
 - Check the "Discovered Issues" section for anything relevant to your phase
 - Check the "Next Session" instructions at the bottom
 
@@ -51,11 +53,11 @@ State explicitly to the user:
 
 ### No Scope Creep
 If you discover a bug or gap **outside your current work**:
-1. For phase work: add to `IMPLEMENTATION_STATUS.md` under "Discovered Issues":
+1. For phase work: add to `docs/siphon/IMPLEMENTATION_STATUS.md` under "Discovered Issues":
    ```
    - [DISCOVERY] <description> (found during Phase N, relevant to Phase M)
    ```
-2. For any work: add new items to `BACKLOG.md` with appropriate `P#`, Size, and ID (use next available ID in that category).
+2. For any work: add new items to `docs/siphon/BACKLOG.md` with appropriate `P#`, Size, and ID (use next available ID in that category).
 3. **Do NOT fix out-of-scope items** — mention them in your session summary.
 
 ### Checkpoint Commits
@@ -75,20 +77,20 @@ npm run build && npm run lint && npm run test
 All three must pass. If `npm run test` doesn't exist yet (pre-Phase 0), skip it.
 
 ### 2. Update Tracking Documents
-**For phase work** — Update `IMPLEMENTATION_STATUS.md`:
+**For phase work** — Update `docs/siphon/IMPLEMENTATION_STATUS.md`:
 - Mark completed tasks with checkmarks
 - Add any discovered issues
 - Write "Next Session" instructions
 - Log what was done in the Session Log
 
-**For backlog work** — Update `BACKLOG.md`:
+**For backlog work** — Update `docs/siphon/BACKLOG.md`:
 - Mark resolved items `[x]` with a brief resolution note beneath
 - Mark items still in progress `[~]`
 - Add investigation **Notes** as sub-bullets beneath items you researched
 - Add any newly discovered items with the next available ID
 
-### 3. Update ARCHITECTURE.md
-If you created new components, add them to the component hierarchy.
+### 3. Update Architecture Docs
+If you created new components, add them to `docs/siphon/ARCHITECTURE.md` (or the relevant feature's architecture doc).
 
 ### 4. Summarize to User
 Tell the user:
@@ -99,15 +101,15 @@ Tell the user:
 
 ---
 
-## Source of Truth Hierarchy
+## Source of Truth Hierarchy (Siphon)
 
 When in doubt about how something should work:
 
-1. **DESIGN.md** -- UI/UX specification, interaction flows, visual design
+1. **`docs/siphon/DESIGN.md`** -- UI/UX specification, interaction flows, visual design
 2. **Source PDFs** (`source/` directory) -- Game mechanics, feature data
-3. **.claude/docs/RULES.md** -- Machine-readable behavioral rules
-4. **.claude/docs/STORE_CONTRACTS.md** -- Store interfaces and invariants
-5. **.claude/docs/SPECIAL_CASES.md** -- Feature-specific edge cases
+3. **`.claude/docs/siphon/RULES.md`** -- Machine-readable behavioral rules
+4. **`.claude/docs/siphon/STORE_CONTRACTS.md`** -- Store interfaces and invariants
+5. **`.claude/docs/siphon/SPECIAL_CASES.md`** -- Feature-specific edge cases
 
 The code should match the design, not the other way around.
 

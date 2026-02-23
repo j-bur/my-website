@@ -46,7 +46,7 @@
 
 ## Phase Specs
 
-Each phase has a detailed spec in `.claude/docs/PHASE_SPECS/`. Read the spec before starting a phase.
+Each phase has a detailed spec in `.claude/docs/siphon/PHASE_SPECS/`. Read the spec before starting a phase.
 
 | Phase | Spec File | Sessions | Key Deliverables |
 |-------|-----------|----------|-----------------|

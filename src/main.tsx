@@ -3,9 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { createHashRouter, RouterProvider } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
-import { HomeRedirect } from './components/HomeRedirect.tsx'
-import { CombatHUD } from './components/combat-hud'
-import { DeckBuilder } from './components/deck-builder'
+import { HomeRedirect } from './siphon/components/HomeRedirect.tsx'
+import { CombatHUD } from './siphon/components/combat-hud'
+import { DeckBuilder } from './siphon/components/deck-builder'
 
 const router = createHashRouter([
   {

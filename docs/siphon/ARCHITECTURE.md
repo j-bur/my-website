@@ -22,65 +22,67 @@ This document describes the technical architecture of The Siphon Interface.
 
 ```
 src/
-├── components/
-│   ├── cards/
-│   │   └── SiphonCard.tsx         # Reusable card component for features
-│   ├── deck-builder/                # Phase 4.5: Deck Builder view
-│   │   ├── DeckBuilder.tsx          # Main view (CharacterHeader + CollectionGrid + SelectedPanel)
-│   │   ├── CharacterHeader.tsx      # Level/MaxHP/PB/EP inputs
-│   │   ├── CollectionGrid.tsx       # All 42 features, filterable
-│   │   ├── SelectedPanel.tsx        # Selected cards + rest/nav buttons
-│   │   └── index.ts                 # Barrel export
-│   ├── settings/                     # Phase 5A-5B: Settings modal + overrides + data
-│   │   ├── SettingsModal.tsx          # Modal with all settings sections
-│   │   ├── DiceModeToggle.tsx         # Reusable 3D/Macro toggle pair
-│   │   ├── ManualOverrides.tsx        # EP/Focus/Motes/HD/MaxHP override inputs
-│   │   ├── DataManagement.tsx         # Export/Import/Reset/Clear buttons
-│   │   └── index.ts                   # Barrel export
-│   ├── combat-hud/
-│   │   ├── CombatHUD.tsx          # CSS Grid layout container
-│   │   ├── EchoManifoldDeck.tsx   # Phase card + mote pips (top-left)
-│   │   ├── WildSurgeDeck.tsx      # Surge deck placeholder (top-right)
-│   │   ├── PhaseAbilities.tsx     # Current phase's 3 abilities
-│   │   ├── ActiveEffectsPanel.tsx # Active effects + drop target + dismiss gesture (center)
-│   │   ├── ResourceDisplay.tsx    # Right column wrapper
-│   │   ├── EchoPointsBar.tsx      # EP bar (center-zero bidirectional)
-│   │   ├── FocusCounter.tsx       # Focus value with glow
-│   │   ├── HitDiceDisplay.tsx     # Hit dice current/max
-│   │   ├── SiphonCapacitanceTracker.tsx # Capacitance pips + in-game timer
-│   │   ├── SelectedDeck.tsx       # Deck with expand/collapse (bottom-left)
-│   │   ├── HandArea.tsx           # Fanned hand cards (bottom)
-│   │   ├── LongRestDialog.tsx     # Long rest preview + execution
-│   │   ├── ShortRestDialog.tsx    # Short rest with HD spending
-│   │   ├── AlliesPanel.tsx        # Ally chips, add/rename/remove, bestow target, hover trigger
-│   │   ├── AllyBestowmentView.tsx # Overlay showing ally's bestowed cards with remove
-│   │   ├── Grimoire.tsx         # CSS book/tome navigation to Deck Builder
-│   │   └── index.ts              # Barrel export
-│   └── __tests__/                 # Component tests
-├── hooks/                           # Custom React hooks
-│   ├── useReducedMotion.ts          # Combines settings + OS prefers-reduced-motion
-│   ├── useAnimatedNumber.ts         # Smooth number interpolation via rAF
-│   └── useCardDragDetection.ts      # Global card drag detection for drop zone highlighting
-├── data/                          # Static game data (verified 2026-02-20)
-│   ├── siphonFeatures.ts            # 42 Siphon Features
-│   ├── featureConstants.ts          # FEATURE_MAP, TRIGGERED_FEATURE_IDS, WHILE_SELECTED_FEATURE_IDS
-│   ├── echoManifold.ts              # 9 Manifold Abilities (3 phases × 3)
-│   ├── wildEchoSurgeTable.ts        # 100 Wild Echo Surge entries
-│   └── index.ts                     # Barrel export
-├── types/                         # TypeScript interfaces
-│   ├── dragData.ts                  # CardDragData type + setCardDragData/getCardDragData/isCardDrag helpers
-│   └── index.ts                     # Barrel export
-├── utils/                         # Helper functions
-├── store/                         # Zustand state stores
-│   ├── characterStore.ts          # Character stats, HP, hit dice
-│   ├── siphonStore.ts             # EP, Focus, card zones, allies, effects
-│   ├── settingsStore.ts           # User preferences, dice modes
-│   ├── manifoldStore.ts           # Echo Manifold phase system
-│   └── index.ts                   # Store re-exports
-├── App.tsx                        # Layout wrapper with <Outlet /> (Phase 4.5)
-├── main.tsx                       # Entry point with createHashRouter (Phase 4.5)
-├── index.css                      # Global styles and Tailwind
-└── setupTests.ts                  # Vitest setup for jest-dom matchers
+├── App.tsx                          # Layout wrapper with <Outlet />
+├── main.tsx                         # Entry point with createHashRouter
+├── index.css                        # Global styles and Tailwind
+├── setupTests.ts                    # Vitest setup for jest-dom matchers
+└── siphon/                          # Echo Siphon companion app
+    ├── CLAUDE.md                    # Siphon-specific AI instructions
+    ├── components/
+    │   ├── cards/
+    │   │   └── SiphonCard.tsx         # Reusable card component for features
+    │   ├── deck-builder/                # Deck Builder view
+    │   │   ├── DeckBuilder.tsx          # Main view (CharacterHeader + CollectionGrid + SelectedPanel)
+    │   │   ├── CharacterHeader.tsx      # Level/MaxHP/PB/EP inputs
+    │   │   ├── CollectionGrid.tsx       # All 42 features, filterable
+    │   │   ├── SelectedPanel.tsx        # Selected cards + rest/nav buttons
+    │   │   └── index.ts                 # Barrel export
+    │   ├── settings/                     # Settings modal + overrides + data
+    │   │   ├── SettingsModal.tsx          # Modal with all settings sections
+    │   │   ├── DiceModeToggle.tsx         # Reusable 3D/Macro toggle pair
+    │   │   ├── ManualOverrides.tsx        # EP/Focus/Motes/HD/MaxHP override inputs
+    │   │   ├── DataManagement.tsx         # Export/Import/Reset/Clear buttons
+    │   │   └── index.ts                   # Barrel export
+    │   ├── combat-hud/
+    │   │   ├── CombatHUD.tsx          # CSS Grid layout container
+    │   │   ├── EchoManifoldDeck.tsx   # Phase card + mote pips (top-left)
+    │   │   ├── WildSurgeDeck.tsx      # Surge deck placeholder (top-right)
+    │   │   ├── PhaseAbilities.tsx     # Current phase's 3 abilities
+    │   │   ├── ActiveEffectsPanel.tsx # Active effects + drop target + dismiss gesture (center)
+    │   │   ├── ResourceDisplay.tsx    # Right column wrapper
+    │   │   ├── EchoPointsBar.tsx      # EP bar (center-zero bidirectional)
+    │   │   ├── FocusCounter.tsx       # Focus value with glow
+    │   │   ├── HitDiceDisplay.tsx     # Hit dice current/max
+    │   │   ├── SiphonCapacitanceTracker.tsx # Capacitance pips + in-game timer
+    │   │   ├── SelectedDeck.tsx       # Deck with expand/collapse (bottom-left)
+    │   │   ├── HandArea.tsx           # Fanned hand cards (bottom)
+    │   │   ├── LongRestDialog.tsx     # Long rest preview + execution
+    │   │   ├── ShortRestDialog.tsx    # Short rest with HD spending
+    │   │   ├── AlliesPanel.tsx        # Ally chips, add/rename/remove, bestow target, hover trigger
+    │   │   ├── AllyBestowmentView.tsx # Overlay showing ally's bestowed cards with remove
+    │   │   ├── Grimoire.tsx         # CSS book/tome navigation to Deck Builder
+    │   │   └── index.ts              # Barrel export
+    │   └── __tests__/                 # Component tests
+    ├── hooks/                           # Custom React hooks
+    │   ├── useReducedMotion.ts          # Combines settings + OS prefers-reduced-motion
+    │   ├── useAnimatedNumber.ts         # Smooth number interpolation via rAF
+    │   └── useCardDragDetection.ts      # Global card drag detection for drop zone highlighting
+    ├── data/                          # Static game data (verified 2026-02-20)
+    │   ├── siphonFeatures.ts            # 42 Siphon Features
+    │   ├── featureConstants.ts          # FEATURE_MAP, TRIGGERED_FEATURE_IDS, WHILE_SELECTED_FEATURE_IDS
+    │   ├── echoManifold.ts              # 9 Manifold Abilities (3 phases × 3)
+    │   ├── wildEchoSurgeTable.ts        # 100 Wild Echo Surge entries
+    │   └── index.ts                     # Barrel export
+    ├── types/                         # TypeScript interfaces
+    │   ├── dragData.ts                  # CardDragData type + setCardDragData/getCardDragData/isCardDrag helpers
+    │   └── index.ts                     # Barrel export
+    ├── utils/                         # Helper functions
+    └── store/                         # Zustand state stores
+        ├── characterStore.ts          # Character stats, HP, hit dice
+        ├── siphonStore.ts             # EP, Focus, card zones, allies, effects
+        ├── settingsStore.ts           # User preferences, dice modes
+        ├── manifoldStore.ts           # Echo Manifold phase system
+        └── index.ts                   # Store re-exports
 ```
 
 ---

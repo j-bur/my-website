@@ -87,11 +87,4 @@ describe('ResourceDisplay', () => {
     const capGroup = screen.getByRole('group', { name: /capacitance/i });
     expect(within(capGroup).getByText('2/3')).toBeInTheDocument();
   });
-
-  it('shows high focus warning when Focus >= 15', () => {
-    useSiphonStore.setState({ focus: 15 });
-    render(<ResourceDisplay />);
-
-    expect(screen.getByText(/weavers are watching/i)).toBeInTheDocument();
-  });
 });

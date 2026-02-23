@@ -1,45 +1,29 @@
-# Claude Code Instructions for The Siphon Interface
+# Claude Code Instructions — jamesburns.cc
 
-**The Siphon Interface** — D&D 5E companion web app for the Siphon Wielder homebrew feature.
+Personal website and tool suite. Deployed to Cloudflare Pages (static SPA) at jamesburns.cc, with GitHub Pages deployment from develop branch.
+
 **Tech Stack**: React 19 + TypeScript + Vite + Tailwind CSS v4 + Zustand + React Router 7
-**Aesthetic**: Dark, atmospheric card game. No bright colors. Cards have no illustrations — typography and iconography only.
 
-**Current State**: Phase 8 complete (all sub-phases 8A-8D). All 4 stores, 458 tests passing across 33 files. CombatHUD: 3-column sidebar layout (260px/1fr/260px), cards 200×280px, inline activation via drag-to-ActiveEffects (no modal), Grimoire in right sidebar navigates to Deck Builder. Check `IMPLEMENTATION_STATUS.md` for the current phase and next steps.
+---
+
+## Project Structure
+
+The codebase is organized by feature. Each feature has its own directory under `src/` with a scoped `CLAUDE.md` containing domain-specific instructions.
+
+```
+src/
+  App.tsx, main.tsx, index.css, setupTests.ts   # Shared app shell
+  siphon/          # Echo Siphon companion app — see src/siphon/CLAUDE.md
+  landing/         # Landing page (future)
+```
+
+**When working on a specific feature**, read that feature's `CLAUDE.md` first. It contains the rules, source-of-truth references, and gotchas specific to that domain.
 
 ---
 
 ## Before You Start
 
-Read `.claude/docs/SESSION_PROTOCOL.md` for mandatory start/end procedures. For phase work, read the spec in `.claude/docs/PHASE_SPECS/`. For bug fixes and improvements, read `BACKLOG.md`.
-
----
-
-## Three Critical Rules
-
-### 1. Select -> Bestow -> Activate (Do NOT conflate these steps)
-- **Select** (Long Rest): Choose up to PB features -> Selected Deck
-- **Bestow** (Combat): Grant a Selected feature to self (-> Hand) or ally
-- **Activate** (Feature's activation): Pay EP, gain Focus -> card **returns to Selected Deck**
-- **Hand** = ONLY cards bestowed to self. NOT all selected cards.
-
-### 2. Warp Triggers AFTER Cost Deduction
-Warp triggers if EP is negative **after** deducting the cost, not before. If EP was already -2 and you spend 3, warp triggers because -5 < 0.
-
-### 3. Focus Doubles When EP is Negative
-Focus gain is doubled whenever EP is negative at the time of the roll.
-
----
-
-## Source of Truth
-
-1. **DESIGN.md** — UI/UX specification (primary source)
-2. **Source PDFs** (`source/`) — Game mechanics, feature data
-3. **`.claude/docs/RULES.md`** — Machine-readable verification criteria
-4. **`.claude/docs/STORE_CONTRACTS.md`** — Store interfaces and invariants
-5. **`.claude/docs/SPECIAL_CASES.md`** — Feature-specific edge cases
-6. **`.claude/docs/CARD_LIFECYCLE.md`** — Full Select/Bestow/Activate flow
-
-The code should match the design, not the other way around.
+Read `.claude/docs/SESSION_PROTOCOL.md` for mandatory start/end procedures.
 
 ---
 
@@ -63,29 +47,14 @@ Before marking work complete:
 - [ ] `npm run build` succeeds
 - [ ] `npm run lint` passes
 - [ ] `npm run test` passes (if tests exist)
-- [ ] Card flow follows Select -> Bestow -> Activate correctly
 
 ---
 
 ## Session Handoff
 
 Before ending a session:
-1. Update `IMPLEMENTATION_STATUS.md` (phase work) or `BACKLOG.md` (backlog work) with progress
-2. Update `ARCHITECTURE.md` if new components were created
+1. Update relevant tracking docs with progress
+2. Update `docs/siphon/ARCHITECTURE.md` if new components were created
 3. Summarize to user: what was done, what remains, decisions needed
 
 See `.claude/docs/SESSION_PROTOCOL.md` for the full protocol.
-
----
-
-## Reference Documentation (read on demand, not preloaded)
-
-| Document | Contents |
-|----------|----------|
-| `.claude/docs/RULES.md` | GIVEN/WHEN/THEN verification rules for tests |
-| `.claude/docs/CARD_LIFECYCLE.md` | State diagrams for card flow |
-| `.claude/docs/STORE_CONTRACTS.md` | Full store interfaces, cost types, focus dice |
-| `.claude/docs/SPECIAL_CASES.md` | Superconduction, Manifestation, Echo Intuition, Siphon Greed, FoundryVTT |
-| `.claude/docs/SESSION_PROTOCOL.md` | Mandatory session start/end procedures |
-| `.claude/docs/PHASE_SPECS/` | One spec per implementation phase (0-8); Phase 8 has sub-phases 8A-8D |
-| `BACKLOG.md` | Prioritized bug reports, UX improvements, and feature requests from playtesting |

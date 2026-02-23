@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { useReducedMotion } from './hooks/useReducedMotion';
+import { useReducedMotion } from './siphon/hooks/useReducedMotion';
 
 function App() {
   const skipAnimations = useReducedMotion();
