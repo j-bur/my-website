@@ -10,7 +10,7 @@
 
 ## Before You Start
 
-Read `.claude/docs/SESSION_PROTOCOL.md` for mandatory start/end procedures. Read the phase spec for your assigned phase in `.claude/docs/PHASE_SPECS/`.
+Read `.claude/docs/SESSION_PROTOCOL.md` for mandatory start/end procedures. For phase work, read the spec in `.claude/docs/PHASE_SPECS/`. For bug fixes and improvements, read `BACKLOG.md`.
 
 ---
 
@@ -70,7 +70,7 @@ Before marking work complete:
 ## Session Handoff
 
 Before ending a session:
-1. Update `IMPLEMENTATION_STATUS.md` (completed tasks, discovered issues, next session)
+1. Update `IMPLEMENTATION_STATUS.md` (phase work) or `BACKLOG.md` (backlog work) with progress
 2. Update `ARCHITECTURE.md` if new components were created
 3. Summarize to user: what was done, what remains, decisions needed
 
@@ -88,3 +88,4 @@ See `.claude/docs/SESSION_PROTOCOL.md` for the full protocol.
 | `.claude/docs/SPECIAL_CASES.md` | Superconduction, Manifestation, Echo Intuition, Siphon Greed, FoundryVTT |
 | `.claude/docs/SESSION_PROTOCOL.md` | Mandatory session start/end procedures |
 | `.claude/docs/PHASE_SPECS/` | One spec per implementation phase (0-8); Phase 8 has sub-phases 8A-8D |
+| `BACKLOG.md` | Prioritized bug reports, UX improvements, and feature requests from playtesting |

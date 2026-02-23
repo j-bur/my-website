@@ -6,12 +6,14 @@ Every AI session working on The Siphon Interface must follow this protocol. No e
 
 ## At Session Start (MANDATORY)
 
-### 1. Identify Your Phase
-Read the phase spec file for your assigned phase:
+### 1. Identify Your Work
+**Phase work**: Read the phase spec file for your assigned phase:
 ```
 .claude/docs/PHASE_SPECS/phase-N-*.md
 ```
-If no phase is assigned, ask the user which phase to work on.
+**Backlog work**: Read `BACKLOG.md` and identify the item(s) the user wants addressed. If none specified, suggest the highest-priority open items.
+
+If neither a phase nor backlog items are assigned, ask the user what to work on.
 
 ### 2. Check Entry Gate
 Every phase spec has Entry Conditions. Verify each one. If ANY condition fails, **STOP and report to the user**. Do not attempt workarounds.
@@ -48,13 +50,13 @@ State explicitly to the user:
 3. Run relevant tests after each change (if tests exist for that area)
 
 ### No Scope Creep
-If you discover a bug or gap **outside your current phase**:
-1. Add it to `IMPLEMENTATION_STATUS.md` under "Discovered Issues":
+If you discover a bug or gap **outside your current work**:
+1. For phase work: add to `IMPLEMENTATION_STATUS.md` under "Discovered Issues":
    ```
    - [DISCOVERY] <description> (found during Phase N, relevant to Phase M)
    ```
-2. **Do NOT fix it**
-3. Mention it in your session summary
+2. For any work: add new items to `BACKLOG.md` with appropriate `P#`, Size, and ID (use next available ID in that category).
+3. **Do NOT fix out-of-scope items** — mention them in your session summary.
 
 ### Checkpoint Commits
 After completing a logical sub-unit, suggest a checkpoint commit to the user. Format:
@@ -72,11 +74,18 @@ npm run build && npm run lint && npm run test
 ```
 All three must pass. If `npm run test` doesn't exist yet (pre-Phase 0), skip it.
 
-### 2. Update IMPLEMENTATION_STATUS.md
+### 2. Update Tracking Documents
+**For phase work** — Update `IMPLEMENTATION_STATUS.md`:
 - Mark completed tasks with checkmarks
 - Add any discovered issues
 - Write "Next Session" instructions
 - Log what was done in the Session Log
+
+**For backlog work** — Update `BACKLOG.md`:
+- Mark resolved items `[x]` with a brief resolution note beneath
+- Mark items still in progress `[~]`
+- Add investigation **Notes** as sub-bullets beneath items you researched
+- Add any newly discovered items with the next available ID
 
 ### 3. Update ARCHITECTURE.md
 If you created new components, add them to the component hierarchy.
