@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import Delaunator from 'delaunator';
 import {
   COLS, ROWS, JITTER, OVERSCAN, OVERSCAN_FAR,
-  SCATTER_COUNT, CLUSTER_COUNT,
+  SCATTER_COUNT, CLUSTER_COUNT, MAX_EDGE_LENGTH,
   MESH_WIDTH, MESH_DEPTH, HEIGHTMAP_RESOLUTION,
   CAMERA_FOV, CAMERA_HEIGHT, CAMERA_Z, CAMERA_LOOK_AT_Z,
   TRI_ALPHA, EDGE_ALPHA, POINT_ALPHA, POINT_SIZE,
@@ -244,16 +244,15 @@ export class MeshScene {
     }
     const posAttr = new THREE.BufferAttribute(positions, 3);
 
-    // --- Triangle geometry (indexed) ---
+    // --- Build graph from Delaunay triangulation ---
+    this.graph = buildMeshGraph(pts2d, new Uint32Array(tri), MAX_EDGE_LENGTH);
+
+    // --- Triangle geometry (indexed, using filtered triangles) ---
     const triGeom = new THREE.BufferGeometry();
     triGeom.setAttribute('position', posAttr);
-    // Use Uint32 to support >65535 vertices
-    triGeom.setIndex(new THREE.BufferAttribute(new Uint32Array(tri), 1));
+    triGeom.setIndex(new THREE.BufferAttribute(this.graph.triangles, 1));
     this.triMesh = new THREE.Mesh(triGeom, this.triMat);
     this.scene.add(this.triMesh);
-
-    // --- Build graph from Delaunay triangulation ---
-    this.graph = buildMeshGraph(pts2d, new Uint32Array(tri));
 
     // --- Edge geometry (pairs of positions) + edge key map ---
     const edgeCount = this.graph.edges.length;

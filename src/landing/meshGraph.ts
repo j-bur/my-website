@@ -20,12 +20,16 @@ export interface MeshGraph {
 /**
  * Build a graph from Delaunay triangulation output.
  * Extracts adjacency lists and a deduplicated edge list from triangle indices.
+ * Triangles with any edge longer than maxEdgeLength are discarded to remove
+ * convex hull artifacts at the mesh boundary.
  */
 export function buildMeshGraph(
   pts2d: number[],
   delaunayTriangles: Uint32Array,
+  maxEdgeLength: number,
 ): MeshGraph {
   const vertexCount = pts2d.length / 2;
+  const maxLenSq = maxEdgeLength * maxEdgeLength;
 
   // Store flat XZ positions
   const positions = new Float32Array(pts2d);
@@ -34,13 +38,28 @@ export function buildMeshGraph(
   const adjacency: number[][] = Array.from({ length: vertexCount }, () => []);
   const edges: [number, number][] = [];
   const edgeKeys = new Map<number, true>();
+  const filteredTris: number[] = [];
 
   for (let i = 0; i < delaunayTriangles.length; i += 3) {
     const a = delaunayTriangles[i];
     const b = delaunayTriangles[i + 1];
     const c = delaunayTriangles[i + 2];
 
-    for (const [p, q] of [[a, b], [b, c], [c, a]] as [number, number][]) {
+    // Skip triangle if any edge exceeds max length
+    const pairs: [number, number][] = [[a, b], [b, c], [c, a]];
+    let tooLong = false;
+    for (const [p, q] of pairs) {
+      const dx = pts2d[p * 2] - pts2d[q * 2];
+      const dz = pts2d[p * 2 + 1] - pts2d[q * 2 + 1];
+      if (dx * dx + dz * dz > maxLenSq) {
+        tooLong = true;
+        break;
+      }
+    }
+    if (tooLong) continue;
+
+    filteredTris.push(a, b, c);
+    for (const [p, q] of pairs) {
       const key = edgeKey(p, q);
       if (!edgeKeys.has(key)) {
         edgeKeys.set(key, true);
@@ -56,6 +75,6 @@ export function buildMeshGraph(
     vertexCount,
     adjacency,
     edges,
-    triangles: delaunayTriangles,
+    triangles: new Uint32Array(filteredTris),
   };
 }

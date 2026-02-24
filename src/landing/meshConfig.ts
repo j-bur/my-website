@@ -8,6 +8,7 @@ export const OVERSCAN = 32;
 export const OVERSCAN_FAR = 100;
 export const SCATTER_COUNT = 1050;
 export const CLUSTER_COUNT = 1000;
+export const MAX_EDGE_LENGTH = 150; // Cull convex hull edges longer than this
 
 // --- World-space mesh dimensions ---
 export const MESH_WIDTH = 2000;
@@ -22,6 +23,9 @@ export const CAMERA_FOV = 70;
 export const CAMERA_HEIGHT = 500;
 export const CAMERA_Z = 700;
 export const CAMERA_LOOK_AT_Z = -100;
+
+// --- Horizon curvature (parabolic drop-off, like Earth's surface) ---
+export const MESH_CURVATURE = 0.000025; // Y drop = curvature * dist²
 
 // --- Alpha ranges for the three render passes ---
 export const TRI_ALPHA = { min: 0.0, range: 0.12 };
@@ -178,6 +182,10 @@ void main() {
   // Directional light from upper-left (Y-up coordinate system)
   vec3 lightDir = normalize(vec3(-0.4, 0.8, -0.3));
   float lighting = max(dot(normal, lightDir), 0.0);
+
+  // Earth-like curvature: mesh curves downward with distance from viewer
+  float cDist = length(basePos - vec2(0.0, ${CAMERA_Z}.0));
+  displaced.y -= ${MESH_CURVATURE} * cDist * cDist;
 
   // Three.js projection
   vec4 mvPos = modelViewMatrix * vec4(displaced, 1.0);
