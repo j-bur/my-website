@@ -296,6 +296,10 @@ body {
   filter: brightness(1.4);
   text-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
 }
+.nav-label-hovered a {
+  filter: brightness(1.4);
+  text-shadow: 0 0 14px rgba(0, 212, 170, 0.7), 0 0 4px rgba(0, 212, 170, 0.4);
+}
 
 /* Programmatic reduced motion (applied via settingsStore) */
 .reduce-motion * {

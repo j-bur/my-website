@@ -1,7 +1,7 @@
 # Implementation Status — Landing Page
 
 **Last Updated**: 2026-02-24
-**Current Phase**: Phase 2 complete, ready for Phase 3
+**Current Phase**: Phase 3 complete, ready for Phase 4
 
 ---
 
@@ -13,7 +13,7 @@
 | Phase 0: Graph Infrastructure | **Complete** | MeshGraph + adjacency, CPU heightAt, MeshScene refactored |
 | Phase 1: Nav Nodes | **Complete** | BFS-placed nav nodes, 3D-projected labels, aIsNavNode shader attribute |
 | Phase 2: Path Rendering | **Complete** | `highlightPath()` on MeshScene, BFS paths precomputed, edge shader with `aHighlight` |
-| Phase 3: Cursor Connection | Not Started | — |
+| Phase 3: Cursor Connection | **Complete** | Raycasting, hover detection, cursor line, click navigation, label hover glow |
 | Phase 4: Performance | Not Started | — |
 | Phase 5: Wave Simulation | Not Started | — |
 | Phase 6a: Cursor Ripple | Not Started | — |
@@ -23,12 +23,10 @@
 
 ## Next Session
 
-1. Begin **Phase 3: Cursor Connection**
-2. Read `.claude/docs/landing/PHASE_SPECS/phase-3-cursor-connection.md`
-3. Entry conditions: `npm run build` and `npm run lint` pass, `highlightPath()` method available on MeshScene
-4. Phase 3 wires mouse hover to call `highlightPath(vertexIndex)` / `highlightPath(null)` — test that paths light up in EP Positive (#00d4aa)
-5. **Visual check recommended**: call `highlightPath(gauldurgVertexIndex)` manually (e.g. via console or a temporary test) to verify edges light up green from hub to Gauldurg
-6. **Shared utility**: `edgeKey(a, b)` in `meshGraph.ts` is the canonical edge key function — use it instead of inline formulas
+1. Begin **Phase 4: Performance** (displacement texture)
+2. Read `.claude/docs/landing/PHASE_SPECS/phase-4-performance.md`
+3. Entry conditions: `npm run build` and `npm run lint` pass
+4. **Visual check recommended**: Before Phase 4, test Phase 3 in browser — move cursor near nav nodes to verify teal line appears, path highlights, pointer cursor, and click navigation works
 
 ---
 
@@ -64,3 +62,4 @@ Each phase has a detailed spec in `.claude/docs/landing/PHASE_SPECS/`. Read the 
 | 2026-02-24 | Phase 0 | Created `meshGraph.ts` (MeshGraph interface + buildMeshGraph), `heightField.ts` (CPU simplex noise + heightAt). Refactored MeshScene to use graph, added getGraph() getter. |
 | 2026-02-24 | Phase 1 | Created `navNodes.ts` (BFS placement + 3D projection). Replaced AnchorNode/ANCHORS with NavNodeDef/NAV_NODES in meshConfig.ts. Added POINT_VERT_SRC with aIsNavNode attribute (larger/brighter/pulsing dots). Added frame callback + resize storage to MeshScene. Rewrote LandingPage.tsx with projected labels via direct DOM transform. Replaced .anchor CSS with .nav-label CSS. |
 | 2026-02-24 | Phase 2 | Created `pathfinding.ts` (BFS findPath + pathToEdgeKeys). Added `EDGE_VERT_SRC`/`EDGE_FRAG_SRC` to meshConfig.ts (composed from VERT_COMMON, with aHighlight attribute + vColor varying for EP Positive accent). Modified MeshScene: edge key→buffer index map, aHighlight Float32Array attribute on edge geometry, edge-specific material, precomputed hub→nav paths at init, public `highlightPath(vertexIndex | null)` method. Extracted shared `edgeKey()` utility into meshGraph.ts to eliminate magic number duplication across 3 files. |
+| 2026-02-24 | Phase 3 | Added cursor interaction to MeshScene: mouse screen tracking with `setMouseScreenPos()`/`clearMouse()`, raycasting onto Y=0 ground plane for world XZ, hover detection via screen-pixel distance (150px threshold), lazy-created teal cursor-to-node `THREE.Line` with `heightAt()` surface displacement, `getHoveredNode()` public API. Rewrote LandingPage.tsx: mousemove/mouseleave/click event handlers on canvas, `useNavigate` for internal links (strips `/#` prefix for hash router), pointer cursor on hover, `nav-label-hovered` CSS class toggled in frame callback. Added `.nav-label-hovered` CSS with EP Positive teal text-shadow glow. |

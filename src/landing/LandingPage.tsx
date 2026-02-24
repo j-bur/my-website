@@ -1,10 +1,13 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MeshScene } from './MeshScene';
 import { NAV_NODES } from './meshConfig';
 
 export function LandingPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const labelRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const sceneRef = useRef<MeshScene | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -12,17 +15,53 @@ export function LandingPage() {
 
     const container = canvas.parentElement!;
     const scene = new MeshScene(canvas);
+    sceneRef.current = scene;
     scene.resize(container.clientWidth, container.clientHeight);
 
-    // Frame callback: update label positions via direct DOM manipulation (no React re-render)
+    // Frame callback: update label positions + hover glow via direct DOM manipulation
     scene.setFrameCallback((projections) => {
+      const hovered = scene.getHoveredNode();
       for (let i = 0; i < projections.length; i++) {
         const el = labelRefs.current[i];
         if (!el) continue;
-        const { screenX, screenY } = projections[i];
+        const { screenX, screenY, node } = projections[i];
         el.style.transform = `translate(${screenX}px, ${screenY - 24}px)`;
+
+        // Toggle hover glow class
+        const isHovered = hovered !== null && node.vertexIndex === hovered.vertexIndex;
+        el.classList.toggle('nav-label-hovered', isHovered);
       }
+
+      // Update cursor style
+      canvas.style.cursor = hovered ? 'pointer' : 'default';
     });
+
+    // Mouse tracking
+    const onMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      scene.setMouseScreenPos(e.clientX - rect.left, e.clientY - rect.top);
+    };
+    const onMouseLeave = () => {
+      scene.clearMouse();
+      canvas.style.cursor = 'default';
+    };
+
+    // Click navigation
+    const onClick = () => {
+      const hovered = scene.getHoveredNode();
+      if (!hovered) return;
+      if (hovered.external) {
+        window.open(hovered.url, '_blank', 'noopener,noreferrer');
+      } else {
+        // Strip /# prefix for hash router (meshConfig URLs are /#/path format)
+        const path = hovered.url.replace(/^\/#/, '');
+        navigate(path);
+      }
+    };
+
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('mouseleave', onMouseLeave);
+    canvas.addEventListener('click', onClick);
 
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
@@ -31,10 +70,14 @@ export function LandingPage() {
     observer.observe(container);
 
     return () => {
+      canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('mouseleave', onMouseLeave);
+      canvas.removeEventListener('click', onClick);
       observer.disconnect();
       scene.dispose();
+      sceneRef.current = null;
     };
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">

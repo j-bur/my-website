@@ -13,6 +13,10 @@ import {
 import { buildMeshGraph, edgeKey, type MeshGraph } from './meshGraph';
 import { placeNavNodes, projectNavNodes, type PlacedNavNode, type NavProjection } from './navNodes';
 import { findPath, pathToEdgeKeys } from './pathfinding';
+import { heightAt } from './heightField';
+
+/** Threshold in screen pixels for cursor-to-node hover detection. */
+const HOVER_DISTANCE_PX = 150;
 
 /**
  * Pure Three.js scene — no React dependency.
@@ -42,6 +46,18 @@ export class MeshScene {
   private edgeKeyToIndex = new Map<number, number>();
   private highlightAttr: THREE.BufferAttribute | null = null;
   private navPaths = new Map<number, number[]>(); // vertexIndex -> path from hub
+
+  // Phase 3: cursor interaction
+  private mouseScreenX = 0;
+  private mouseScreenY = 0;
+  private mouseActive = false;
+  private mouseWorldXZ: { x: number; z: number } | null = null;
+  private hoveredNode: PlacedNavNode | null = null;
+  private cursorLine: THREE.Line | null = null;
+  private cursorLineMat: THREE.LineBasicMaterial | null = null;
+  private cursorLineGeom: THREE.BufferGeometry | null = null;
+  private raycaster = new THREE.Raycaster();
+  private groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
   constructor(canvas: HTMLCanvasElement) {
     // Renderer
@@ -234,14 +250,97 @@ export class MeshScene {
     this.triMat.uniforms.uTime.value = t;
 
     // Project nav labels before render so DOM and canvas are composited in sync
-    if (this.frameCallback && this.placedNavNodes.length > 0) {
+    if (this.placedNavNodes.length > 0) {
       const projections = projectNavNodes(
         this.placedNavNodes, t, this.camera, this.canvasWidth, this.canvasHeight,
       );
-      this.frameCallback(projections, t);
+      // Hover detection: find nearest nav node within screen-pixel threshold
+      this.updateHover(projections);
+
+      // Update cursor-to-node line
+      this.updateCursorLine(t);
+
+      if (this.frameCallback) {
+        this.frameCallback(projections, t);
+      }
     }
 
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /** Find the nearest nav node to the cursor within HOVER_DISTANCE_PX. */
+  private updateHover(projections: NavProjection[]): void {
+    if (!this.mouseActive) {
+      if (this.hoveredNode) {
+        this.hoveredNode = null;
+        this.highlightPath(null);
+      }
+      return;
+    }
+
+    let nearest: PlacedNavNode | null = null;
+    let nearestDistSq = HOVER_DISTANCE_PX * HOVER_DISTANCE_PX;
+
+    for (const proj of projections) {
+      const dx = this.mouseScreenX - proj.screenX;
+      const dy = this.mouseScreenY - proj.screenY;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < nearestDistSq) {
+        nearestDistSq = distSq;
+        nearest = proj.node;
+      }
+    }
+
+    // Only update highlight on hover state change
+    if (nearest !== this.hoveredNode) {
+      this.hoveredNode = nearest;
+      this.highlightPath(nearest?.vertexIndex ?? null);
+    }
+  }
+
+  /** Draw or hide the solid teal line from cursor to hovered node. */
+  private updateCursorLine(t: number): void {
+    if (!this.hoveredNode || !this.mouseWorldXZ) {
+      if (this.cursorLine) {
+        this.cursorLine.visible = false;
+      }
+      return;
+    }
+
+    // Lazily create cursor line geometry
+    if (!this.cursorLine) {
+      this.cursorLineGeom = new THREE.BufferGeometry();
+      this.cursorLineGeom.setAttribute(
+        'position',
+        new THREE.BufferAttribute(new Float32Array(6), 3),
+      );
+      this.cursorLineMat = new THREE.LineBasicMaterial({
+        color: 0x00d4aa,
+        transparent: true,
+        opacity: 0.6,
+      });
+      this.cursorLine = new THREE.Line(this.cursorLineGeom, this.cursorLineMat);
+      this.scene.add(this.cursorLine);
+    }
+
+    this.cursorLine.visible = true;
+
+    // Both endpoints displaced onto the wave surface
+    const node = this.hoveredNode;
+    const nodeY = heightAt(node.baseX, node.baseZ, t);
+    const cursorY = heightAt(this.mouseWorldXZ.x, this.mouseWorldXZ.z, t);
+
+    const posArr = this.cursorLineGeom!.attributes.position.array as Float32Array;
+    // Endpoint 0: cursor
+    posArr[0] = this.mouseWorldXZ.x;
+    posArr[1] = cursorY;
+    posArr[2] = this.mouseWorldXZ.z;
+    // Endpoint 1: nav node
+    posArr[3] = node.baseX;
+    posArr[4] = nodeY;
+    posArr[5] = node.baseZ;
+
+    (this.cursorLineGeom!.attributes.position as THREE.BufferAttribute).needsUpdate = true;
   }
 
   /** Graph data structure built from the Delaunay triangulation. */
@@ -288,6 +387,44 @@ export class MeshScene {
     this.highlightAttr.needsUpdate = true;
   }
 
+  /**
+   * Update cursor screen position from a mousemove event.
+   * Converts to NDC, raycasts onto the Y=0 ground plane to get world XZ.
+   */
+  setMouseScreenPos(screenX: number, screenY: number): void {
+    this.mouseScreenX = screenX;
+    this.mouseScreenY = screenY;
+    this.mouseActive = true;
+
+    // Convert to NDC
+    const ndcX = (screenX / this.canvasWidth) * 2 - 1;
+    const ndcY = -(screenY / this.canvasHeight) * 2 + 1;
+
+    // Raycast onto Y=0 plane
+    this.raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), this.camera);
+    const intersection = new THREE.Vector3();
+    const hit = this.raycaster.ray.intersectPlane(this.groundPlane, intersection);
+    this.mouseWorldXZ = hit ? { x: intersection.x, z: intersection.z } : null;
+  }
+
+  /** Clear mouse state (e.g. on mouseleave). */
+  clearMouse(): void {
+    this.mouseActive = false;
+    this.mouseWorldXZ = null;
+    if (this.hoveredNode) {
+      this.hoveredNode = null;
+      this.highlightPath(null);
+    }
+  }
+
+  /**
+   * Get the currently hovered nav node, or null.
+   * Called by LandingPage to determine click targets and cursor style.
+   */
+  getHoveredNode(): PlacedNavNode | null {
+    return this.hoveredNode;
+  }
+
   /** Update renderer and camera on container resize */
   resize(width: number, height: number): void {
     this.canvasWidth = width;
@@ -304,6 +441,8 @@ export class MeshScene {
     this.triMesh?.geometry.dispose();
     this.edgeLines?.geometry.dispose();
     this.pointCloud?.geometry.dispose();
+    this.cursorLineGeom?.dispose();
+    this.cursorLineMat?.dispose();
     this.triMat.dispose();
     this.edgeMat.dispose();
     this.pointMat.dispose();
