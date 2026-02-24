@@ -8,6 +8,7 @@ import {
   TRI_ALPHA, EDGE_ALPHA, POINT_ALPHA, POINT_SIZE,
   VERT_SRC, FRAG_SRC,
 } from './meshConfig';
+import { buildMeshGraph, type MeshGraph } from './meshGraph';
 
 /**
  * Pure Three.js scene — no React dependency.
@@ -26,6 +27,7 @@ export class MeshScene {
   private edgeMat: THREE.ShaderMaterial;
   private pointMat: THREE.ShaderMaterial;
 
+  private graph: MeshGraph | null = null;
   private clock = new THREE.Clock();
 
   constructor(canvas: HTMLCanvasElement) {
@@ -153,20 +155,13 @@ export class MeshScene {
     this.triMesh = new THREE.Mesh(triGeom, this.triMat);
     this.scene.add(this.triMesh);
 
-    // --- Extract unique edges ---
-    const edgeSet = new Map<number, [number, number]>();
-    for (let i = 0; i < tri.length; i += 3) {
-      const a = tri[i], b = tri[i + 1], c = tri[i + 2];
-      for (const [p, q] of [[a, b], [b, c], [c, a]] as [number, number][]) {
-        const key = p < q ? p * 1000000 + q : q * 1000000 + p;
-        if (!edgeSet.has(key)) edgeSet.set(key, [p, q]);
-      }
-    }
+    // --- Build graph from Delaunay triangulation ---
+    this.graph = buildMeshGraph(pts2d, new Uint32Array(tri));
 
     // --- Edge geometry (pairs of positions) ---
-    const edgePositions = new Float32Array(edgeSet.size * 6); // 2 verts * 3 components
+    const edgePositions = new Float32Array(this.graph.edges.length * 6); // 2 verts * 3 components
     let ei = 0;
-    for (const [, [p, q]] of edgeSet) {
+    for (const [p, q] of this.graph.edges) {
       edgePositions[ei++] = positions[p * 3];
       edgePositions[ei++] = positions[p * 3 + 1];
       edgePositions[ei++] = positions[p * 3 + 2];
@@ -191,6 +186,11 @@ export class MeshScene {
     // All three materials share the same uTime uniform object
     this.triMat.uniforms.uTime.value = t;
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /** Graph data structure built from the Delaunay triangulation. */
+  getGraph(): MeshGraph | null {
+    return this.graph;
   }
 
   /** Update renderer and camera on container resize */

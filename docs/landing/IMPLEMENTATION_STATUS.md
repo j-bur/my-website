@@ -1,7 +1,7 @@
 # Implementation Status — Landing Page
 
 **Last Updated**: 2026-02-24
-**Current Phase**: Pre-Phase 0 (v1 implemented, improvements planned)
+**Current Phase**: Phase 0 complete, ready for Phase 1
 
 ---
 
@@ -10,7 +10,7 @@
 | Phase | Status | Gate |
 |-------|--------|------|
 | v1: Initial Implementation | Complete | Three.js mesh, 3 render passes, CSS anchor overlays |
-| Phase 0: Graph Infrastructure | Not Started | — |
+| Phase 0: Graph Infrastructure | **Complete** | MeshGraph + adjacency, CPU heightAt, MeshScene refactored |
 | Phase 1: Nav Nodes | Not Started | — |
 | Phase 2: Path Rendering | Not Started | — |
 | Phase 3: Cursor Connection | Not Started | — |
@@ -23,8 +23,8 @@
 
 ## Next Session
 
-1. Begin **Phase 0: Graph Infrastructure + CPU Height Function**
-2. Read `.claude/docs/landing/PHASE_SPECS/phase-0-graph-infrastructure.md`
+1. Begin **Phase 1: Nav Nodes**
+2. Read `.claude/docs/landing/PHASE_SPECS/phase-1-nav-nodes.md`
 3. Entry conditions: `npm run build` and `npm run lint` pass, landing page renders at localhost
 
 ---
@@ -48,7 +48,7 @@ Each phase has a detailed spec in `.claude/docs/landing/PHASE_SPECS/`. Read the 
 
 ## Discovered Issues
 
-_(None yet — add issues found during phase work here)_
+- **CPU/GPU noise drift**: `heightField.ts` simplex noise uses JS doubles vs GLSL float precision. Sine waves match exactly but noise octaves may differ by ~0.1 units. Fine for nav node projection; would need revisiting if pixel-perfect CPU/GPU agreement is ever required.
 
 ---
 
@@ -57,3 +57,4 @@ _(None yet — add issues found during phase work here)_
 | Date | Phase | Summary |
 |------|-------|---------|
 | 2026-02-24 | Planning | Phase specs 0–6b written in `.claude/docs/landing/PHASE_SPECS/` |
+| 2026-02-24 | Phase 0 | Created `meshGraph.ts` (MeshGraph interface + buildMeshGraph), `heightField.ts` (CPU simplex noise + heightAt). Refactored MeshScene to use graph, added getGraph() getter. |
