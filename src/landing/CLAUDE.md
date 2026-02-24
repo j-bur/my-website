@@ -59,6 +59,7 @@ No `simplex-noise` — noise is computed in GLSL on the GPU. CPU-side noise (in 
 ### Key Design Decisions
 
 - **GPU displacement via ShaderMaterial** — all vertex displacement, normal computation, and lighting happen in the vertex shader. No CPU-side vertex updates per frame.
+- **Composable vertex shaders** — `VERT_COMMON` in `meshConfig.ts` contains the shared body (uniforms, heightAt, displacement, lighting, alpha calculation). `VERT_SRC`, `POINT_VERT_SRC`, and any future per-pass shaders (e.g. `EDGE_VERT_SRC`) compose from it with different endings. This ensures wave simulation changes (Phase 5) only need one edit.
 - **Displacement texture** (Phase 4) — height field rendered to a texture once per frame, sampled by all vertex shaders, eliminating redundant noise computation.
 - **Nav nodes are mesh vertices** — positioned via BFS from a hub node, not CSS overlays.
 - **Three.js handles projection** — PerspectiveCamera replaces the mockup's custom landscape camera math.

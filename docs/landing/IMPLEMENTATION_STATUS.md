@@ -27,6 +27,7 @@
 2. Read `.claude/docs/landing/PHASE_SPECS/phase-2-path-rendering.md`
 3. Entry conditions: `npm run build` and `npm run lint` pass, nav nodes visible and projected correctly
 4. **Visual check recommended**: verify nav node labels track the wave motion and the hub/Gauldurg dots render with enhanced brightness
+5. **Phase 2 spec correction**: Task 2 says "all 3 geometry types share `VERT_SRC`/`FRAG_SRC`" — this is stale. Points now use `POINT_VERT_SRC`, and the shared body is `VERT_COMMON`. Compose `EDGE_VERT_SRC` from `VERT_COMMON` using the same pattern (see `POINT_VERT_SRC` for the template). Line number references at the bottom of the spec are also outdated.
 
 ---
 
