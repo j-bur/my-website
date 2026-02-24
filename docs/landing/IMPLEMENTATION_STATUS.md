@@ -1,7 +1,7 @@
 # Implementation Status — Landing Page
 
 **Last Updated**: 2026-02-24
-**Current Phase**: Phase 1 complete, ready for Phase 2
+**Current Phase**: Phase 2 complete, ready for Phase 3
 
 ---
 
@@ -12,7 +12,7 @@
 | v1: Initial Implementation | Complete | Three.js mesh, 3 render passes, CSS anchor overlays |
 | Phase 0: Graph Infrastructure | **Complete** | MeshGraph + adjacency, CPU heightAt, MeshScene refactored |
 | Phase 1: Nav Nodes | **Complete** | BFS-placed nav nodes, 3D-projected labels, aIsNavNode shader attribute |
-| Phase 2: Path Rendering | Not Started | — |
+| Phase 2: Path Rendering | **Complete** | `highlightPath()` on MeshScene, BFS paths precomputed, edge shader with `aHighlight` |
 | Phase 3: Cursor Connection | Not Started | — |
 | Phase 4: Performance | Not Started | — |
 | Phase 5: Wave Simulation | Not Started | — |
@@ -23,11 +23,11 @@
 
 ## Next Session
 
-1. Begin **Phase 2: Path Rendering**
-2. Read `.claude/docs/landing/PHASE_SPECS/phase-2-path-rendering.md`
-3. Entry conditions: `npm run build` and `npm run lint` pass, nav nodes visible and projected correctly
-4. **Visual check recommended**: verify nav node labels track the wave motion and the hub/Gauldurg dots render with enhanced brightness
-5. **Phase 2 spec correction**: Task 2 says "all 3 geometry types share `VERT_SRC`/`FRAG_SRC`" — this is stale. Points now use `POINT_VERT_SRC`, and the shared body is `VERT_COMMON`. Compose `EDGE_VERT_SRC` from `VERT_COMMON` using the same pattern (see `POINT_VERT_SRC` for the template). Line number references at the bottom of the spec are also outdated.
+1. Begin **Phase 3: Cursor Connection**
+2. Read `.claude/docs/landing/PHASE_SPECS/phase-3-cursor-connection.md`
+3. Entry conditions: `npm run build` and `npm run lint` pass, `highlightPath()` method available on MeshScene
+4. Phase 3 wires mouse hover to call `highlightPath(vertexIndex)` / `highlightPath(null)` — test that paths light up in EP Positive (#00d4aa)
+5. **Visual check recommended**: call `highlightPath(gauldurgVertexIndex)` manually (e.g. via console or a temporary test) to verify edges light up green from hub to Gauldurg
 
 ---
 
@@ -62,3 +62,4 @@ Each phase has a detailed spec in `.claude/docs/landing/PHASE_SPECS/`. Read the 
 | 2026-02-24 | Planning | Phase specs 0–6b written in `.claude/docs/landing/PHASE_SPECS/` |
 | 2026-02-24 | Phase 0 | Created `meshGraph.ts` (MeshGraph interface + buildMeshGraph), `heightField.ts` (CPU simplex noise + heightAt). Refactored MeshScene to use graph, added getGraph() getter. |
 | 2026-02-24 | Phase 1 | Created `navNodes.ts` (BFS placement + 3D projection). Replaced AnchorNode/ANCHORS with NavNodeDef/NAV_NODES in meshConfig.ts. Added POINT_VERT_SRC with aIsNavNode attribute (larger/brighter/pulsing dots). Added frame callback + resize storage to MeshScene. Rewrote LandingPage.tsx with projected labels via direct DOM transform. Replaced .anchor CSS with .nav-label CSS. |
+| 2026-02-24 | Phase 2 | Created `pathfinding.ts` (BFS findPath + pathToEdgeKeys). Added `EDGE_VERT_SRC`/`EDGE_FRAG_SRC` to meshConfig.ts (composed from VERT_COMMON, with aHighlight attribute + vColor varying for EP Positive accent). Modified MeshScene: edge key→buffer index map, aHighlight Float32Array attribute on edge geometry, edge-specific material, precomputed hub→nav paths at init, public `highlightPath(vertexIndex | null)` method. |

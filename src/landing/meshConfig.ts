@@ -185,6 +185,31 @@ ${VERT_COMMON}
 }
 `;
 
+// --- Edge vertex shader: adds path highlight support ---
+export const EDGE_VERT_SRC = /* glsl */ `
+attribute float aHighlight;
+varying vec3 vColor;
+${VERT_COMMON}
+  if (aHighlight > 0.5) {
+    vColor = vec3(0.0, 0.83, 0.67); // EP Positive (#00d4aa)
+    vAlpha = 0.8;
+  } else {
+    vColor = vec3(1.0);
+    vAlpha = uAlphaMin + alpha * uAlphaRange;
+  }
+}
+`;
+
+// --- Edge fragment shader: uses vColor varying ---
+export const EDGE_FRAG_SRC = /* glsl */ `
+precision mediump float;
+varying float vAlpha;
+varying vec3 vColor;
+void main() {
+  gl_FragColor = vec4(vColor, vAlpha);
+}
+`;
+
 export const FRAG_SRC = /* glsl */ `
 precision mediump float;
 varying float vAlpha;

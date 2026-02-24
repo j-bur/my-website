@@ -7,10 +7,12 @@ import {
   CAMERA_FOV, CAMERA_HEIGHT, CAMERA_Z, CAMERA_LOOK_AT_Z,
   TRI_ALPHA, EDGE_ALPHA, POINT_ALPHA, POINT_SIZE,
   VERT_SRC, POINT_VERT_SRC, FRAG_SRC,
-  NAV_NODES,
+  EDGE_VERT_SRC, EDGE_FRAG_SRC,
+  NAV_NODES, HUB_NODE_INDEX,
 } from './meshConfig';
 import { buildMeshGraph, type MeshGraph } from './meshGraph';
 import { placeNavNodes, projectNavNodes, type PlacedNavNode, type NavProjection } from './navNodes';
+import { findPath, pathToEdgeKeys } from './pathfinding';
 
 /**
  * Pure Three.js scene — no React dependency.
@@ -35,6 +37,11 @@ export class MeshScene {
   private canvasWidth = 0;
   private canvasHeight = 0;
   private clock = new THREE.Clock();
+
+  // Phase 2: path highlight infrastructure
+  private edgeKeyToIndex = new Map<number, number>();
+  private highlightAttr: THREE.BufferAttribute | null = null;
+  private navPaths = new Map<number, number[]>(); // vertexIndex -> path from hub
 
   constructor(canvas: HTMLCanvasElement) {
     // Renderer
@@ -61,7 +68,7 @@ export class MeshScene {
     };
 
     this.triMat = this.createMaterial(sharedUniforms, TRI_ALPHA.min, TRI_ALPHA.range, 1.0, VERT_SRC);
-    this.edgeMat = this.createMaterial(sharedUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0, VERT_SRC);
+    this.edgeMat = this.createMaterial(sharedUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0, EDGE_VERT_SRC, EDGE_FRAG_SRC);
     this.pointMat = this.createMaterial(sharedUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC);
 
     this.buildMesh();
@@ -76,10 +83,11 @@ export class MeshScene {
     alphaRange: number,
     pointSize: number,
     vertexShader: string,
+    fragmentShader: string = FRAG_SRC,
   ): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
       vertexShader,
-      fragmentShader: FRAG_SRC,
+      fragmentShader,
       uniforms: {
         uTime: sharedUniforms.uTime,
         uAlphaMin: { value: alphaMin },
@@ -165,19 +173,31 @@ export class MeshScene {
     // --- Build graph from Delaunay triangulation ---
     this.graph = buildMeshGraph(pts2d, new Uint32Array(tri));
 
-    // --- Edge geometry (pairs of positions) ---
-    const edgePositions = new Float32Array(this.graph.edges.length * 6); // 2 verts * 3 components
+    // --- Edge geometry (pairs of positions) + edge key map ---
+    const edgeCount = this.graph.edges.length;
+    const edgePositions = new Float32Array(edgeCount * 6); // 2 verts * 3 components
+    this.edgeKeyToIndex = new Map();
     let ei = 0;
-    for (const [p, q] of this.graph.edges) {
+    for (let edgeIdx = 0; edgeIdx < edgeCount; edgeIdx++) {
+      const [p, q] = this.graph.edges[edgeIdx];
       edgePositions[ei++] = positions[p * 3];
       edgePositions[ei++] = positions[p * 3 + 1];
       edgePositions[ei++] = positions[p * 3 + 2];
       edgePositions[ei++] = positions[q * 3];
       edgePositions[ei++] = positions[q * 3 + 1];
       edgePositions[ei++] = positions[q * 3 + 2];
+      // Map edge key to buffer index (index into aHighlight array)
+      const key = p < q ? p * 1_000_000 + q : q * 1_000_000 + p;
+      this.edgeKeyToIndex.set(key, edgeIdx);
     }
     const edgeGeom = new THREE.BufferGeometry();
     edgeGeom.setAttribute('position', new THREE.BufferAttribute(edgePositions, 3));
+
+    // aHighlight attribute: 2 vertices per edge, both share same value
+    const highlightData = new Float32Array(edgeCount * 2);
+    this.highlightAttr = new THREE.BufferAttribute(highlightData, 1);
+    edgeGeom.setAttribute('aHighlight', this.highlightAttr);
+
     this.edgeLines = new THREE.LineSegments(edgeGeom, this.edgeMat);
     this.scene.add(this.edgeLines);
 
@@ -195,6 +215,18 @@ export class MeshScene {
 
     this.pointCloud = new THREE.Points(pointGeom, this.pointMat);
     this.scene.add(this.pointCloud);
+
+    // --- Precompute paths from hub to each nav node ---
+    const hubVertexIndex = this.placedNavNodes[HUB_NODE_INDEX].vertexIndex;
+    this.navPaths = new Map();
+    for (const node of this.placedNavNodes) {
+      if (node.vertexIndex !== hubVertexIndex) {
+        this.navPaths.set(
+          node.vertexIndex,
+          findPath(this.graph.adjacency, hubVertexIndex, node.vertexIndex),
+        );
+      }
+    }
   }
 
   private animate(): void {
@@ -226,6 +258,35 @@ export class MeshScene {
   /** The placed nav nodes (hub + others). */
   getPlacedNavNodes(): PlacedNavNode[] {
     return this.placedNavNodes;
+  }
+
+  /**
+   * Highlight the shortest path from hub to a nav node, or clear all highlights.
+   * Only runs on hover state change, not every frame.
+   */
+  highlightPath(targetVertexIndex: number | null): void {
+    if (!this.highlightAttr) return;
+    const data = this.highlightAttr.array as Float32Array;
+
+    // Zero out entire buffer
+    data.fill(0);
+
+    if (targetVertexIndex !== null) {
+      const path = this.navPaths.get(targetVertexIndex);
+      if (path && path.length > 1) {
+        const edgeKeys = pathToEdgeKeys(path);
+        for (const key of edgeKeys) {
+          const edgeIdx = this.edgeKeyToIndex.get(key);
+          if (edgeIdx !== undefined) {
+            // 2 vertices per edge, both get highlight = 1.0
+            data[edgeIdx * 2] = 1.0;
+            data[edgeIdx * 2 + 1] = 1.0;
+          }
+        }
+      }
+    }
+
+    this.highlightAttr.needsUpdate = true;
   }
 
   /** Update renderer and camera on container resize */
