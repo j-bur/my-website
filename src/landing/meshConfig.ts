@@ -12,6 +12,7 @@ export const CLUSTER_COUNT = 1000;
 // --- World-space mesh dimensions ---
 export const MESH_WIDTH = 2000;
 export const MESH_DEPTH = 1200;
+export const HEIGHTMAP_RESOLUTION = 512;
 
 // --- Camera ---
 export const TILT_DEG = 35;
@@ -98,49 +99,81 @@ float snoise(vec3 v){
 }
 `;
 
-// --- Shared vertex shader body: uniforms, heightAt, displacement, lighting, alpha ---
-// Everything through the alpha calculation. Composed into VERT_SRC and POINT_VERT_SRC
-// with different endings. When Phase 5 rewrites the wave simulation, only this block
-// needs to change.
-const VERT_COMMON = /* glsl */ `
-uniform float uTime;
-uniform float uAlphaMin;
-uniform float uAlphaRange;
-uniform float uPointSize;
-varying float vAlpha;
-
-${NOISE_GLSL}
-
-// Height field: 6 traveling sine waves + 3 noise octaves for faceted detail
+// --- GLSL heightAt function (used only by the height field fragment shader) ---
+const HEIGHT_AT_GLSL = /* glsl */ `
 float heightAt(vec2 p, float t) {
   float z = 0.0;
-  // Large storm swells
   z += sin(dot(p, vec2( 0.0030, 0.0008)) + t * 0.50) * 45.0;
   z += sin(dot(p, vec2(-0.0022, 0.0018)) + t * 0.65) * 35.0;
   z += sin(dot(p, vec2( 0.0012,-0.0030)) + t * 0.40) * 25.0;
   z += sin(dot(p, vec2( 0.0050,-0.0010)) + t * 0.80) * 18.0;
   z += sin(dot(p, vec2(-0.0015,-0.0045)) + t * 0.55) * 15.0;
   z += sin(dot(p, vec2(-0.0035,-0.0105)) + t * 0.30) * 17.0;
-  // Choppy noise octaves
   z += snoise(vec3(p * 0.005, t * 0.25)) * 30.0;
   z += snoise(vec3(p * 0.012, t * 0.30 + 50.0)) * 18.0;
   z += snoise(vec3(p * 0.025, t * 0.20 + 100.0)) * 10.0;
   return z;
 }
+`;
+
+// --- Height field vertex shader (fullscreen quad passthrough) ---
+export const HEIGHT_VERT_SRC = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+// --- Height field fragment shader (renders height to texture) ---
+export const HEIGHT_FRAG_SRC = /* glsl */ `
+precision highp float;
+uniform float uTime;
+uniform vec2 uMapMin;
+uniform vec2 uMapSize;
+varying vec2 vUv;
+
+${NOISE_GLSL}
+${HEIGHT_AT_GLSL}
+
+void main() {
+  vec2 worldXZ = uMapMin + vUv * uMapSize;
+  float h = heightAt(worldXZ, uTime);
+  gl_FragColor = vec4(h, 0.0, 0.0, 1.0);
+}
+`;
+
+// --- Shared vertex shader body: uniforms, displacement texture sampling, lighting, alpha ---
+// Everything through the alpha calculation. Composed into VERT_SRC and POINT_VERT_SRC
+// with different endings. When Phase 5 rewrites the wave simulation, only the
+// HEIGHT_FRAG_SRC heightAt function needs to change.
+const VERT_COMMON = /* glsl */ `
+uniform float uTime;
+uniform float uAlphaMin;
+uniform float uAlphaRange;
+uniform float uPointSize;
+uniform sampler2D uHeightMap;
+uniform vec2 uMapMin;
+uniform vec2 uMapSize;
+varying float vAlpha;
+
+float sampleHeight(vec2 worldXZ) {
+  vec2 uv = (worldXZ - uMapMin) / uMapSize;
+  return texture2D(uHeightMap, uv).r;
+}
 
 void main() {
   vec2 basePos = position.xz;
-  float t = uTime;
 
-  // Displace Y by height field
-  float h = heightAt(basePos, t);
+  // Displace Y by height field (sampled from displacement texture)
+  float h = sampleHeight(basePos);
   vec3 displaced = vec3(position.x, h, position.z);
 
-  // Surface normal via finite differences
-  float eps = 3.0;
-  float hx = heightAt(basePos + vec2(eps, 0.0), t);
-  float hz = heightAt(basePos + vec2(0.0, eps), t);
-  vec3 normal = normalize(vec3((h - hx) / eps, 1.0, (h - hz) / eps));
+  // Surface normal via finite differences (1 texel offset)
+  vec2 texelSize = uMapSize / ${HEIGHTMAP_RESOLUTION}.0;
+  float hx = sampleHeight(basePos + vec2(texelSize.x, 0.0));
+  float hz = sampleHeight(basePos + vec2(0.0, texelSize.y));
+  vec3 normal = normalize(vec3((h - hx) / texelSize.x, 1.0, (h - hz) / texelSize.y));
 
   // Directional light from upper-left (Y-up coordinate system)
   vec3 lightDir = normalize(vec3(-0.4, 0.8, -0.3));

@@ -3,11 +3,12 @@ import Delaunator from 'delaunator';
 import {
   COLS, ROWS, JITTER, OVERSCAN, OVERSCAN_FAR,
   SCATTER_COUNT, CLUSTER_COUNT,
-  MESH_WIDTH, MESH_DEPTH,
+  MESH_WIDTH, MESH_DEPTH, HEIGHTMAP_RESOLUTION,
   CAMERA_FOV, CAMERA_HEIGHT, CAMERA_Z, CAMERA_LOOK_AT_Z,
   TRI_ALPHA, EDGE_ALPHA, POINT_ALPHA, POINT_SIZE,
   VERT_SRC, POINT_VERT_SRC, FRAG_SRC,
   EDGE_VERT_SRC, EDGE_FRAG_SRC,
+  HEIGHT_VERT_SRC, HEIGHT_FRAG_SRC,
   NAV_NODES, HUB_NODE_INDEX,
 } from './meshConfig';
 import { buildMeshGraph, edgeKey, type MeshGraph } from './meshGraph';
@@ -53,6 +54,16 @@ export class MeshScene {
   private hoveredNode: PlacedNavNode | null = null;
   private isNavNodeAttr: THREE.BufferAttribute | null = null;
 
+  // Phase 4: displacement texture
+  private heightTarget: THREE.WebGLRenderTarget;
+  private heightScene: THREE.Scene;
+  private heightCamera: THREE.OrthographicCamera;
+  private heightMat: THREE.ShaderMaterial;
+  private mapMin = new THREE.Vector2();
+  private mapSize = new THREE.Vector2(1, 1);
+  private frameCount = 0;
+  private lastFpsTime = 0;
+
   constructor(canvas: HTMLCanvasElement) {
     // Renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -72,14 +83,48 @@ export class MeshScene {
     // Scene
     this.scene = new THREE.Scene();
 
+    // Height field render target (displacement texture)
+    this.heightTarget = new THREE.WebGLRenderTarget(
+      HEIGHTMAP_RESOLUTION, HEIGHTMAP_RESOLUTION, {
+        type: THREE.FloatType,
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+      },
+    );
+
+    // Height field scene (fullscreen quad)
+    this.heightCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 2);
+    this.heightCamera.position.z = 1;
+    this.heightScene = new THREE.Scene();
+
     // Shared shader uniforms (each material gets its own alpha range)
     const sharedUniforms = {
       uTime: { value: 0 },
     };
 
-    this.triMat = this.createMaterial(sharedUniforms, TRI_ALPHA.min, TRI_ALPHA.range, 1.0, VERT_SRC);
-    this.edgeMat = this.createMaterial(sharedUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0, EDGE_VERT_SRC, EDGE_FRAG_SRC);
-    this.pointMat = this.createMaterial(sharedUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC);
+    this.heightMat = new THREE.ShaderMaterial({
+      vertexShader: HEIGHT_VERT_SRC,
+      fragmentShader: HEIGHT_FRAG_SRC,
+      uniforms: {
+        uTime: sharedUniforms.uTime,
+        uMapMin: { value: this.mapMin },
+        uMapSize: { value: this.mapSize },
+      },
+      depthWrite: false,
+      depthTest: false,
+    });
+    this.heightScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.heightMat));
+
+    // Height map uniforms shared by all mesh materials
+    const heightUniforms = {
+      uHeightMap: { value: this.heightTarget.texture },
+      uMapMin: { value: this.mapMin },
+      uMapSize: { value: this.mapSize },
+    };
+
+    this.triMat = this.createMaterial(sharedUniforms, heightUniforms, TRI_ALPHA.min, TRI_ALPHA.range, 1.0, VERT_SRC);
+    this.edgeMat = this.createMaterial(sharedUniforms, heightUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0, EDGE_VERT_SRC, EDGE_FRAG_SRC);
+    this.pointMat = this.createMaterial(sharedUniforms, heightUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC);
 
     this.buildMesh();
 
@@ -89,6 +134,11 @@ export class MeshScene {
 
   private createMaterial(
     sharedUniforms: { uTime: { value: number } },
+    heightUniforms: {
+      uHeightMap: { value: THREE.Texture };
+      uMapMin: { value: THREE.Vector2 };
+      uMapSize: { value: THREE.Vector2 };
+    },
     alphaMin: number,
     alphaRange: number,
     pointSize: number,
@@ -100,6 +150,9 @@ export class MeshScene {
       fragmentShader,
       uniforms: {
         uTime: sharedUniforms.uTime,
+        uHeightMap: heightUniforms.uHeightMap,
+        uMapMin: heightUniforms.uMapMin,
+        uMapSize: heightUniforms.uMapSize,
         uAlphaMin: { value: alphaMin },
         uAlphaRange: { value: alphaRange },
         uPointSize: { value: pointSize },
@@ -154,6 +207,22 @@ export class MeshScene {
     }
 
     const nPts = pts2d.length / 2;
+
+    // --- Compute world-space bounds for displacement texture ---
+    let minX = Infinity, maxX = -Infinity;
+    let minZ = Infinity, maxZ = -Infinity;
+    for (let i = 0; i < nPts; i++) {
+      const x = pts2d[i * 2];
+      const z = pts2d[i * 2 + 1];
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (z < minZ) minZ = z;
+      if (z > maxZ) maxZ = z;
+    }
+    const padX = (maxX - minX) * 0.02;
+    const padZ = (maxZ - minZ) * 0.02;
+    this.mapMin.set(minX - padX, minZ - padZ);
+    this.mapSize.set((maxX - minX) + 2 * padX, (maxZ - minZ) + 2 * padZ);
 
     // --- Delaunay triangulation ---
     const coordsForDelaunay: [number, number][] = [];
@@ -239,9 +308,26 @@ export class MeshScene {
 
   private animate(): void {
     const t = this.clock.getElapsedTime();
-    // All three materials share the same uTime uniform object
+
+    // FPS counter (dev-only)
+    if (import.meta.env.DEV) {
+      this.frameCount++;
+      if (t - this.lastFpsTime >= 2.0) {
+        console.log(`FPS: ${(this.frameCount / (t - this.lastFpsTime)).toFixed(1)}`);
+        this.frameCount = 0;
+        this.lastFpsTime = t;
+      }
+    }
+
+    // All materials (including heightMat) share the same uTime uniform object
     this.triMat.uniforms.uTime.value = t;
 
+    // Pass 1: render height field to displacement texture
+    this.renderer.setRenderTarget(this.heightTarget);
+    this.renderer.render(this.heightScene, this.heightCamera);
+    this.renderer.setRenderTarget(null);
+
+    // Pass 2: render mesh (all 3 materials sample from displacement texture)
     // Project nav labels before render so DOM and canvas are composited in sync
     if (this.placedNavNodes.length > 0) {
       const projections = projectNavNodes(
@@ -396,7 +482,12 @@ export class MeshScene {
     this.edgeMat.dispose();
     this.pointMat.dispose();
 
+    // Height field resources
+    this.heightTarget.dispose();
+    this.heightMat.dispose();
+
     this.scene.clear();
+    this.heightScene.clear();
     this.renderer.dispose();
   }
 }

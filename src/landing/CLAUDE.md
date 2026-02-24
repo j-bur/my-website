@@ -59,8 +59,8 @@ No `simplex-noise` — noise is computed in GLSL on the GPU. CPU-side noise (in 
 ### Key Design Decisions
 
 - **GPU displacement via ShaderMaterial** — all vertex displacement, normal computation, and lighting happen in the vertex shader. No CPU-side vertex updates per frame.
-- **Composable vertex shaders** — `VERT_COMMON` in `meshConfig.ts` contains the shared body (uniforms, heightAt, displacement, lighting, alpha calculation). `VERT_SRC`, `POINT_VERT_SRC`, and any future per-pass shaders (e.g. `EDGE_VERT_SRC`) compose from it with different endings. This ensures wave simulation changes (Phase 5) only need one edit.
-- **Displacement texture** (Phase 4) — height field rendered to a texture once per frame, sampled by all vertex shaders, eliminating redundant noise computation.
+- **Composable vertex shaders** — `VERT_COMMON` in `meshConfig.ts` contains the shared body (uniforms, displacement texture sampling, lighting, alpha calculation). `VERT_SRC`, `POINT_VERT_SRC`, and `EDGE_VERT_SRC` compose from it with different endings. Wave simulation changes (Phase 5) only need to modify `HEIGHT_AT_GLSL` in `meshConfig.ts`.
+- **Displacement texture** (Phase 4, implemented) — height field rendered to a 512×512 `FloatType` texture once per frame via `HEIGHT_FRAG_SRC`, sampled by all vertex shaders via `sampleHeight()`, eliminating redundant noise computation. Mesh bounds computed from point cloud with 2% padding.
 - **Nav nodes are mesh vertices** — positioned via BFS from a hub node, not CSS overlays.
 - **Three.js handles projection** — PerspectiveCamera replaces the mockup's custom landscape camera math.
 - **ResizeObserver** for responsive canvas sizing.
