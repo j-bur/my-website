@@ -10,7 +10,7 @@ import {
   EDGE_VERT_SRC, EDGE_FRAG_SRC,
   NAV_NODES, HUB_NODE_INDEX,
 } from './meshConfig';
-import { buildMeshGraph, type MeshGraph } from './meshGraph';
+import { buildMeshGraph, edgeKey, type MeshGraph } from './meshGraph';
 import { placeNavNodes, projectNavNodes, type PlacedNavNode, type NavProjection } from './navNodes';
 import { findPath, pathToEdgeKeys } from './pathfinding';
 
@@ -186,8 +186,7 @@ export class MeshScene {
       edgePositions[ei++] = positions[q * 3];
       edgePositions[ei++] = positions[q * 3 + 1];
       edgePositions[ei++] = positions[q * 3 + 2];
-      // Map edge key to buffer index (index into aHighlight array)
-      const key = p < q ? p * 1_000_000 + q : q * 1_000_000 + p;
+      const key = edgeKey(p, q);
       this.edgeKeyToIndex.set(key, edgeIdx);
     }
     const edgeGeom = new THREE.BufferGeometry();
