@@ -201,14 +201,16 @@ export class MeshScene {
     const t = this.clock.getElapsedTime();
     // All three materials share the same uTime uniform object
     this.triMat.uniforms.uTime.value = t;
-    this.renderer.render(this.scene, this.camera);
 
+    // Project nav labels before render so DOM and canvas are composited in sync
     if (this.frameCallback && this.placedNavNodes.length > 0) {
       const projections = projectNavNodes(
         this.placedNavNodes, t, this.camera, this.canvasWidth, this.canvasHeight,
       );
       this.frameCallback(projections, t);
     }
+
+    this.renderer.render(this.scene, this.camera);
   }
 
   /** Graph data structure built from the Delaunay triangulation. */
