@@ -113,4 +113,4 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 
 ## Technical Debt
 
-- [ ] **P3** | **S** | **TECH-01: App.tsx coupled to siphon**: `App.tsx` imports `useReducedMotion` from `src/siphon/hooks/` and hardcodes `bg-siphon-bg`. When the landing page route is added, the app shell should be neutral (e.g., `bg-black`) with each feature applying its own background. Extract `useReducedMotion` to a shared location or make it feature-agnostic.
+- [x] **P3** | **S** | **TECH-01: App.tsx coupled to siphon**: Resolved — `App.tsx` is now a neutral shell (`min-h-screen text-white`). Siphon routes wrapped in `SiphonLayout` which applies `bg-siphon-bg` and `reduce-motion`. Landing page applies `bg-black` via its own component.

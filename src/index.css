@@ -44,7 +44,7 @@
   font-weight: 400;
   color-scheme: dark;
   color: var(--color-text-primary);
-  background-color: var(--color-siphon-bg);
+  background-color: #000;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -269,6 +269,36 @@ body {
 .warp-pulse {
   animation: warp-pulse 1s ease-in-out infinite;
   border-radius: 0.5rem;
+}
+
+/* Landing page anchor nodes */
+.anchor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  z-index: 10;
+  cursor: pointer;
+  transition: filter 0.3s, text-shadow 0.3s;
+}
+.anchor:hover {
+  filter: brightness(1.4);
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+}
+.anchor-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.2);
+}
+.anchor:hover .anchor-dot {
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.4);
 }
 
 /* Programmatic reduced motion (applied via settingsStore) */

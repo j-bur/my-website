@@ -1,0 +1,176 @@
+// Landing page mesh configuration — constants ported from source/landing-mockup.html
+
+// --- Grid & mesh generation ---
+export const COLS = 44;
+export const ROWS = 32;
+export const JITTER = 0.85;
+export const OVERSCAN = 32;
+export const OVERSCAN_FAR = 100;
+export const SCATTER_COUNT = 1050;
+export const CLUSTER_COUNT = 1000;
+
+// --- World-space mesh dimensions ---
+export const MESH_WIDTH = 2000;
+export const MESH_DEPTH = 1200;
+
+// --- Camera ---
+export const TILT_DEG = 35;
+export const CAMERA_FOV = 70;
+// Camera positioned above the near edge, looking toward the far edge
+// Height/distance ratio ≈ tan(35°) for the desired tilt angle
+export const CAMERA_HEIGHT = 500;
+export const CAMERA_Z = 700;
+export const CAMERA_LOOK_AT_Z = -100;
+
+// --- Alpha ranges for the three render passes ---
+export const TRI_ALPHA = { min: 0.0, range: 0.12 };
+export const EDGE_ALPHA = { min: 0.01, range: 0.55 };
+export const POINT_ALPHA = { min: 0.02, range: 0.95 };
+export const POINT_SIZE = 1.5;
+
+// --- Anchor nodes ---
+export interface AnchorNode {
+  label: string;
+  url: string;
+  external: boolean;
+  /** CSS positioning */
+  style: { top?: string; left?: string; right?: string; bottom?: string; transform?: string };
+}
+
+export const ANCHORS: AnchorNode[] = [
+  {
+    label: 'FoundryVTT',
+    url: 'https://foundry.jamesburns.cc',
+    external: true,
+    style: { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
+  },
+  {
+    label: 'Gauldurg',
+    url: '/#/deck-builder',
+    external: false,
+    style: { top: '12%', right: '10%' },
+  },
+];
+
+// --- GLSL Simplex Noise (Ashima Arts / Stefan Gustavson, MIT) ---
+const NOISE_GLSL = /* glsl */ `
+vec3 mod289v3(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 mod289v4(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289v4(((x*34.0)+10.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+float snoise(vec3 v){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0);
+  const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy));
+  vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz);
+  vec3 l=1.0-g;
+  vec3 i1=min(g.xyz,l.zxy);
+  vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+C.xxx;
+  vec3 x2=x0-i2+C.yyy;
+  vec3 x3=x0-D.yyy;
+  i=mod289v3(i);
+  vec4 p=permute(permute(permute(
+    i.z+vec4(0.0,i1.z,i2.z,1.0))
+    +i.y+vec4(0.0,i1.y,i2.y,1.0))
+    +i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=0.142857142857;
+  vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z);
+  vec4 x_=floor(j*ns.z);
+  vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy;
+  vec4 y=y_*ns.x+ns.yyyy;
+  vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy);
+  vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0;
+  vec4 s1=floor(b1)*2.0+1.0;
+  vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
+  vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 p0=vec3(a0.xy,h.x);
+  vec3 p1=vec3(a0.zw,h.y);
+  vec3 p2=vec3(a1.xy,h.z);
+  vec3 p3=vec3(a1.zw,h.w);
+  vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+  p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
+  vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+  m=m*m;
+  return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+}
+`;
+
+// --- Vertex shader: ocean surface with directional lighting ---
+// Adapted from mockup — uses Three.js projection instead of custom landscape camera
+export const VERT_SRC = /* glsl */ `
+uniform float uTime;
+uniform float uAlphaMin;
+uniform float uAlphaRange;
+uniform float uPointSize;
+varying float vAlpha;
+
+${NOISE_GLSL}
+
+// Height field: 6 traveling sine waves + 3 noise octaves for faceted detail
+float heightAt(vec2 p, float t) {
+  float z = 0.0;
+  // Large storm swells
+  z += sin(dot(p, vec2( 0.0030, 0.0008)) + t * 0.50) * 45.0;
+  z += sin(dot(p, vec2(-0.0022, 0.0018)) + t * 0.65) * 35.0;
+  z += sin(dot(p, vec2( 0.0012,-0.0030)) + t * 0.40) * 25.0;
+  z += sin(dot(p, vec2( 0.0050,-0.0010)) + t * 0.80) * 18.0;
+  z += sin(dot(p, vec2(-0.0015,-0.0045)) + t * 0.55) * 15.0;
+  z += sin(dot(p, vec2(-0.0035,-0.0105)) + t * 0.30) * 17.0;
+  // Choppy noise octaves
+  z += snoise(vec3(p * 0.005, t * 0.25)) * 30.0;
+  z += snoise(vec3(p * 0.012, t * 0.30 + 50.0)) * 18.0;
+  z += snoise(vec3(p * 0.025, t * 0.20 + 100.0)) * 10.0;
+  return z;
+}
+
+void main() {
+  vec2 basePos = position.xz;
+  float t = uTime;
+
+  // Displace Y by height field
+  float h = heightAt(basePos, t);
+  vec3 displaced = vec3(position.x, h, position.z);
+
+  // Surface normal via finite differences
+  float eps = 3.0;
+  float hx = heightAt(basePos + vec2(eps, 0.0), t);
+  float hz = heightAt(basePos + vec2(0.0, eps), t);
+  vec3 normal = normalize(vec3((h - hx) / eps, 1.0, (h - hz) / eps));
+
+  // Directional light from upper-left (Y-up coordinate system)
+  vec3 lightDir = normalize(vec3(-0.4, 0.8, -0.3));
+  float lighting = max(dot(normal, lightDir), 0.0);
+
+  // Three.js projection
+  vec4 mvPos = modelViewMatrix * vec4(displaced, 1.0);
+  gl_Position = projectionMatrix * mvPos;
+
+  // Distance fade based on camera distance
+  float camDist = -mvPos.z;
+  float distFade = clamp(600.0 / camDist, 0.22, 1.0);
+
+  // Per-vertex random brightness
+  float hash = fract(sin(dot(floor(basePos), vec2(12.9898, 78.233))) * 43758.5453);
+  float vertBright = 0.5 + hash * 0.5;
+
+  // Final alpha from lighting + distance + vertex variation
+  float alpha = (0.04 + lighting * 0.8) * distFade * vertBright;
+  gl_PointSize = uPointSize + alpha * 4.0;
+  vAlpha = uAlphaMin + alpha * uAlphaRange;
+}
+`;
+
+export const FRAG_SRC = /* glsl */ `
+precision mediump float;
+varying float vAlpha;
+void main() {
+  gl_FragColor = vec4(1.0, 1.0, 1.0, vAlpha);
+}
+`;

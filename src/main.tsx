@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { createHashRouter, RouterProvider } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
-import { HomeRedirect } from './siphon/components/HomeRedirect.tsx'
+import { LandingPage } from './landing/LandingPage.tsx'
+import { SiphonLayout } from './siphon/components/SiphonLayout.tsx'
 import { CombatHUD } from './siphon/components/combat-hud'
 import { DeckBuilder } from './siphon/components/deck-builder'
 
@@ -12,9 +13,14 @@ const router = createHashRouter([
     path: '/',
     element: <App />,
     children: [
-      { index: true, element: <HomeRedirect /> },
-      { path: 'combat', element: <CombatHUD /> },
-      { path: 'deck-builder', element: <DeckBuilder /> },
+      { index: true, element: <LandingPage /> },
+      {
+        element: <SiphonLayout />,
+        children: [
+          { path: 'combat', element: <CombatHUD /> },
+          { path: 'deck-builder', element: <DeckBuilder /> },
+        ],
+      },
     ],
   },
 ]);

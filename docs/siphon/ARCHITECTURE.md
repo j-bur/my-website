@@ -22,10 +22,16 @@ This document describes the technical architecture of The Siphon Interface.
 
 ```
 src/
-├── App.tsx                          # Layout wrapper with <Outlet />
+├── App.tsx                          # Neutral layout wrapper with <Outlet />
 ├── main.tsx                         # Entry point with createHashRouter
 ├── index.css                        # Global styles and Tailwind
 ├── setupTests.ts                    # Vitest setup for jest-dom matchers
+├── landing/                         # Landing page — Three.js wireframe mesh
+│   ├── CLAUDE.md                    # Landing page AI instructions
+│   ├── LandingPage.tsx              # Route component (canvas + HTML anchor overlays)
+│   ├── MeshScene.ts                 # Pure Three.js scene, animation loop, dispose
+│   ├── meshConfig.ts                # Constants, anchors, GLSL shader sources
+│   └── delaunator.d.ts             # TypeScript declarations for delaunator
 └── siphon/                          # Echo Siphon companion app
     ├── CLAUDE.md                    # Siphon-specific AI instructions
     ├── components/
@@ -177,8 +183,9 @@ Four Zustand stores manage application state. All stores persist to localStorage
 ### Current Structure (Phase 8D Complete)
 
 ```
-App (layout wrapper with <Outlet />)
-├── HomeRedirect (/ → /combat or /deck-builder)
+App (neutral layout wrapper with <Outlet />)
+├── LandingPage (/ — Three.js wireframe mesh + anchor overlays)
+├── SiphonLayout (siphon route wrapper — bg-siphon-bg + reduce-motion)
 ├── DeckBuilder (/deck-builder)
 │   ├── CharacterHeader (Level, Max HP, PB, EP Max inputs)
 │   ├── CollectionGrid (42 cards, filter + search)
@@ -228,14 +235,15 @@ App (layout wrapper with <Outlet />)
 
 | Route | Component | Description |
 |-------|-----------|-------------|
-| `/#/` | `HomeRedirect` | Redirects to `/#/combat` if `selectedCardIds` has cards, otherwise `/#/deck-builder` |
-| `/#/combat` | `CombatHUD` | Combat view (main gameplay) |
-| `/#/deck-builder` | `DeckBuilder` | Character setup + card selection |
+| `/#/` | `LandingPage` | Three.js wireframe mesh with anchor overlays |
+| `/#/combat` | `SiphonLayout` → `CombatHUD` | Combat view (main gameplay) |
+| `/#/deck-builder` | `SiphonLayout` → `DeckBuilder` | Character setup + card selection |
 
 Navigation flow:
-1. App loads → `HomeRedirect` → Deck Builder (if no deck) or Combat (if deck exists)
-2. Deck Builder → "Enter Combat" → Combat
-3. Combat → Grimoire (right sidebar bottom) → Deck Builder
+1. App loads → Landing page with FoundryVTT and Gauldurg anchors
+2. Gauldurg anchor → Deck Builder
+3. Deck Builder → "Enter Combat" → Combat
+4. Combat → Grimoire (right sidebar bottom) → Deck Builder
 
 ---
 

@@ -2,85 +2,80 @@
 
 Animated wireframe mesh landing page for jamesburns.cc. Full-viewport Three.js scene with interactive navigation nodes.
 
-**Status**: Not yet implemented.
+**Status**: Implemented (v1). Visual tuning may be needed — camera angle, mesh density, lighting parameters.
 
 ---
 
 ## Design Vision
 
-Recreate the aesthetic of `source/3d-rendering-abstract-black-white-background.jpg` as a live, animated wireframe mesh — a Delaunay triangulation of points viewed at a slight perspective angle, with vertex displacement creating a gentle water-surface undulation.
+Recreate the aesthetic of `source/3d-rendering-abstract-black-white-background.jpg` as a live, animated wireframe mesh — a Delaunay triangulation of points on a stormy ocean surface with directional lighting, viewed at perspective from above.
 
 ### Visual
 
-- **Mesh**: ~200-400 points scattered across viewport in a semi-regular grid with jitter, triangulated via Delaunay
-- **Animation**: Simplex noise drives continuous vertex Z-displacement. Low frequency, slow time progression, 2 octaves. Top-down with perspective tilt (~15-25 degrees), so displacement reads as subtle X/Y drift + brightness/opacity variation (brighter = closer to surface)
-- **Lines**: Thin white/gray edges between vertices. Alpha varies with vertex "height"
-- **Nodes**: Small circles at vertices. Most are ambient; a few are interactive anchor nodes
-- **Background**: Black (`#000000`) or near-black, distinct from the Siphon app's `#161418`
-- **Atmosphere**: The original `index.html` had flavor text "This demiplane holds only a door." — atmospheric text can float subtly over the mesh
+- **Mesh**: Thousands of points (grid + jitter + clusters + scatter), Delaunay-triangulated
+- **Three render passes**: Filled triangles (subtle lit surface, alpha 0–0.12), wireframe edges (alpha 0.01–0.55), vertex dots (alpha 0.02–0.95)
+- **Animation**: 6 directional sine waves + 3 simplex noise octaves drive vertex Y-displacement on the GPU via custom ShaderMaterial
+- **Lighting**: Directional light computed from surface normals (finite differences in vertex shader)
+- **Camera**: PerspectiveCamera at ~35° tilt, positioned above the near edge looking toward the far edge
+- **Background**: Black (`#000000`)
+- **No reduced-motion handling** — user preference (OS setting is irrelevant for this site)
 
-### Anchor Nodes (Interactive)
+### Anchor Nodes
 
-Specific mesh vertices pinned to approximate viewport positions. Visually distinct: larger, glowing, labeled. Click/tap navigates.
+HTML overlay elements with fixed CSS positioning:
 
-Planned anchors:
-- **Echo Siphon** — internal link to `/#/deck-builder` (or `/#/combat` if deck exists)
-- **FoundryVTT** — external link to `https://foundry.jamesburns.cc`
-- (More can be added as the site grows)
-
-Labels rendered as HTML overlay (React), positioned by projecting 3D anchor coordinates to screen space each frame.
+| Label | Position | Link | Type |
+|-------|----------|------|------|
+| FoundryVTT | Center of viewport | `https://foundry.jamesburns.cc` | External |
+| Gauldurg | Top-right area | `/#/deck-builder` | Internal |
 
 ---
 
-## Technical Approach
-
-### Dependencies to Add
-
-| Package | Size | Purpose |
-|---------|------|---------|
-| `three` | ~150KB min | 3D scene, camera, raycasting |
-| `delaunator` | ~4KB | Delaunay triangulation from point set |
-| `simplex-noise` | ~3KB | Smooth noise for wave animation |
-
-### Architecture
+## Architecture
 
 ```
 src/landing/
   CLAUDE.md              # This file
-  LandingPage.tsx        # Route component — canvas + HTML overlay
-  MeshScene.ts           # Three.js scene setup, animation loop, anchor raycasting
-  meshConfig.ts          # Point count, noise params, camera angle, anchor definitions
+  LandingPage.tsx        # React route component — canvas + HTML anchor overlays
+  MeshScene.ts           # Pure Three.js scene: renderer, camera, mesh, render loop, dispose
+  meshConfig.ts          # Constants, anchor definitions, GLSL shader sources
+  delaunator.d.ts        # TypeScript declarations for delaunator package
 ```
 
-- `LandingPage.tsx` — React component mounted at `/#/` route (replaces current `HomeRedirect`). Renders a `<canvas>` ref passed to `MeshScene`, plus a positioned HTML overlay for anchor labels.
-- `MeshScene.ts` — Pure Three.js (no React dependency). Creates scene, camera, renderer, geometry. Owns the `requestAnimationFrame` loop. Exposes methods for resize, cleanup, and hover/click hit-testing.
-- `meshConfig.ts` — Constants: point density, noise frequency/amplitude/speed, camera FOV/angle, anchor node definitions (label, position, URL).
+### Dependencies
 
-### Three.js Scene Details
+| Package | Purpose |
+|---------|---------|
+| `three` | 3D scene, camera, ShaderMaterial, renderer |
+| `delaunator` | Delaunay triangulation from point set |
 
-- **Geometry**: `BufferGeometry` with positions from the Delaunay point set. Wireframe rendered via `LineSegments` + `LineBasicMaterial`. Nodes rendered as `Points` + `PointsMaterial`.
-- **Camera**: `PerspectiveCamera`, positioned above and slightly angled (tilt ~15-25 degrees). Orthographic is also viable if parallax feels too strong.
-- **Animation loop**: Each frame, update vertex Z positions using `createNoise3D(x, y, time)`. Update buffer attribute, set `needsUpdate = true`.
-- **Raycasting**: On pointer move, raycast against anchor node positions. On hit, set cursor to pointer and highlight node. On click, navigate.
-- **Resize**: `ResizeObserver` on canvas parent. Update camera aspect + renderer size.
+No `simplex-noise` — noise is computed in GLSL on the GPU.
 
-### Reduced Motion
+### Key Design Decisions
 
-When `prefers-reduced-motion` is active (or the setting is enabled):
-- Render the mesh statically (no animation loop, just one frame)
-- Anchor nodes still interactive
+- **GPU displacement via ShaderMaterial** — all vertex displacement, normal computation, and lighting happen in the vertex shader. No CPU-side vertex updates per frame.
+- **HTML anchor overlays** — positioned with CSS, not projected from 3D coordinates. Simple and proven from the mockup phase.
+- **Three.js handles projection** — PerspectiveCamera replaces the mockup's custom landscape camera math.
+- **ResizeObserver** for responsive canvas sizing.
 
-### Routing Change
+### Routing
 
-Currently `/#/` renders `HomeRedirect` which redirects to combat or deck-builder. With the landing page:
-- `/#/` renders `LandingPage`
-- `/#/combat` and `/#/deck-builder` unchanged
-- The Echo Siphon anchor node on the landing page handles the smart redirect logic (deck-builder if no deck, combat if deck exists)
+- `/#/` → `LandingPage` (index route)
+- Siphon routes (`/#/combat`, `/#/deck-builder`) wrapped in `SiphonLayout` which applies `bg-siphon-bg` and `reduce-motion`
+- `App.tsx` is a neutral shell (`min-h-screen text-white`, no feature-specific styling)
 
-### App Shell Note
+### Reference
 
-`App.tsx` currently hardcodes `bg-siphon-bg` and imports `useReducedMotion` from siphon. Before or during landing page implementation:
-- Make the app shell background neutral (`bg-black` or transparent)
-- Extract `useReducedMotion` to a shared location, or have each feature manage its own background
+The static HTML mockup at `source/landing-mockup.html` was the visual prototype. The GLSL shaders in `meshConfig.ts` are ported directly from it.
 
-See `docs/siphon/BACKLOG.md` item **TECH-01** for tracking.
+---
+
+## Tuning Notes for Future Sessions
+
+The v1 port uses Three.js's PerspectiveCamera which behaves differently from the mockup's custom projection. Areas that may need adjustment:
+
+- **Camera FOV/position** — controls how much of the mesh is visible and the foreshortening
+- **Distance fade** — the `600.0 / camDist` reference distance in the shader may need tuning
+- **Mesh density** — the mockup had perspective-compensated row spacing; Three.js may need similar treatment if bottom rows look stretched
+- **Edge visibility** — the mockup used `clip *= 1.3` zoom; Three.js equivalent is camera positioning
+- **Chunk size** — Three.js adds ~150KB; consider lazy-loading the landing page route
