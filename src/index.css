@@ -288,7 +288,7 @@ body {
   transition: opacity 0.3s;
 }
 .nav-label a {
-  pointer-events: auto;
+  pointer-events: none;
   text-decoration: none;
   color: inherit;
   transition: filter 0.3s, text-shadow 0.3s;

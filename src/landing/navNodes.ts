@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import type { NavNodeDef } from './meshConfig';
 import { NAV_PLACEMENT, HUB_NODE_INDEX } from './meshConfig';
 import type { MeshGraph } from './meshGraph';
-import { heightAt } from './heightField';
 
 export interface PlacedNavNode extends NavNodeDef {
   vertexIndex: number;
@@ -150,19 +149,20 @@ const _vec3 = new THREE.Vector3();
 
 /**
  * Project placed nav nodes from 3D world space to screen pixel coordinates.
- * Uses the CPU heightAt() to compute current Y displacement matching the GPU shader.
+ * Accepts pre-computed Y heights (sampled from the GPU height map texture)
+ * so the labels track the actual displaced mesh position exactly.
  */
 export function projectNavNodes(
   nodes: PlacedNavNode[],
-  time: number,
+  heights: ArrayLike<number>,
   camera: THREE.PerspectiveCamera,
   width: number,
   height: number,
 ): NavProjection[] {
   const projections: NavProjection[] = [];
-  for (const node of nodes) {
-    const y = heightAt(node.baseX, node.baseZ, time);
-    _vec3.set(node.baseX, y, node.baseZ);
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    _vec3.set(node.baseX, heights[i], node.baseZ);
     _vec3.project(camera);
     // NDC to pixel coords
     const screenX = ((_vec3.x + 1) / 2) * width;

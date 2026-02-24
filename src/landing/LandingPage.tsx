@@ -25,7 +25,7 @@ export function LandingPage() {
         const el = labelRefs.current[i];
         if (!el) continue;
         const { screenX, screenY, node } = projections[i];
-        el.style.transform = `translate(${screenX}px, ${screenY - 24}px)`;
+        el.style.transform = `translate(${screenX - 4}px, ${screenY - 30}px)`;
 
         const isHub = i === HUB_NODE_INDEX;
         const isHovered = hovered !== null && node.vertexIndex === hovered.vertexIndex;

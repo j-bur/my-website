@@ -54,6 +54,9 @@ export class MeshScene {
   private hoveredNode: PlacedNavNode | null = null;
   private isNavNodeAttr: THREE.BufferAttribute | null = null;
 
+  // Reusable buffers for reading nav node heights from GPU height map
+  private _navPixelBuf = new Float32Array(4);
+
   // Phase 4: displacement texture
   private heightTarget: THREE.WebGLRenderTarget;
   private heightScene: THREE.Scene;
@@ -328,10 +331,21 @@ export class MeshScene {
     this.renderer.setRenderTarget(null);
 
     // Pass 2: render mesh (all 3 materials sample from displacement texture)
-    // Project nav labels before render so DOM and canvas are composited in sync
+    // Read nav node heights from the GPU height map so labels track the actual mesh
     if (this.placedNavNodes.length > 0) {
+      const navHeights = new Float32Array(this.placedNavNodes.length);
+      for (let i = 0; i < this.placedNavNodes.length; i++) {
+        const node = this.placedNavNodes[i];
+        const u = (node.baseX - this.mapMin.x) / this.mapSize.x;
+        const v = (node.baseZ - this.mapMin.y) / this.mapSize.y;
+        const px = Math.min(Math.floor(u * HEIGHTMAP_RESOLUTION), HEIGHTMAP_RESOLUTION - 1);
+        const py = Math.min(Math.floor(v * HEIGHTMAP_RESOLUTION), HEIGHTMAP_RESOLUTION - 1);
+        this.renderer.readRenderTargetPixels(this.heightTarget, px, py, 1, 1, this._navPixelBuf);
+        navHeights[i] = this._navPixelBuf[0];
+      }
+
       const projections = projectNavNodes(
-        this.placedNavNodes, t, this.camera, this.canvasWidth, this.canvasHeight,
+        this.placedNavNodes, navHeights, this.camera, this.canvasWidth, this.canvasHeight,
       );
       // Hover detection: find nearest nav node within screen-pixel threshold
       this.updateHover(projections);
