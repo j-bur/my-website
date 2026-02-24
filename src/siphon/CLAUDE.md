@@ -36,6 +36,12 @@ The code should match the design, not the other way around.
 
 ---
 
+## Siphon-Specific Constraints
+
+- Do NOT add illustrations or images to cards (typography and iconography only)
+- Do NOT implement real-time countdown timers (display total duration only)
+- Do NOT treat all bestows as Action + Touch (Superconduction is different)
+
 ## Siphon-Specific Testing
 
 In addition to the project-wide testing checklist:

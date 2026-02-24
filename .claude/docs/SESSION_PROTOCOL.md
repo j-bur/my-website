@@ -6,26 +6,32 @@ Every AI session working on this project must follow this protocol. No exception
 
 ## At Session Start (MANDATORY)
 
-### 1. Identify Your Work
-Read the feature-specific `CLAUDE.md` for the area you're working on (e.g., `src/siphon/CLAUDE.md`).
+### 1. Identify Your Feature
 
-**Phase work** (Siphon): Read the phase spec file for your assigned phase:
-```
-.claude/docs/siphon/PHASE_SPECS/phase-N-*.md
-```
-**Backlog work** (Siphon): Read `docs/siphon/BACKLOG.md` and identify the item(s) the user wants addressed. If none specified, suggest the highest-priority open items.
+Determine which feature you're working on and read its `CLAUDE.md`:
+
+| Feature | CLAUDE.md | Phase Specs | Tracking |
+|---------|-----------|-------------|----------|
+| Siphon | `src/siphon/CLAUDE.md` | `.claude/docs/siphon/PHASE_SPECS/` | `docs/siphon/IMPLEMENTATION_STATUS.md`, `docs/siphon/BACKLOG.md` |
+| Landing | `src/landing/CLAUDE.md` | `.claude/docs/landing/PHASE_SPECS/` | `docs/landing/IMPLEMENTATION_STATUS.md`, `docs/landing/BACKLOG.md` |
+
+**Phase work**: Read the phase spec file for your assigned phase.
+**Backlog work**: Read the feature's `BACKLOG.md` and identify the item(s) the user wants addressed. If none specified, suggest the highest-priority open items.
 
 If neither a phase nor backlog items are assigned, ask the user what to work on.
 
 ### 2. Check Entry Gate
+
 Every phase spec has Entry Conditions. Verify each one. If ANY condition fails, **STOP and report to the user**. Do not attempt workarounds.
 
 ### 3. Read Session Context
-- Read `docs/siphon/IMPLEMENTATION_STATUS.md` for what previous sessions completed
+
+- Read the feature's `IMPLEMENTATION_STATUS.md` for what previous sessions completed
 - Check the "Discovered Issues" section for anything relevant to your phase
 - Check the "Next Session" instructions at the bottom
 
 ### 4. Run Verification
+
 ```bash
 npm run build && npm run lint
 ```
@@ -38,6 +44,7 @@ npm run test
 If any test fails, **STOP and report**. Do not proceed with failing tests.
 
 ### 5. Announce Scope
+
 State explicitly to the user:
 - What you **will** do this session
 - What you **will not** do (reference the phase's "Out of Scope" section)
@@ -47,23 +54,26 @@ State explicitly to the user:
 ## During Session
 
 ### Work Incrementally
+
 1. Complete one file or one logical change before moving to the next
 2. Run `npm run build` after modifying any `.ts` or `.tsx` file
 3. Run relevant tests after each change (if tests exist for that area)
 
 ### No Scope Creep
+
 If you discover a bug or gap **outside your current work**:
-1. For phase work: add to `docs/siphon/IMPLEMENTATION_STATUS.md` under "Discovered Issues":
+1. For phase work: add to the feature's `IMPLEMENTATION_STATUS.md` under "Discovered Issues":
    ```
    - [DISCOVERY] <description> (found during Phase N, relevant to Phase M)
    ```
-2. For any work: add new items to `docs/siphon/BACKLOG.md` with appropriate `P#`, Size, and ID (use next available ID in that category).
+2. For any work: add new items to the feature's `BACKLOG.md` with appropriate `P#`, Size, and ID (use next available ID in that category).
 3. **Do NOT fix out-of-scope items** — mention them in your session summary.
 
 ### Checkpoint Commits
+
 After completing a logical sub-unit, suggest a checkpoint commit to the user. Format:
 ```
-Phase N.X: <brief description of what was completed>
+<feature> Phase N.X: <brief description of what was completed>
 ```
 
 ---
@@ -71,47 +81,29 @@ Phase N.X: <brief description of what was completed>
 ## At Session End (MANDATORY)
 
 ### 1. Run Full Verification
+
 ```bash
 npm run build && npm run lint && npm run test
 ```
-All three must pass. If `npm run test` doesn't exist yet (pre-Phase 0), skip it.
+All must pass. If `npm run test` has no tests for your feature, skip that check.
 
 ### 2. Update Tracking Documents
-**For phase work** — Update `docs/siphon/IMPLEMENTATION_STATUS.md`:
-- Mark completed tasks with checkmarks
-- Add any discovered issues
-- Write "Next Session" instructions
-- Log what was done in the Session Log
 
-**For backlog work** — Update `docs/siphon/BACKLOG.md`:
-- Mark resolved items `[x]` with a brief resolution note beneath
-- Mark items still in progress `[~]`
-- Add investigation **Notes** as sub-bullets beneath items you researched
-- Add any newly discovered items with the next available ID
+Update the feature's tracking docs (see the feature's `CLAUDE.md` for which docs to update):
+- **`IMPLEMENTATION_STATUS.md`**: Mark completed tasks, add discovered issues, write "Next Session" instructions, log what was done
+- **`BACKLOG.md`**: Mark resolved items `[x]`, items in progress `[~]`, add investigation notes as sub-bullets, add any newly discovered items
 
-### 3. Update Architecture Docs
-If you created new components, add them to `docs/siphon/ARCHITECTURE.md` (or the relevant feature's architecture doc).
+### 3. Update Architecture / Feature Docs
+
+If you created new components or modules, update the feature's architecture documentation (referenced in its `CLAUDE.md`).
 
 ### 4. Summarize to User
+
 Tell the user:
 - What was completed
 - What remains in this phase (if splitting across sessions)
 - Any decisions or blockers for the next session
 - Any discovered issues from other phases
-
----
-
-## Source of Truth Hierarchy (Siphon)
-
-When in doubt about how something should work:
-
-1. **`docs/siphon/DESIGN.md`** -- UI/UX specification, interaction flows, visual design
-2. **Source PDFs** (`source/` directory) -- Game mechanics, feature data
-3. **`.claude/docs/siphon/RULES.md`** -- Machine-readable behavioral rules
-4. **`.claude/docs/siphon/STORE_CONTRACTS.md`** -- Store interfaces and invariants
-5. **`.claude/docs/siphon/SPECIAL_CASES.md`** -- Feature-specific edge cases
-
-The code should match the design, not the other way around.
 
 ---
 
@@ -123,6 +115,3 @@ The code should match the design, not the other way around.
 - Do not skip the entry gate check
 - Do not skip the exit verification
 - Do not create documentation files unless specified in your phase
-- Do not add illustrations or images to cards (typography and iconography only)
-- Do not implement real-time countdown timers (display total duration only)
-- Do not treat all bestows as Action + Touch (Superconduction is different)

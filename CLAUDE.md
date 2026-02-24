@@ -53,8 +53,8 @@ Before marking work complete:
 ## Session Handoff
 
 Before ending a session:
-1. Update relevant tracking docs with progress
-2. Update `docs/siphon/ARCHITECTURE.md` if new components were created
+1. Update the feature's tracking docs with progress (see its `CLAUDE.md` for which docs)
+2. Update architecture/feature docs if new components or modules were created
 3. Summarize to user: what was done, what remains, decisions needed
 
 See `.claude/docs/SESSION_PROTOCOL.md` for the full protocol.

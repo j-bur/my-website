@@ -2,7 +2,7 @@
 
 Animated wireframe mesh landing page for jamesburns.cc. Full-viewport Three.js scene with interactive navigation nodes.
 
-**Status**: Implemented (v1). Visual tuning may be needed — camera angle, mesh density, lighting parameters.
+**Current State**: v1 implemented. Phases 0–6b planned for interactive nav nodes, path rendering, performance optimization, wave improvements, and cursor effects. Check `docs/landing/IMPLEMENTATION_STATUS.md` for the current phase and next steps.
 
 ---
 
@@ -14,20 +14,20 @@ Recreate the aesthetic of `source/3d-rendering-abstract-black-white-background.j
 
 - **Mesh**: Thousands of points (grid + jitter + clusters + scatter), Delaunay-triangulated
 - **Three render passes**: Filled triangles (subtle lit surface, alpha 0–0.12), wireframe edges (alpha 0.01–0.55), vertex dots (alpha 0.02–0.95)
-- **Animation**: 6 directional sine waves + 3 simplex noise octaves drive vertex Y-displacement on the GPU via custom ShaderMaterial
+- **Animation**: GPU vertex displacement via custom ShaderMaterial
 - **Lighting**: Directional light computed from surface normals (finite differences in vertex shader)
 - **Camera**: PerspectiveCamera at ~35° tilt, positioned above the near edge looking toward the far edge
 - **Background**: Black (`#000000`)
 - **No reduced-motion handling** — user preference (OS setting is irrelevant for this site)
 
-### Anchor Nodes
+### Navigation Nodes
 
-HTML overlay elements with fixed CSS positioning:
+Nav nodes are mesh vertices placed via BFS hop distance from a central hub (FoundryVTT). Labels are HTML elements positioned via 3D projection, following the wave animation.
 
-| Label | Position | Link | Type |
-|-------|----------|------|------|
-| FoundryVTT | Center of viewport | `https://foundry.jamesburns.cc` | External |
-| Gauldurg | Top-right area | `/#/deck-builder` | Internal |
+| Label | Role | Link | Type |
+|-------|------|------|------|
+| FoundryVTT | Hub (center vertex) | `https://foundry.jamesburns.cc` | External |
+| Gauldurg | Nav node (8–25 hops from hub) | `/#/deck-builder` | Internal |
 
 ---
 
@@ -36,10 +36,15 @@ HTML overlay elements with fixed CSS positioning:
 ```
 src/landing/
   CLAUDE.md              # This file
-  LandingPage.tsx        # React route component — canvas + HTML anchor overlays
+  LandingPage.tsx        # React route component — canvas + projected nav labels
   MeshScene.ts           # Pure Three.js scene: renderer, camera, mesh, render loop, dispose
-  meshConfig.ts          # Constants, anchor definitions, GLSL shader sources
+  meshConfig.ts          # Constants, nav node definitions, GLSL shader sources
   delaunator.d.ts        # TypeScript declarations for delaunator package
+  meshGraph.ts           # Graph data structure + adjacency builder (Phase 0)
+  heightField.ts         # CPU-side height function mirroring GPU shader (Phase 0)
+  navNodes.ts            # Nav node placement (BFS) + screen projection (Phase 1)
+  pathfinding.ts         # BFS shortest path + edge key conversion (Phase 2)
+  cursorInteraction.ts   # Lightning wavefront simulation (Phase 6b)
 ```
 
 ### Dependencies
@@ -49,19 +54,21 @@ src/landing/
 | `three` | 3D scene, camera, ShaderMaterial, renderer |
 | `delaunator` | Delaunay triangulation from point set |
 
-No `simplex-noise` — noise is computed in GLSL on the GPU.
+No `simplex-noise` — noise is computed in GLSL on the GPU. CPU-side noise (in `heightField.ts`) is a TypeScript port of the same GLSL implementation.
 
 ### Key Design Decisions
 
 - **GPU displacement via ShaderMaterial** — all vertex displacement, normal computation, and lighting happen in the vertex shader. No CPU-side vertex updates per frame.
-- **HTML anchor overlays** — positioned with CSS, not projected from 3D coordinates. Simple and proven from the mockup phase.
+- **Displacement texture** (Phase 4) — height field rendered to a texture once per frame, sampled by all vertex shaders, eliminating redundant noise computation.
+- **Nav nodes are mesh vertices** — positioned via BFS from a hub node, not CSS overlays.
 - **Three.js handles projection** — PerspectiveCamera replaces the mockup's custom landscape camera math.
 - **ResizeObserver** for responsive canvas sizing.
+- **No path aliases**: All imports use relative paths.
 
 ### Routing
 
 - `/#/` → `LandingPage` (index route)
-- Siphon routes (`/#/combat`, `/#/deck-builder`) wrapped in `SiphonLayout` which applies `bg-siphon-bg` and `reduce-motion`
+- Siphon routes (`/#/combat`, `/#/deck-builder`) wrapped in `SiphonLayout`
 - `App.tsx` is a neutral shell (`min-h-screen text-white`, no feature-specific styling)
 
 ### Reference
@@ -70,12 +77,27 @@ The static HTML mockup at `source/landing-mockup.html` was the visual prototype.
 
 ---
 
-## Tuning Notes for Future Sessions
+## Landing-Specific Constraints
 
-The v1 port uses Three.js's PerspectiveCamera which behaves differently from the mockup's custom projection. Areas that may need adjustment:
+- **Always serve over HTTP for testing** — `file://` protocol causes severe animation stuttering on this PC
+- **Do NOT honor `prefers-reduced-motion`** — the user's OS has "Show Animations" off but wants full animation on this site
 
-- **Camera FOV/position** — controls how much of the mesh is visible and the foreshortening
-- **Distance fade** — the `600.0 / camDist` reference distance in the shader may need tuning
-- **Mesh density** — the mockup had perspective-compensated row spacing; Three.js may need similar treatment if bottom rows look stretched
-- **Edge visibility** — the mockup used `clip *= 1.3` zoom; Three.js equivalent is camera positioning
-- **Chunk size** — Three.js adds ~150KB; consider lazy-loading the landing page route
+---
+
+## Session Handoff (Landing)
+
+Before ending a session:
+1. Update `docs/landing/IMPLEMENTATION_STATUS.md` (phase work) or `docs/landing/BACKLOG.md` (backlog work)
+2. Update the Architecture section above if new modules were created
+
+---
+
+## Reference Documentation (read on demand, not preloaded)
+
+| Document | Contents |
+|----------|----------|
+| `.claude/docs/SESSION_PROTOCOL.md` | Mandatory session start/end procedures |
+| `.claude/docs/landing/PHASE_SPECS/` | One spec per implementation phase (0–6b) |
+| `docs/landing/IMPLEMENTATION_STATUS.md` | Phase progress, discovered issues, session log |
+| `docs/landing/BACKLOG.md` | Performance issues, visual bugs, tuning items |
+| `source/landing-mockup.html` | Original static HTML/WebGL prototype (630 lines) |
