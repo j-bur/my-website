@@ -13,6 +13,7 @@ export interface NavProjection {
   node: PlacedNavNode;
   screenX: number;
   screenY: number;
+  labelOffsetY: number; // perspective-correct pixel offset for label above node
 }
 
 /**
@@ -147,10 +148,15 @@ export function placeNavNodes(
 // Reusable vector to avoid per-frame allocation
 const _vec3 = new THREE.Vector3();
 
+/** World-space distance above node to place label. */
+const LABEL_WORLD_HEIGHT = 40;
+
 /**
  * Project placed nav nodes from 3D world space to screen pixel coordinates.
  * Accepts pre-computed Y heights (sampled from the GPU height map texture)
  * so the labels track the actual displaced mesh position exactly.
+ * Also computes a perspective-correct label offset by projecting a second
+ * point above each node, so distant labels don't float too high on screen.
  */
 export function projectNavNodes(
   nodes: PlacedNavNode[],
@@ -162,12 +168,20 @@ export function projectNavNodes(
   const projections: NavProjection[] = [];
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
-    _vec3.set(node.baseX, heights[i], node.baseZ);
+    const y = heights[i];
+
+    // Project the node position
+    _vec3.set(node.baseX, y, node.baseZ);
     _vec3.project(camera);
-    // NDC to pixel coords
     const screenX = ((_vec3.x + 1) / 2) * width;
     const screenY = ((1 - _vec3.y) / 2) * height;
-    projections.push({ node, screenX, screenY });
+
+    // Project a point above the node for perspective-correct label offset
+    _vec3.set(node.baseX, y + LABEL_WORLD_HEIGHT, node.baseZ);
+    _vec3.project(camera);
+    const labelScreenY = ((1 - _vec3.y) / 2) * height;
+
+    projections.push({ node, screenX, screenY, labelOffsetY: screenY - labelScreenY });
   }
   return projections;
 }

@@ -3,7 +3,7 @@ import Delaunator from 'delaunator';
 import {
   COLS, ROWS, JITTER, OVERSCAN, OVERSCAN_FAR,
   SCATTER_COUNT, CLUSTER_COUNT, MAX_EDGE_LENGTH,
-  MESH_WIDTH, MESH_DEPTH, HEIGHTMAP_RESOLUTION,
+  MESH_WIDTH, MESH_DEPTH, HEIGHTMAP_RESOLUTION, MESH_CURVATURE,
   CAMERA_FOV, CAMERA_HEIGHT, CAMERA_Z, CAMERA_LOOK_AT_Z,
   TRI_ALPHA, EDGE_ALPHA, POINT_ALPHA, POINT_SIZE,
   VERT_SRC, POINT_VERT_SRC, FRAG_SRC,
@@ -340,7 +340,11 @@ export class MeshScene {
         const px = Math.min(Math.floor(u * HEIGHTMAP_RESOLUTION), HEIGHTMAP_RESOLUTION - 1);
         const py = Math.min(Math.floor(v * HEIGHTMAP_RESOLUTION), HEIGHTMAP_RESOLUTION - 1);
         this.renderer.readRenderTargetPixels(this.heightTarget, px, py, 1, 1, this._navPixelBuf);
-        navHeights[i] = this._navPixelBuf[0];
+        // Apply curvature drop to match the vertex shader (which applies it after height map sampling)
+        const dx = node.baseX;
+        const dz = node.baseZ - CAMERA_Z;
+        const cDist = Math.sqrt(dx * dx + dz * dz);
+        navHeights[i] = this._navPixelBuf[0] - MESH_CURVATURE * cDist * cDist;
       }
 
       const projections = projectNavNodes(
