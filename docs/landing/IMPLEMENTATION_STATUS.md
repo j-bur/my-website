@@ -13,7 +13,7 @@
 | Phase 0: Graph Infrastructure | **Complete** | MeshGraph + adjacency, CPU heightAt, MeshScene refactored |
 | Phase 1: Nav Nodes | **Complete** | BFS-placed nav nodes, 3D-projected labels, aIsNavNode shader attribute |
 | Phase 2: Path Rendering | **Complete** | `highlightPath()` on MeshScene, BFS paths precomputed, edge shader with `aHighlight` |
-| Phase 3: Cursor Connection | **Complete** | Raycasting, hover detection, cursor line, click navigation, label hover glow |
+| Phase 3: Cursor Connection | **Complete** | Hover detection, path highlight on hover, click navigation, discoverable nav nodes |
 | Phase 4: Performance | Not Started | — |
 | Phase 5: Wave Simulation | Not Started | — |
 | Phase 6a: Cursor Ripple | Not Started | — |
@@ -26,7 +26,7 @@
 1. Begin **Phase 4: Performance** (displacement texture)
 2. Read `.claude/docs/landing/PHASE_SPECS/phase-4-performance.md`
 3. Entry conditions: `npm run build` and `npm run lint` pass
-4. **Visual check recommended**: Before Phase 4, test Phase 3 in browser — move cursor near nav nodes to verify teal line appears, path highlights, pointer cursor, and click navigation works
+4. **Visual check recommended**: Before Phase 4, test Phase 3 in browser — move cursor near nav nodes to verify path highlights in teal, pointer cursor appears, non-hub label fades in, and click navigation works
 
 ---
 
