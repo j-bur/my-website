@@ -82,7 +82,8 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 
 ## UX Improvements — General
 
-- [ ] **P2** | **S** | **UX-12: Focus threshold flavor text should be removed**: Do not display flavor text like "The Weavers are watching..." for Focus thresholds. Instead, change the Focus value color as it hits each threshold. *(TODO: determine color scheme for thresholds.)*
+- [~] **P2** | **S** | **UX-12: Focus threshold flavor text should be removed**: Do not display flavor text like "The Weavers are watching..." for Focus thresholds. Instead, change the Focus value color as it hits each threshold. *(TODO: determine color scheme for thresholds.)*
+  - **Note**: Flavor text removed in `17592bd`. Stale test removed in `228ea42`. Color thresholds not yet implemented.
 
 - [ ] **P3** | **S** | **UX-13: "Clear session data" is unclear**: The Settings option doesn't explain what it deletes, and doesn't actually delete everything it should.
 
@@ -107,3 +108,9 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 - [ ] **P3** | **S** | **Q-02: Short Rest Hit Dice preview**: Should the Short Rest modal show how many Hit Dice the player would have remaining if they confirm?
 
 - [ ] **P3** | **S** | **Q-03: Siphon Feature tag audit**: Ensure all feature cards consistently use tags and that all tags make sense.
+
+---
+
+## Technical Debt
+
+- [ ] **P3** | **S** | **TECH-01: App.tsx coupled to siphon**: `App.tsx` imports `useReducedMotion` from `src/siphon/hooks/` and hardcodes `bg-siphon-bg`. When the landing page route is added, the app shell should be neutral (e.g., `bg-black`) with each feature applying its own background. Extract `useReducedMotion` to a shared location or make it feature-agnostic.

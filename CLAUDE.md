@@ -14,7 +14,7 @@ The codebase is organized by feature. Each feature has its own directory under `
 src/
   App.tsx, main.tsx, index.css, setupTests.ts   # Shared app shell
   siphon/          # Echo Siphon companion app — see src/siphon/CLAUDE.md
-  landing/         # Landing page (future)
+  landing/         # Animated mesh landing page — see src/landing/CLAUDE.md
 ```
 
 **When working on a specific feature**, read that feature's `CLAUDE.md` first. It contains the rules, source-of-truth references, and gotchas specific to that domain.
