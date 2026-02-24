@@ -6,9 +6,11 @@ import {
   MESH_WIDTH, MESH_DEPTH,
   CAMERA_FOV, CAMERA_HEIGHT, CAMERA_Z, CAMERA_LOOK_AT_Z,
   TRI_ALPHA, EDGE_ALPHA, POINT_ALPHA, POINT_SIZE,
-  VERT_SRC, FRAG_SRC,
+  VERT_SRC, POINT_VERT_SRC, FRAG_SRC,
+  NAV_NODES,
 } from './meshConfig';
 import { buildMeshGraph, type MeshGraph } from './meshGraph';
+import { placeNavNodes, projectNavNodes, type PlacedNavNode, type NavProjection } from './navNodes';
 
 /**
  * Pure Three.js scene — no React dependency.
@@ -28,6 +30,10 @@ export class MeshScene {
   private pointMat: THREE.ShaderMaterial;
 
   private graph: MeshGraph | null = null;
+  private placedNavNodes: PlacedNavNode[] = [];
+  private frameCallback: ((projections: NavProjection[], time: number) => void) | null = null;
+  private canvasWidth = 0;
+  private canvasHeight = 0;
   private clock = new THREE.Clock();
 
   constructor(canvas: HTMLCanvasElement) {
@@ -54,9 +60,9 @@ export class MeshScene {
       uTime: { value: 0 },
     };
 
-    this.triMat = this.createMaterial(sharedUniforms, TRI_ALPHA.min, TRI_ALPHA.range, 1.0);
-    this.edgeMat = this.createMaterial(sharedUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0);
-    this.pointMat = this.createMaterial(sharedUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE);
+    this.triMat = this.createMaterial(sharedUniforms, TRI_ALPHA.min, TRI_ALPHA.range, 1.0, VERT_SRC);
+    this.edgeMat = this.createMaterial(sharedUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0, VERT_SRC);
+    this.pointMat = this.createMaterial(sharedUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC);
 
     this.buildMesh();
 
@@ -69,9 +75,10 @@ export class MeshScene {
     alphaMin: number,
     alphaRange: number,
     pointSize: number,
+    vertexShader: string,
   ): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
-      vertexShader: VERT_SRC,
+      vertexShader,
       fragmentShader: FRAG_SRC,
       uniforms: {
         uTime: sharedUniforms.uTime,
@@ -177,6 +184,15 @@ export class MeshScene {
     // --- Point geometry (shared positions) ---
     const pointGeom = new THREE.BufferGeometry();
     pointGeom.setAttribute('position', posAttr);
+
+    // --- Place nav nodes and mark their vertices ---
+    this.placedNavNodes = placeNavNodes(this.graph, NAV_NODES);
+    const isNavNode = new Float32Array(nPts);
+    for (const nav of this.placedNavNodes) {
+      isNavNode[nav.vertexIndex] = 1.0;
+    }
+    pointGeom.setAttribute('aIsNavNode', new THREE.BufferAttribute(isNavNode, 1));
+
     this.pointCloud = new THREE.Points(pointGeom, this.pointMat);
     this.scene.add(this.pointCloud);
   }
@@ -186,6 +202,13 @@ export class MeshScene {
     // All three materials share the same uTime uniform object
     this.triMat.uniforms.uTime.value = t;
     this.renderer.render(this.scene, this.camera);
+
+    if (this.frameCallback && this.placedNavNodes.length > 0) {
+      const projections = projectNavNodes(
+        this.placedNavNodes, t, this.camera, this.canvasWidth, this.canvasHeight,
+      );
+      this.frameCallback(projections, t);
+    }
   }
 
   /** Graph data structure built from the Delaunay triangulation. */
@@ -193,8 +216,20 @@ export class MeshScene {
     return this.graph;
   }
 
+  /** Register a callback invoked each frame with projected nav node positions. */
+  setFrameCallback(cb: (projections: NavProjection[], time: number) => void): void {
+    this.frameCallback = cb;
+  }
+
+  /** The placed nav nodes (hub + others). */
+  getPlacedNavNodes(): PlacedNavNode[] {
+    return this.placedNavNodes;
+  }
+
   /** Update renderer and camera on container resize */
   resize(width: number, height: number): void {
+    this.canvasWidth = width;
+    this.canvasHeight = height;
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();

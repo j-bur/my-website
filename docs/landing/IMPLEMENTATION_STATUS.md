@@ -1,7 +1,7 @@
 # Implementation Status — Landing Page
 
 **Last Updated**: 2026-02-24
-**Current Phase**: Phase 0 complete, ready for Phase 1
+**Current Phase**: Phase 1 complete, ready for Phase 2
 
 ---
 
@@ -11,7 +11,7 @@
 |-------|--------|------|
 | v1: Initial Implementation | Complete | Three.js mesh, 3 render passes, CSS anchor overlays |
 | Phase 0: Graph Infrastructure | **Complete** | MeshGraph + adjacency, CPU heightAt, MeshScene refactored |
-| Phase 1: Nav Nodes | Not Started | — |
+| Phase 1: Nav Nodes | **Complete** | BFS-placed nav nodes, 3D-projected labels, aIsNavNode shader attribute |
 | Phase 2: Path Rendering | Not Started | — |
 | Phase 3: Cursor Connection | Not Started | — |
 | Phase 4: Performance | Not Started | — |
@@ -23,9 +23,10 @@
 
 ## Next Session
 
-1. Begin **Phase 1: Nav Nodes**
-2. Read `.claude/docs/landing/PHASE_SPECS/phase-1-nav-nodes.md`
-3. Entry conditions: `npm run build` and `npm run lint` pass, landing page renders at localhost
+1. Begin **Phase 2: Path Rendering**
+2. Read `.claude/docs/landing/PHASE_SPECS/phase-2-path-rendering.md`
+3. Entry conditions: `npm run build` and `npm run lint` pass, nav nodes visible and projected correctly
+4. **Visual check recommended**: verify nav node labels track the wave motion and the hub/Gauldurg dots render with enhanced brightness
 
 ---
 
@@ -58,3 +59,4 @@ Each phase has a detailed spec in `.claude/docs/landing/PHASE_SPECS/`. Read the 
 |------|-------|---------|
 | 2026-02-24 | Planning | Phase specs 0–6b written in `.claude/docs/landing/PHASE_SPECS/` |
 | 2026-02-24 | Phase 0 | Created `meshGraph.ts` (MeshGraph interface + buildMeshGraph), `heightField.ts` (CPU simplex noise + heightAt). Refactored MeshScene to use graph, added getGraph() getter. |
+| 2026-02-24 | Phase 1 | Created `navNodes.ts` (BFS placement + 3D projection). Replaced AnchorNode/ANCHORS with NavNodeDef/NAV_NODES in meshConfig.ts. Added POINT_VERT_SRC with aIsNavNode attribute (larger/brighter/pulsing dots). Added frame callback + resize storage to MeshScene. Rewrote LandingPage.tsx with projected labels via direct DOM transform. Replaced .anchor CSS with .nav-label CSS. |

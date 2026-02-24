@@ -271,34 +271,30 @@ body {
   border-radius: 0.5rem;
 }
 
-/* Landing page anchor nodes */
-.anchor {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  color: #fff;
+/* Landing page nav node labels — positioned via 3D projection each frame */
+.nav-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
   font-size: 14px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  z-index: 10;
-  cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  color: #fff;
+  white-space: nowrap;
+  will-change: transform;
+}
+.nav-label a {
+  pointer-events: auto;
+  text-decoration: none;
+  color: inherit;
   transition: filter 0.3s, text-shadow 0.3s;
 }
-.anchor:hover {
+.nav-label a:hover {
   filter: brightness(1.4);
   text-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
-}
-.anchor-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.2);
-}
-.anchor:hover .anchor-dot {
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.4);
 }
 
 /* Programmatic reduced motion (applied via settingsStore) */

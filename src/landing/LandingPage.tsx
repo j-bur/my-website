@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { MeshScene } from './MeshScene';
-import { ANCHORS } from './meshConfig';
+import { NAV_NODES } from './meshConfig';
 
 export function LandingPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const labelRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -12,6 +13,16 @@ export function LandingPage() {
     const container = canvas.parentElement!;
     const scene = new MeshScene(canvas);
     scene.resize(container.clientWidth, container.clientHeight);
+
+    // Frame callback: update label positions via direct DOM manipulation (no React re-render)
+    scene.setFrameCallback((projections) => {
+      for (let i = 0; i < projections.length; i++) {
+        const el = labelRefs.current[i];
+        if (!el) continue;
+        const { screenX, screenY } = projections[i];
+        el.style.transform = `translate(${screenX}px, ${screenY - 24}px)`;
+      }
+    });
 
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
@@ -29,17 +40,19 @@ export function LandingPage() {
     <div className="relative w-full h-screen bg-black overflow-hidden">
       <canvas ref={canvasRef} className="block w-full h-full" />
 
-      {ANCHORS.map((anchor) => (
-        <a
-          key={anchor.label}
-          href={anchor.url}
-          className="anchor"
-          style={{ position: 'absolute', ...anchor.style }}
-          {...(anchor.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      {NAV_NODES.map((node, i) => (
+        <div
+          key={node.label}
+          ref={(el) => { labelRefs.current[i] = el; }}
+          className="nav-label"
         >
-          <span className="anchor-dot" />
-          {anchor.label}
-        </a>
+          <a
+            href={node.url}
+            {...(node.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          >
+            {node.label}
+          </a>
+        </div>
       ))}
     </div>
   );

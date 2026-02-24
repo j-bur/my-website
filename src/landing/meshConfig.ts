@@ -28,29 +28,25 @@ export const EDGE_ALPHA = { min: 0.01, range: 0.55 };
 export const POINT_ALPHA = { min: 0.02, range: 0.95 };
 export const POINT_SIZE = 1.5;
 
-// --- Anchor nodes ---
-export interface AnchorNode {
+// --- Navigation nodes ---
+export interface NavNodeDef {
   label: string;
   url: string;
   external: boolean;
-  /** CSS positioning */
-  style: { top?: string; left?: string; right?: string; bottom?: string; transform?: string };
 }
 
-export const ANCHORS: AnchorNode[] = [
-  {
-    label: 'FoundryVTT',
-    url: 'https://foundry.jamesburns.cc',
-    external: true,
-    style: { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
-  },
-  {
-    label: 'Gauldurg',
-    url: '/#/deck-builder',
-    external: false,
-    style: { top: '12%', right: '10%' },
-  },
+export const NAV_NODES: NavNodeDef[] = [
+  { label: 'FoundryVTT', url: 'https://foundry.jamesburns.cc', external: true },
+  { label: 'Gauldurg', url: '/#/deck-builder', external: false },
 ];
+
+export const HUB_NODE_INDEX = 0; // FoundryVTT is always the hub
+
+export const NAV_PLACEMENT = {
+  minHops: 8,
+  maxHops: 25,
+  minAngularSpread: Math.PI / 3, // 60 degrees minimum between non-hub nodes
+};
 
 // --- GLSL Simplex Noise (Ashima Arts / Stefan Gustavson, MIT) ---
 const NOISE_GLSL = /* glsl */ `
@@ -164,6 +160,69 @@ void main() {
   float alpha = (0.04 + lighting * 0.8) * distFade * vertBright;
   gl_PointSize = uPointSize + alpha * 4.0;
   vAlpha = uAlphaMin + alpha * uAlphaRange;
+}
+`;
+
+// --- Point vertex shader: adds nav node highlighting ---
+export const POINT_VERT_SRC = /* glsl */ `
+uniform float uTime;
+uniform float uAlphaMin;
+uniform float uAlphaRange;
+uniform float uPointSize;
+attribute float aIsNavNode;
+varying float vAlpha;
+
+${NOISE_GLSL}
+
+// Height field: 6 traveling sine waves + 3 noise octaves for faceted detail
+float heightAt(vec2 p, float t) {
+  float z = 0.0;
+  z += sin(dot(p, vec2( 0.0030, 0.0008)) + t * 0.50) * 45.0;
+  z += sin(dot(p, vec2(-0.0022, 0.0018)) + t * 0.65) * 35.0;
+  z += sin(dot(p, vec2( 0.0012,-0.0030)) + t * 0.40) * 25.0;
+  z += sin(dot(p, vec2( 0.0050,-0.0010)) + t * 0.80) * 18.0;
+  z += sin(dot(p, vec2(-0.0015,-0.0045)) + t * 0.55) * 15.0;
+  z += sin(dot(p, vec2(-0.0035,-0.0105)) + t * 0.30) * 17.0;
+  z += snoise(vec3(p * 0.005, t * 0.25)) * 30.0;
+  z += snoise(vec3(p * 0.012, t * 0.30 + 50.0)) * 18.0;
+  z += snoise(vec3(p * 0.025, t * 0.20 + 100.0)) * 10.0;
+  return z;
+}
+
+void main() {
+  vec2 basePos = position.xz;
+  float t = uTime;
+
+  float h = heightAt(basePos, t);
+  vec3 displaced = vec3(position.x, h, position.z);
+
+  float eps = 3.0;
+  float hx = heightAt(basePos + vec2(eps, 0.0), t);
+  float hz = heightAt(basePos + vec2(0.0, eps), t);
+  vec3 normal = normalize(vec3((h - hx) / eps, 1.0, (h - hz) / eps));
+
+  vec3 lightDir = normalize(vec3(-0.4, 0.8, -0.3));
+  float lighting = max(dot(normal, lightDir), 0.0);
+
+  vec4 mvPos = modelViewMatrix * vec4(displaced, 1.0);
+  gl_Position = projectionMatrix * mvPos;
+
+  float camDist = -mvPos.z;
+  float distFade = clamp(600.0 / camDist, 0.22, 1.0);
+
+  float hash = fract(sin(dot(floor(basePos), vec2(12.9898, 78.233))) * 43758.5453);
+  float vertBright = 0.5 + hash * 0.5;
+
+  float alpha = (0.04 + lighting * 0.8) * distFade * vertBright;
+
+  if (aIsNavNode > 0.5) {
+    float pulse = 0.85 + 0.15 * sin(uTime * 2.0);
+    gl_PointSize = uPointSize + 6.0;
+    vAlpha = 0.9 * pulse;
+  } else {
+    gl_PointSize = uPointSize + alpha * 4.0;
+    vAlpha = uAlphaMin + alpha * uAlphaRange;
+  }
 }
 `;
 
