@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MeshScene } from './MeshScene';
-import { NAV_NODES } from './meshConfig';
+import { NAV_NODES, HUB_NODE_INDEX } from './meshConfig';
 
 export function LandingPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -27,8 +27,13 @@ export function LandingPage() {
         const { screenX, screenY, node } = projections[i];
         el.style.transform = `translate(${screenX}px, ${screenY - 24}px)`;
 
-        // Toggle hover glow class
+        const isHub = i === HUB_NODE_INDEX;
         const isHovered = hovered !== null && node.vertexIndex === hovered.vertexIndex;
+
+        // Non-hub labels hidden until cursor is within range
+        el.style.opacity = (isHub || isHovered) ? '1' : '0';
+
+        // Toggle hover glow class
         el.classList.toggle('nav-label-hovered', isHovered);
       }
 

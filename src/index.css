@@ -285,6 +285,7 @@ body {
   color: #fff;
   white-space: nowrap;
   will-change: transform;
+  transition: opacity 0.3s;
 }
 .nav-label a {
   pointer-events: auto;

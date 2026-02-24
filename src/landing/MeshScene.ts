@@ -13,7 +13,6 @@ import {
 import { buildMeshGraph, edgeKey, type MeshGraph } from './meshGraph';
 import { placeNavNodes, projectNavNodes, type PlacedNavNode, type NavProjection } from './navNodes';
 import { findPath, pathToEdgeKeys } from './pathfinding';
-import { heightAt } from './heightField';
 
 /** Threshold in screen pixels for cursor-to-node hover detection. */
 const HOVER_DISTANCE_PX = 150;
@@ -51,13 +50,8 @@ export class MeshScene {
   private mouseScreenX = 0;
   private mouseScreenY = 0;
   private mouseActive = false;
-  private mouseWorldXZ: { x: number; z: number } | null = null;
   private hoveredNode: PlacedNavNode | null = null;
-  private cursorLine: THREE.Line | null = null;
-  private cursorLineMat: THREE.LineBasicMaterial | null = null;
-  private cursorLineGeom: THREE.BufferGeometry | null = null;
-  private raycaster = new THREE.Raycaster();
-  private groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  private isNavNodeAttr: THREE.BufferAttribute | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     // Renderer
@@ -220,13 +214,12 @@ export class MeshScene {
     const pointGeom = new THREE.BufferGeometry();
     pointGeom.setAttribute('position', posAttr);
 
-    // --- Place nav nodes and mark their vertices ---
+    // --- Place nav nodes — only the hub is visually distinct by default ---
     this.placedNavNodes = placeNavNodes(this.graph, NAV_NODES);
     const isNavNode = new Float32Array(nPts);
-    for (const nav of this.placedNavNodes) {
-      isNavNode[nav.vertexIndex] = 1.0;
-    }
-    pointGeom.setAttribute('aIsNavNode', new THREE.BufferAttribute(isNavNode, 1));
+    isNavNode[this.placedNavNodes[HUB_NODE_INDEX].vertexIndex] = 1.0;
+    this.isNavNodeAttr = new THREE.BufferAttribute(isNavNode, 1);
+    pointGeom.setAttribute('aIsNavNode', this.isNavNodeAttr);
 
     this.pointCloud = new THREE.Points(pointGeom, this.pointMat);
     this.scene.add(this.pointCloud);
@@ -256,9 +249,6 @@ export class MeshScene {
       );
       // Hover detection: find nearest nav node within screen-pixel threshold
       this.updateHover(projections);
-
-      // Update cursor-to-node line
-      this.updateCursorLine(t);
 
       if (this.frameCallback) {
         this.frameCallback(projections, t);
@@ -291,56 +281,25 @@ export class MeshScene {
       }
     }
 
-    // Only update highlight on hover state change
+    // Only update on hover state change
     if (nearest !== this.hoveredNode) {
+      const hubVertexIndex = this.placedNavNodes[HUB_NODE_INDEX].vertexIndex;
+
+      // Un-highlight previous (unless it's the hub, which is always visible)
+      if (this.hoveredNode && this.hoveredNode.vertexIndex !== hubVertexIndex && this.isNavNodeAttr) {
+        (this.isNavNodeAttr.array as Float32Array)[this.hoveredNode.vertexIndex] = 0.0;
+        this.isNavNodeAttr.needsUpdate = true;
+      }
+
+      // Highlight new hovered node's dot
+      if (nearest && nearest.vertexIndex !== hubVertexIndex && this.isNavNodeAttr) {
+        (this.isNavNodeAttr.array as Float32Array)[nearest.vertexIndex] = 1.0;
+        this.isNavNodeAttr.needsUpdate = true;
+      }
+
       this.hoveredNode = nearest;
       this.highlightPath(nearest?.vertexIndex ?? null);
     }
-  }
-
-  /** Draw or hide the solid teal line from cursor to hovered node. */
-  private updateCursorLine(t: number): void {
-    if (!this.hoveredNode || !this.mouseWorldXZ) {
-      if (this.cursorLine) {
-        this.cursorLine.visible = false;
-      }
-      return;
-    }
-
-    // Lazily create cursor line geometry
-    if (!this.cursorLine) {
-      this.cursorLineGeom = new THREE.BufferGeometry();
-      this.cursorLineGeom.setAttribute(
-        'position',
-        new THREE.BufferAttribute(new Float32Array(6), 3),
-      );
-      this.cursorLineMat = new THREE.LineBasicMaterial({
-        color: 0x00d4aa,
-        transparent: true,
-        opacity: 0.6,
-      });
-      this.cursorLine = new THREE.Line(this.cursorLineGeom, this.cursorLineMat);
-      this.scene.add(this.cursorLine);
-    }
-
-    this.cursorLine.visible = true;
-
-    // Both endpoints displaced onto the wave surface
-    const node = this.hoveredNode;
-    const nodeY = heightAt(node.baseX, node.baseZ, t);
-    const cursorY = heightAt(this.mouseWorldXZ.x, this.mouseWorldXZ.z, t);
-
-    const posArr = this.cursorLineGeom!.attributes.position.array as Float32Array;
-    // Endpoint 0: cursor
-    posArr[0] = this.mouseWorldXZ.x;
-    posArr[1] = cursorY;
-    posArr[2] = this.mouseWorldXZ.z;
-    // Endpoint 1: nav node
-    posArr[3] = node.baseX;
-    posArr[4] = nodeY;
-    posArr[5] = node.baseZ;
-
-    (this.cursorLineGeom!.attributes.position as THREE.BufferAttribute).needsUpdate = true;
   }
 
   /** Graph data structure built from the Delaunay triangulation. */
@@ -387,31 +346,23 @@ export class MeshScene {
     this.highlightAttr.needsUpdate = true;
   }
 
-  /**
-   * Update cursor screen position from a mousemove event.
-   * Converts to NDC, raycasts onto the Y=0 ground plane to get world XZ.
-   */
+  /** Update cursor screen position from a mousemove event. */
   setMouseScreenPos(screenX: number, screenY: number): void {
     this.mouseScreenX = screenX;
     this.mouseScreenY = screenY;
     this.mouseActive = true;
-
-    // Convert to NDC
-    const ndcX = (screenX / this.canvasWidth) * 2 - 1;
-    const ndcY = -(screenY / this.canvasHeight) * 2 + 1;
-
-    // Raycast onto Y=0 plane
-    this.raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), this.camera);
-    const intersection = new THREE.Vector3();
-    const hit = this.raycaster.ray.intersectPlane(this.groundPlane, intersection);
-    this.mouseWorldXZ = hit ? { x: intersection.x, z: intersection.z } : null;
   }
 
   /** Clear mouse state (e.g. on mouseleave). */
   clearMouse(): void {
     this.mouseActive = false;
-    this.mouseWorldXZ = null;
     if (this.hoveredNode) {
+      // Un-highlight the dot (unless hub)
+      const hubVertexIndex = this.placedNavNodes[HUB_NODE_INDEX].vertexIndex;
+      if (this.hoveredNode.vertexIndex !== hubVertexIndex && this.isNavNodeAttr) {
+        (this.isNavNodeAttr.array as Float32Array)[this.hoveredNode.vertexIndex] = 0.0;
+        this.isNavNodeAttr.needsUpdate = true;
+      }
       this.hoveredNode = null;
       this.highlightPath(null);
     }
@@ -441,8 +392,6 @@ export class MeshScene {
     this.triMesh?.geometry.dispose();
     this.edgeLines?.geometry.dispose();
     this.pointCloud?.geometry.dispose();
-    this.cursorLineGeom?.dispose();
-    this.cursorLineMat?.dispose();
     this.triMat.dispose();
     this.edgeMat.dispose();
     this.pointMat.dispose();
