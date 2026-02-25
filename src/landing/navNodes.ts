@@ -22,11 +22,17 @@ export interface NavProjection {
  * Other nodes are placed at BFS hop distance [minHops, maxHops] from hub,
  * filtered to the upper screen region and scored by angular spread.
  */
+export interface PlaceNavNodesResult {
+  placed: PlacedNavNode[];
+  hopDist: Float32Array;
+  maxHopDist: number;
+}
+
 export function placeNavNodes(
   graph: MeshGraph,
   navDefs: NavNodeDef[],
   camera: THREE.PerspectiveCamera,
-): PlacedNavNode[] {
+): PlaceNavNodesResult {
   const { positions, vertexCount, adjacency } = graph;
   const { minHops, maxHops, minAngularSpread, screenMarginNDC } = NAV_PLACEMENT;
 
@@ -43,18 +49,19 @@ export function placeNavNodes(
     }
   }
 
-  // BFS from hub to compute hop distances
+  // BFS from hub to compute hop distances (unbounded — reaches all reachable vertices)
   const hopDist = new Int32Array(vertexCount).fill(-1);
   hopDist[hubVertex] = 0;
+  let maxHopDist = 0;
   const queue: number[] = [hubVertex];
   let head = 0;
   while (head < queue.length) {
     const v = queue[head++];
     const d = hopDist[v];
-    if (d >= maxHops) continue; // no need to go further
     for (const neighbor of adjacency[v]) {
       if (hopDist[neighbor] === -1) {
         hopDist[neighbor] = d + 1;
+        if (d + 1 > maxHopDist) maxHopDist = d + 1;
         queue.push(neighbor);
       }
     }
@@ -147,7 +154,14 @@ export function placeNavNodes(
     });
   }
 
-  return placed;
+  // Convert Int32Array to Float32Array for use as a vertex attribute.
+  // Unreachable vertices (hopDist === -1) get maxHopDist + 1 so they reveal last.
+  const hopDistF32 = new Float32Array(vertexCount);
+  for (let i = 0; i < vertexCount; i++) {
+    hopDistF32[i] = hopDist[i] === -1 ? maxHopDist + 1 : hopDist[i];
+  }
+
+  return { placed, hopDist: hopDistF32, maxHopDist };
 }
 
 // Reusable vector to avoid per-frame allocation

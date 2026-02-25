@@ -2,7 +2,7 @@
 
 Animated wireframe mesh landing page for jamesburns.cc. Full-viewport Three.js scene with interactive navigation nodes.
 
-**Current State**: All planned phases (0–6b) complete. Interactive nav nodes, path rendering, displacement texture, Gerstner wave simulation, cursor ripple, and graph lightning all implemented. Check `docs/landing/IMPLEMENTATION_STATUS.md` for details and tuning references.
+**Current State**: All planned phases (0–7) complete. Interactive nav nodes, path rendering, displacement texture, Gerstner wave simulation, cursor ripple, graph lightning, and staged mesh reveal all implemented. Check `docs/landing/IMPLEMENTATION_STATUS.md` for details and tuning references.
 
 ---
 

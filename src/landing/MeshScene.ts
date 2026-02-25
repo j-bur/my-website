@@ -10,7 +10,7 @@ import {
   EDGE_VERT_SRC, EDGE_FRAG_SRC,
   HEIGHT_VERT_SRC, HEIGHT_FRAG_SRC,
   NAV_NODES, HUB_NODE_INDEX,
-  FACE_PALETTE,
+  FACE_PALETTE, REVEAL,
 } from './meshConfig';
 import { buildMeshGraph, edgeKey, type MeshGraph } from './meshGraph';
 import { placeNavNodes, projectNavNodes, type PlacedNavNode, type NavProjection } from './navNodes';
@@ -62,6 +62,10 @@ export class MeshScene {
   private pointEnergyAttr: THREE.BufferAttribute | null = null;
   private triEnergyAttr: THREE.BufferAttribute | null = null;
   private triVertexIndices: Uint32Array | null = null; // original vertex indices for triangle buffer
+
+  // Phase 7: staged reveal
+  private revealComplete = false;
+  private maxHopDist = 0;
 
   // Phase 6a: cursor wake
   private cursorWorldX = 0;
@@ -198,6 +202,7 @@ export class MeshScene {
         uAlphaRange: { value: alphaRange },
         uPointSize: { value: pointSize },
         uDrops: wakeUniforms.uDrops,
+        uRevealThreshold: { value: 0.0 },
       },
       transparent: true,
       depthWrite: false,
@@ -368,7 +373,34 @@ export class MeshScene {
     // Ensure camera world matrix is up-to-date for frustum projection in placeNavNodes
     // (no render frame has run yet, so matrixWorld hasn't been computed from position/quaternion)
     this.camera.updateMatrixWorld(true);
-    this.placedNavNodes = placeNavNodes(this.graph, NAV_NODES, this.camera);
+    const navResult = placeNavNodes(this.graph, NAV_NODES, this.camera);
+    this.placedNavNodes = navResult.placed;
+    this.maxHopDist = navResult.maxHopDist;
+    const hopDist = navResult.hopDist;
+
+    // Phase 7: aHopDist attributes for staged reveal
+    // Points: direct from BFS
+    pointGeom.setAttribute('aHopDist', new THREE.BufferAttribute(hopDist, 1));
+    // Edges: max hop of 2 endpoints, replicated to both vertices
+    const edgeHopDist = new Float32Array(edgeCount * 2);
+    for (let e = 0; e < edgeCount; e++) {
+      const [p, q] = this.graph.edges[e];
+      const maxHop = Math.max(hopDist[p], hopDist[q]);
+      edgeHopDist[e * 2] = maxHop;
+      edgeHopDist[e * 2 + 1] = maxHop;
+    }
+    edgeGeom.setAttribute('aHopDist', new THREE.BufferAttribute(edgeHopDist, 1));
+    // Triangles: max hop of 3 face vertices, replicated to all 3
+    const triHopDist = new Float32Array(triCount * 3);
+    for (let t = 0; t < triCount; t++) {
+      const i0 = triangles[t * 3], i1 = triangles[t * 3 + 1], i2 = triangles[t * 3 + 2];
+      const maxHop = Math.max(hopDist[i0], hopDist[i1], hopDist[i2]);
+      triHopDist[t * 3] = maxHop;
+      triHopDist[t * 3 + 1] = maxHop;
+      triHopDist[t * 3 + 2] = maxHop;
+    }
+    triGeom.setAttribute('aHopDist', new THREE.BufferAttribute(triHopDist, 1));
+
     const isNavNode = new Float32Array(nPts);
     isNavNode[this.placedNavNodes[HUB_NODE_INDEX].vertexIndex] = 1.0;
     this.isNavNodeAttr = new THREE.BufferAttribute(isNavNode, 1);
@@ -521,6 +553,34 @@ export class MeshScene {
 
     // All materials (including heightMat) share the same uTime uniform object
     this.triMat.uniforms.uTime.value = t;
+
+    // Phase 7: staged reveal — exponential threshold ramp
+    if (!this.revealComplete) {
+      const { pointDuration, edgeTriDelay, edgeTriDuration, exponent } = REVEAL;
+      const expDenom = Math.exp(exponent) - 1;
+      const easeExpIn = (x: number) => (Math.exp(exponent * x) - 1) / expDenom;
+
+      // Points: start at t=0
+      const pointProgress = Math.min(t / pointDuration, 1.0);
+      const pointThreshold = this.maxHopDist * easeExpIn(pointProgress);
+      this.pointMat.uniforms.uRevealThreshold.value = pointThreshold;
+
+      // Edges + Triangles: start at t=edgeTriDelay
+      const etElapsed = Math.max(t - edgeTriDelay, 0);
+      const etProgress = Math.min(etElapsed / edgeTriDuration, 1.0);
+      const etThreshold = this.maxHopDist * easeExpIn(etProgress);
+      this.edgeMat.uniforms.uRevealThreshold.value = etThreshold;
+      this.triMat.uniforms.uRevealThreshold.value = etThreshold;
+
+      // Check completion: points have finished their full duration
+      if (pointProgress >= 1.0 && etProgress >= 1.0) {
+        this.revealComplete = true;
+        // Lock to large sentinel so shader check is always 1.0 (no-op)
+        this.pointMat.uniforms.uRevealThreshold.value = 99999;
+        this.edgeMat.uniforms.uRevealThreshold.value = 99999;
+        this.triMat.uniforms.uRevealThreshold.value = 99999;
+      }
+    }
 
     // Pass 1: render height field to displacement texture
     this.renderer.setRenderTarget(this.heightTarget);
@@ -682,6 +742,11 @@ export class MeshScene {
    */
   getHoveredNode(): PlacedNavNode | null {
     return this.hoveredNode;
+  }
+
+  /** Whether the staged mesh reveal animation has completed. */
+  isRevealComplete(): boolean {
+    return this.revealComplete;
   }
 
   /** Update renderer and camera on container resize */

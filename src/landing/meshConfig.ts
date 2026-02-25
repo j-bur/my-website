@@ -63,6 +63,15 @@ export const NAV_PLACEMENT = {
   screenMarginNDC: 0.85, // reject candidates beyond ±this in NDC X (keeps nodes on-screen)
 };
 
+// --- Staged reveal (Phase 7) ---
+export const REVEAL = {
+  pointDuration: 2.0,     // seconds for full point reveal
+  edgeTriDelay: 0.5,      // seconds before edges/triangles start
+  edgeTriDuration: 1.5,   // seconds for edge/tri reveal (ends at same time as points)
+  exponent: 3.0,          // exponential ramp factor (higher = slower start, faster finish)
+  smoothWidth: 2.0,       // hop-distance width of the fade zone
+};
+
 // --- GLSL Simplex Noise (Ashima Arts / Stefan Gustavson, MIT) ---
 const NOISE_GLSL = /* glsl */ `
 vec3 mod289v3(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
@@ -206,6 +215,8 @@ uniform sampler2D uHeightMap;
 uniform vec2 uMapMin;
 uniform vec2 uMapSize;
 uniform vec4 uDrops[64]; // xy = worldXZ, z = spawnTime, w = amplitude
+uniform float uRevealThreshold;
+attribute float aHopDist;
 varying float vAlpha;
 varying vec3 vColor;
 
@@ -269,6 +280,9 @@ void main() {
 
   // Default face color (white); overridden by aColor in the triangle pass
   vColor = vec3(1.0);
+
+  // Phase 7: staged reveal — per-vertex fade based on BFS hop distance
+  float revealFade = smoothstep(aHopDist - ${REVEAL.smoothWidth.toFixed(1)}, aHopDist, uRevealThreshold);
 `;
 
 // --- Standard vertex shader (tri pass) + lightning facet brightening ---
@@ -287,6 +301,7 @@ ${VERT_COMMON}
     vColor = mix(vColor, vColor * 1.8, aEnergy);
     vAlpha = max(vAlpha, aEnergy * 0.25);
   }
+  vAlpha *= revealFade;
 }
 `;
 
@@ -307,6 +322,7 @@ ${VERT_COMMON}
     gl_PointSize += aEnergy * 4.0;
     vAlpha = max(vAlpha, aEnergy * 0.5);
   }
+  vAlpha *= revealFade;
 }
 `;
 
@@ -326,6 +342,7 @@ ${VERT_COMMON}
     vColor = mix(vColor, vec3(0.6, 0.9, 1.0), aEnergy * 0.6); // light blue-white lightning
     vAlpha = max(vAlpha, aEnergy * 0.5);
   }
+  vAlpha *= revealFade;
 }
 `;
 

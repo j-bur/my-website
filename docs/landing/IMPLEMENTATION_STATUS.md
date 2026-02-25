@@ -1,7 +1,7 @@
 # Implementation Status — Landing Page
 
 **Last Updated**: 2026-02-24
-**Current Phase**: Phase 6b complete
+**Current Phase**: Phase 7 complete
 
 ---
 
@@ -18,12 +18,13 @@
 | Phase 5: Wave Simulation | **Complete** | Gerstner waves, domain-warped FBM, time-varying drift |
 | Phase 6a: Cursor Ripple | **Complete** | Propagating drop ripples (64-slot ring buffer), adaptive spacing, screen-to-world raycast |
 | Phase 6b: Graph Lightning | **Complete** | Spatial hash, BFS lightning wavefront, aEnergy on edges + points + tris, interpolated fast cursor |
+| Phase 7: Staged Mesh Reveal | **Complete** | BFS hop-distance reveal, exponential ease, 0.5s point head start, smoothstep fade |
 
 ---
 
 ## Next Session
 
-1. All planned phases (0–6b) are complete
+1. All planned phases (0–7) are complete
 2. Phase 6b tuning reference (if revisiting):
    - **LightningEffect** (`cursorInteraction.ts`):
      - `MAX_HOPS` (3): BFS depth limit
@@ -74,6 +75,7 @@ Each phase has a detailed spec in `.claude/docs/landing/PHASE_SPECS/`. Read the 
 | 5 | `phase-5-wave-simulation.md` | Gerstner waves, domain-warped FBM, time-varying params |
 | 6a | `phase-6a-cursor-ripple.md` | Shader radial ripple from cursor movement |
 | 6b | `phase-6b-graph-lightning.md` | Graph BFS lightning effect, spatial hash |
+| 7 | `phase-7-mesh-reveal.md` | BFS hop-distance staged reveal, exponential ease, smoothstep fade |
 
 ---
 
@@ -99,3 +101,4 @@ Each phase has a detailed spec in `.claude/docs/landing/PHASE_SPECS/`. Read the 
 | 2026-02-24 | Phase 5 | Wave simulation rewrite. Replaced 6 fixed sine waves with `gerstnerY()` — power-curve shaping (`pow((sin+1)/2, 1+steep)*2-1`) creates sharp crests and broad troughs without XZ displacement. Added time-varying direction drift (`t*0.02` rotation on alternating waves, ~5 min full rotation) and amplitude modulation (`ampMod1`/`ampMod2` at different rates). Replaced 3 simple noise octaves with domain-warped FBM: 2 noise evaluations warp the input coordinates by ±80 world units before the 3 FBM octaves, creating organic non-repeating turbulence. Updated CPU mirror in `heightField.ts` with identical `gerstnerY()` + drift + warping logic. Files modified: `meshConfig.ts` (HEIGHT_AT_GLSL), `heightField.ts`. No new files created. |
 | 2026-02-24 | Phase 6a | Cursor wake effect. Propagating drop ripple system: 64-slot ring buffer of cursor trail positions uploaded as `uDrops[64]` uniform. Each drop spawns expanding concentric ripples (Gaussian-enveloped sine, 1.5s lifetime, 0.95/s decay, 100 u/s wavefront speed). Adaptive drop spacing (20–100 world units) scales with cursor velocity so drops fade before buffer wraps even at high speed. Path interpolation fills gaps during fast cursor movement. Added `screenToWorldXZ()` raycast (screen→Y=0 plane intersection) and per-frame velocity tracking with smoothing in MeshScene. Added `setCursorActive()` public API. Added `mouseenter` event handler in LandingPage. Existing ripples continue propagating when cursor leaves canvas. Files modified: `meshConfig.ts`, `MeshScene.ts`, `LandingPage.tsx`. No new files created. |
 | 2026-02-24 | Phase 6b | Graph lightning effect. Created `cursorInteraction.ts` with `LightningEffect` class: BFS wavefront from nearest vertex to cursor, per-vertex energy with exponential hop falloff (0.55^hop), per-frame multiplicative decay (0.92). Added `SpatialHash` + `buildSpatialHash()` + `findNearestVertex()` to `meshGraph.ts` (cell size 80, 9-cell neighborhood search). Added `aEnergy` attribute to edge vertex shader (mixes toward light blue-white `vec3(0.6, 0.9, 1.0)`) and point vertex shader (increases point size + alpha). Wired into MeshScene: creates LightningEffect after mesh build, calls `update()` each frame, copies energy buffers to GPU only when active. Files created: `cursorInteraction.ts`. Files modified: `meshGraph.ts`, `meshConfig.ts`, `MeshScene.ts`. |
+| 2026-02-24 | Phase 7 | Staged mesh reveal. Extended `placeNavNodes` to return full BFS `hopDist` Float32Array + `maxHopDist` (unbounded BFS, unreachable vertices get maxHopDist+1). Added `REVEAL` config to meshConfig.ts. Added `aHopDist` attribute and `uRevealThreshold` uniform to `VERT_COMMON`, `revealFade` via `smoothstep` (2-hop fade zone), `vAlpha *= revealFade` at end of all 3 pass shaders. MeshScene: `aHopDist` buffer attribute on points (direct), edges (max of endpoints), triangles (max of face vertices). Exponential ease reveal in `animate()` — points from t=0 over 2s, edges/tris from t=0.5s over 1.5s, sentinel 99999 on completion. `isRevealComplete()` accessor. Files modified: `navNodes.ts`, `meshConfig.ts`, `MeshScene.ts`. |
