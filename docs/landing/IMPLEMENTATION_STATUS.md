@@ -1,7 +1,7 @@
 # Implementation Status — Landing Page
 
 **Last Updated**: 2026-02-24
-**Current Phase**: Phase 4 complete, ready for Phase 5
+**Current Phase**: Phase 5 complete, ready for Phase 6a
 
 ---
 
@@ -15,7 +15,7 @@
 | Phase 2: Path Rendering | **Complete** | `highlightPath()` on MeshScene, BFS paths precomputed, edge shader with `aHighlight` |
 | Phase 3: Cursor Connection | **Complete** | Hover detection, path highlight on hover, click navigation, discoverable nav nodes |
 | Phase 4: Performance | **Complete** | Displacement texture, two-pass render, dev FPS counter |
-| Phase 5: Wave Simulation | Not Started | — |
+| Phase 5: Wave Simulation | **Complete** | Gerstner waves, domain-warped FBM, time-varying drift |
 | Phase 6a: Cursor Ripple | Not Started | — |
 | Phase 6b: Graph Lightning | Not Started | — |
 
@@ -23,10 +23,20 @@
 
 ## Next Session
 
-1. Begin **Phase 5: Wave Simulation** (Gerstner waves)
-2. Read `.claude/docs/landing/PHASE_SPECS/phase-5-wave-simulation.md`
-3. Entry conditions: `npm run build` and `npm run lint` pass
-4. **Visual check recommended**: Before Phase 5, test Phase 4 in browser — verify mesh animation looks identical to pre-Phase-4 (no quantization or jitter), check FPS counter in dev console (target 30+), verify nav node hover/path/click still works
+1. **Visual check REQUIRED**: Serve on localhost and verify Phase 5 waves in browser:
+   - Waves should travel across the surface (not stationary bobbing)
+   - Watch for 30+ seconds — no obvious repeating cycle
+   - Wave crests should appear sharper than troughs
+   - Turbulence should look organic and non-repeating
+   - FPS should remain 30+ (check dev console)
+   - Nav node hover/path/click still works
+2. If visual tuning needed, adjust parameters in `HEIGHT_AT_GLSL` (meshConfig.ts) and mirror in `heightField.ts`:
+   - `steep` values (0.3–0.6): controls crest sharpness
+   - `* 80.0` warp magnitude: controls turbulence displacement
+   - `t * 0.02` drift rate: controls direction rotation speed
+   - `ampMod` ranges: controls amplitude variation depth
+3. When satisfied, begin **Phase 6a: Cursor Ripple**
+4. Read `.claude/docs/landing/PHASE_SPECS/phase-6a-cursor-ripple.md`
 
 ---
 
@@ -64,3 +74,4 @@ Each phase has a detailed spec in `.claude/docs/landing/PHASE_SPECS/`. Read the 
 | 2026-02-24 | Phase 2 | Created `pathfinding.ts` (BFS findPath + pathToEdgeKeys). Added `EDGE_VERT_SRC`/`EDGE_FRAG_SRC` to meshConfig.ts (composed from VERT_COMMON, with aHighlight attribute + vColor varying for EP Positive accent). Modified MeshScene: edge key→buffer index map, aHighlight Float32Array attribute on edge geometry, edge-specific material, precomputed hub→nav paths at init, public `highlightPath(vertexIndex | null)` method. Extracted shared `edgeKey()` utility into meshGraph.ts to eliminate magic number duplication across 3 files. |
 | 2026-02-24 | Phase 3 | Added cursor interaction to MeshScene: mouse screen tracking with `setMouseScreenPos()`/`clearMouse()`, hover detection via screen-pixel distance (150px threshold), `getHoveredNode()` public API. Rewrote LandingPage.tsx: mousemove/mouseleave/click event handlers on canvas, `useNavigate` for internal links (strips `/#` prefix for hash router), pointer cursor on hover, `nav-label-hovered` CSS class toggled in frame callback. Added `.nav-label-hovered` CSS with EP Positive teal text-shadow glow. Removed cursor-to-node line (perspective mismatch). Non-hub nav nodes hidden by default — `aIsNavNode` only marks hub; dot + label revealed on hover for discoverable navigation. |
 | 2026-02-24 | Phase 4 | Displacement texture optimization. Extracted `heightAt` from vertex shaders into a height field fragment shader (`HEIGHT_FRAG_SRC`) that renders to a 512×512 `FloatType` `WebGLRenderTarget`. All mesh vertex shaders (`VERT_COMMON`) now sample displacement from texture via `sampleHeight()` instead of computing noise inline — eliminates redundant `heightAt()` per vertex. Added `HEIGHT_VERT_SRC` (fullscreen quad passthrough), `HEIGHT_AT_GLSL` (extracted heightAt function), `HEIGHTMAP_RESOLUTION` constant. MeshScene: two-pass render loop (height texture → scene), orthographic camera + fullscreen quad for height pass, mesh bounds computed from point cloud with 2% padding, shared `uHeightMap`/`uMapMin`/`uMapSize` uniforms across all materials. Dev-only FPS counter via `import.meta.env.DEV`. Normal finite differences use 1-texel offset (`uMapSize / 512.0`). Dispose updated for height resources. |
+| 2026-02-24 | Phase 5 | Wave simulation rewrite. Replaced 6 fixed sine waves with `gerstnerY()` — power-curve shaping (`pow((sin+1)/2, 1+steep)*2-1`) creates sharp crests and broad troughs without XZ displacement. Added time-varying direction drift (`t*0.02` rotation on alternating waves, ~5 min full rotation) and amplitude modulation (`ampMod1`/`ampMod2` at different rates). Replaced 3 simple noise octaves with domain-warped FBM: 2 noise evaluations warp the input coordinates by ±80 world units before the 3 FBM octaves, creating organic non-repeating turbulence. Updated CPU mirror in `heightField.ts` with identical `gerstnerY()` + drift + warping logic. Files modified: `meshConfig.ts` (HEIGHT_AT_GLSL), `heightField.ts`. No new files created. |

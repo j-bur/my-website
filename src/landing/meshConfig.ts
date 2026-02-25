@@ -104,18 +104,54 @@ float snoise(vec3 v){
 `;
 
 // --- GLSL heightAt function (used only by the height field fragment shader) ---
+// Phase 5: Gerstner waves + domain-warped FBM + time-varying parameters
 const HEIGHT_AT_GLSL = /* glsl */ `
+float gerstnerY(float phase, float amp, float steep) {
+  float s = sin(phase);
+  // Power curve: broader troughs, sharper crests (Gerstner characteristic)
+  // steep=0 → pure sine, steep=0.3-0.6 → progressively sharper crests
+  float v = pow((s + 1.0) * 0.5, 1.0 + steep) * 2.0 - 1.0;
+  return amp * v;
+}
+
 float heightAt(vec2 p, float t) {
   float z = 0.0;
-  z += sin(dot(p, vec2( 0.0030, 0.0008)) + t * 0.50) * 45.0;
-  z += sin(dot(p, vec2(-0.0022, 0.0018)) + t * 0.65) * 35.0;
-  z += sin(dot(p, vec2( 0.0012,-0.0030)) + t * 0.40) * 25.0;
-  z += sin(dot(p, vec2( 0.0050,-0.0010)) + t * 0.80) * 18.0;
-  z += sin(dot(p, vec2(-0.0015,-0.0045)) + t * 0.55) * 15.0;
-  z += sin(dot(p, vec2(-0.0035,-0.0105)) + t * 0.30) * 17.0;
-  z += snoise(vec3(p * 0.005, t * 0.25)) * 30.0;
-  z += snoise(vec3(p * 0.012, t * 0.30 + 50.0)) * 18.0;
-  z += snoise(vec3(p * 0.025, t * 0.20 + 100.0)) * 10.0;
+
+  // Time-varying drift: slowly rotate wave directions (~5 min full rotation)
+  float driftAngle = t * 0.02;
+  float cd = cos(driftAngle);
+  float sd = sin(driftAngle);
+
+  // Amplitude modulation (prevents obvious repetition)
+  float ampMod1 = 0.85 + 0.15 * sin(t * 0.05);
+  float ampMod2 = 0.85 + 0.15 * sin(t * 0.037 + 2.0);
+
+  // 6 Gerstner waves — drift applied to alternating waves (1, 3, 5)
+  vec2 d1 = vec2(cd * 0.0030 - sd * 0.0008, sd * 0.0030 + cd * 0.0008);
+  vec2 d2 = vec2(-0.0022, 0.0018);
+  vec2 d3 = vec2(cd * 0.0012 + sd * 0.0030, sd * 0.0012 - cd * 0.0030);
+  vec2 d4 = vec2(0.0050, -0.0010);
+  vec2 d5 = vec2(-cd * 0.0015 + sd * 0.0045, -sd * 0.0015 - cd * 0.0045);
+  vec2 d6 = vec2(-0.0035, -0.0105);
+
+  z += gerstnerY(dot(p, d1) + t * 0.50, 45.0 * ampMod1, 0.4);
+  z += gerstnerY(dot(p, d2) + t * 0.65, 35.0, 0.35);
+  z += gerstnerY(dot(p, d3) + t * 0.40, 25.0 * ampMod2, 0.5);
+  z += gerstnerY(dot(p, d4) + t * 0.80, 18.0, 0.45);
+  z += gerstnerY(dot(p, d5) + t * 0.55, 15.0 * ampMod1, 0.3);
+  z += gerstnerY(dot(p, d6) + t * 0.30, 17.0, 0.55);
+
+  // Domain-warped FBM (organic, non-repeating turbulence)
+  vec2 warp = vec2(
+    snoise(vec3(p * 0.003, t * 0.1)) * 80.0,
+    snoise(vec3(p * 0.003 + 100.0, t * 0.1)) * 80.0
+  );
+  vec2 wp = p + warp;
+
+  z += snoise(vec3(wp * 0.005, t * 0.25)) * 30.0;
+  z += snoise(vec3(wp * 0.012, t * 0.30 + 50.0)) * 18.0;
+  z += snoise(vec3(wp * 0.025, t * 0.20 + 100.0)) * 10.0;
+
   return z;
 }
 `;

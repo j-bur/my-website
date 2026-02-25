@@ -1,6 +1,7 @@
 /**
- * CPU-side height function matching the GPU vertex shader.
- * Ported from the GLSL in meshConfig.ts (Ashima Arts / Stefan Gustavson simplex noise, MIT).
+ * CPU-side height function matching the GPU height field shader.
+ * Gerstner waves + domain-warped FBM + time-varying parameters.
+ * Simplex noise ported from the GLSL in meshConfig.ts (Ashima Arts / Stefan Gustavson, MIT).
  */
 
 // --- Simplex noise helpers (scalar operations applied to 3/4-element tuples) ---
@@ -132,25 +133,57 @@ export function snoise(v: [number, number, number]): number {
 }
 
 /**
+ * Gerstner-shaped wave: power curve creates sharp crests, broad troughs.
+ * steep=0 → pure sine, steep=0.3-0.6 → progressively sharper crests.
+ * Mirrors the GLSL gerstnerY() in meshConfig.ts.
+ */
+function gerstnerY(phase: number, amp: number, steep: number): number {
+  const s = Math.sin(phase);
+  const v = Math.pow((s + 1.0) * 0.5, 1.0 + steep) * 2.0 - 1.0;
+  return amp * v;
+}
+
+/**
  * Compute the height (Y displacement) at a given XZ position and time.
  * Mirrors the GLSL heightAt() in meshConfig.ts exactly:
- * 6 directional sine waves + 3 simplex noise octaves.
+ * 6 Gerstner waves + domain-warped FBM + time-varying parameters.
  */
 export function heightAt(x: number, z: number, t: number): number {
   let h = 0.0;
 
-  // Large storm swells (6 traveling sine waves)
-  h += Math.sin(x * 0.0030 + z * 0.0008 + t * 0.50) * 45.0;
-  h += Math.sin(x * -0.0022 + z * 0.0018 + t * 0.65) * 35.0;
-  h += Math.sin(x * 0.0012 + z * -0.0030 + t * 0.40) * 25.0;
-  h += Math.sin(x * 0.0050 + z * -0.0010 + t * 0.80) * 18.0;
-  h += Math.sin(x * -0.0015 + z * -0.0045 + t * 0.55) * 15.0;
-  h += Math.sin(x * -0.0035 + z * -0.0105 + t * 0.30) * 17.0;
+  // Time-varying drift: slowly rotate wave directions (~5 min full rotation)
+  const driftAngle = t * 0.02;
+  const cd = Math.cos(driftAngle);
+  const sd = Math.sin(driftAngle);
 
-  // Choppy noise octaves
-  h += snoise([x * 0.005, z * 0.005, t * 0.25]) * 30.0;
-  h += snoise([x * 0.012, z * 0.012, t * 0.30 + 50.0]) * 18.0;
-  h += snoise([x * 0.025, z * 0.025, t * 0.20 + 100.0]) * 10.0;
+  // Amplitude modulation (prevents obvious repetition)
+  const ampMod1 = 0.85 + 0.15 * Math.sin(t * 0.05);
+  const ampMod2 = 0.85 + 0.15 * Math.sin(t * 0.037 + 2.0);
+
+  // 6 Gerstner waves — drift applied to alternating waves (1, 3, 5)
+  const d1x = cd * 0.0030 - sd * 0.0008;
+  const d1z = sd * 0.0030 + cd * 0.0008;
+  const d3x = cd * 0.0012 + sd * 0.0030;
+  const d3z = sd * 0.0012 - cd * 0.0030;
+  const d5x = -cd * 0.0015 + sd * 0.0045;
+  const d5z = -sd * 0.0015 - cd * 0.0045;
+
+  h += gerstnerY(x * d1x + z * d1z + t * 0.50, 45.0 * ampMod1, 0.4);
+  h += gerstnerY(x * -0.0022 + z * 0.0018 + t * 0.65, 35.0, 0.35);
+  h += gerstnerY(x * d3x + z * d3z + t * 0.40, 25.0 * ampMod2, 0.5);
+  h += gerstnerY(x * 0.0050 + z * -0.0010 + t * 0.80, 18.0, 0.45);
+  h += gerstnerY(x * d5x + z * d5z + t * 0.55, 15.0 * ampMod1, 0.3);
+  h += gerstnerY(x * -0.0035 + z * -0.0105 + t * 0.30, 17.0, 0.55);
+
+  // Domain-warped FBM (organic, non-repeating turbulence)
+  const warpX = snoise([x * 0.003, z * 0.003, t * 0.1]) * 80.0;
+  const warpZ = snoise([x * 0.003 + 100.0, z * 0.003 + 100.0, t * 0.1]) * 80.0;
+  const wx = x + warpX;
+  const wz = z + warpZ;
+
+  h += snoise([wx * 0.005, wz * 0.005, t * 0.25]) * 30.0;
+  h += snoise([wx * 0.012, wz * 0.012, t * 0.30 + 50.0]) * 18.0;
+  h += snoise([wx * 0.025, wz * 0.025, t * 0.20 + 100.0]) * 10.0;
 
   return h;
 }
