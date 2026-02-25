@@ -204,7 +204,7 @@ uniform float uPointSize;
 uniform sampler2D uHeightMap;
 uniform vec2 uMapMin;
 uniform vec2 uMapSize;
-uniform vec4 uDrops[8]; // xy = worldXZ, z = spawnTime, w = amplitude
+uniform vec4 uDrops[64]; // xy = worldXZ, z = spawnTime, w = amplitude
 varying float vAlpha;
 varying vec3 vColor;
 
@@ -222,17 +222,17 @@ void main() {
 
   // Cursor wake: propagating ripples from cursor trail
   float wakeSum = 0.0;
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 64; i++) {
     vec4 drop = uDrops[i];
     if (drop.w <= 0.0) continue;
     float age = uTime - drop.z;
-    if (age < 0.0 || age > 2.0) continue;
+    if (age < 0.0 || age > 5.0) continue;
     float dist = length(basePos - drop.xy);
     float wavefront = age * 100.0;
-    float ringWidth = 25.0 + age * 15.0;
+    float ringWidth = 25.0 + age * 10.0;
     float ringDelta = dist - wavefront;
     float envelope = exp(-ringDelta * ringDelta / (ringWidth * ringWidth));
-    float decay = max(1.0 - age * 0.5, 0.0);
+    float decay = max(1.0 - age * 0.2, 0.0);
     wakeSum += drop.w * envelope * decay * sin(dist * 0.1 - age * 10.0);
   }
   displaced.y -= wakeSum;

@@ -65,9 +65,13 @@ export class MeshScene {
   private _rayOrigin = new THREE.Vector3();
   private _rayDir = new THREE.Vector3();
 
-  // Propagating ripple drops (ring buffer of 8)
-  private dropsUni = Array.from({ length: 8 }, () => new THREE.Vector4(0, 0, 0, 0));
-  private drops = new Float32Array(32); // 8 × 4 (x, z, time, amp)
+  // Propagating ripple drops (ring buffer)
+  private static readonly NUM_DROPS = 64;
+  private static readonly MIN_DROP_SPACING = 20;  // world units at slow cursor speed
+  private static readonly MAX_DROP_SPACING = 100;  // world units at fast cursor speed
+  private static readonly MAX_DROPS_PER_FRAME = 8;
+  private dropsUni = Array.from({ length: MeshScene.NUM_DROPS }, () => new THREE.Vector4(0, 0, 0, 0));
+  private drops = new Float32Array(MeshScene.NUM_DROPS * 4);
   private dropIndex = 0;
   private lastDropX = 0;
   private lastDropZ = 0;
@@ -406,26 +410,41 @@ export class MeshScene {
       const rawSpeed = dt > 0 ? Math.sqrt(ddx * ddx + ddz * ddz) / dt : 0;
       this.cursorSpeed += (rawSpeed - this.cursorSpeed) * 0.15;
 
-      // Spawn a new drop when cursor has moved enough distance
+      // Spawn drops along the cursor path (interpolated for fast movement)
+      // Adaptive spacing: wider at high speed so the ring buffer lasts longer
+      // (expanding wavefronts overlap to fill gaps at wider spacing)
+      const spacing = Math.max(
+        MeshScene.MIN_DROP_SPACING,
+        Math.min(this.cursorSpeed * 0.025, MeshScene.MAX_DROP_SPACING),
+      );
       const sdx = this.cursorWorldX - this.lastDropX;
       const sdz = this.cursorWorldZ - this.lastDropZ;
-      if (sdx * sdx + sdz * sdz > 30 * 30) {
-        const amp = Math.min(this.cursorSpeed * 0.015, 2.5);
-        const base = this.dropIndex * 4;
-        this.drops[base] = this.cursorWorldX;
-        this.drops[base + 1] = this.cursorWorldZ;
-        this.drops[base + 2] = t;
-        this.drops[base + 3] = amp;
-        this.dropIndex = (this.dropIndex + 1) % 8;
-        this.lastDropX = this.cursorWorldX;
-        this.lastDropZ = this.cursorWorldZ;
+      const sDist = Math.sqrt(sdx * sdx + sdz * sdz);
+      if (sDist > spacing) {
+        const count = Math.min(
+          Math.floor(sDist / spacing),
+          MeshScene.MAX_DROPS_PER_FRAME,
+        );
+        const stepX = (sdx / sDist) * spacing;
+        const stepZ = (sdz / sDist) * spacing;
+        const amp = Math.min(this.cursorSpeed * 0.02, 5.0);
+        for (let j = 0; j < count; j++) {
+          this.lastDropX += stepX;
+          this.lastDropZ += stepZ;
+          const base = this.dropIndex * 4;
+          this.drops[base] = this.lastDropX;
+          this.drops[base + 1] = this.lastDropZ;
+          this.drops[base + 2] = t;
+          this.drops[base + 3] = amp;
+          this.dropIndex = (this.dropIndex + 1) % MeshScene.NUM_DROPS;
+        }
       }
     } else {
       this.cursorSpeed *= 0.92;
     }
 
     // Upload drops to shared uniform (all materials reference same array)
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < MeshScene.NUM_DROPS; i++) {
       const base = i * 4;
       this.dropsUni[i].set(
         this.drops[base], this.drops[base + 1],
