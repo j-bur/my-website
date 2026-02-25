@@ -55,7 +55,7 @@ export class MeshScene {
   private hoveredNode: PlacedNavNode | null = null;
   private isNavNodeAttr: THREE.BufferAttribute | null = null;
 
-  // Phase 6a: cursor ripple
+  // Phase 6a: cursor wake
   private cursorWorldX = 0;
   private cursorWorldZ = 0;
   private prevCursorWorldX = 0;
@@ -64,6 +64,13 @@ export class MeshScene {
   private cursorOnCanvas = false;
   private _rayOrigin = new THREE.Vector3();
   private _rayDir = new THREE.Vector3();
+
+  // Propagating ripple drops (ring buffer of 8)
+  private dropsUni = Array.from({ length: 8 }, () => new THREE.Vector4(0, 0, 0, 0));
+  private drops = new Float32Array(32); // 8 × 4 (x, z, time, amp)
+  private dropIndex = 0;
+  private lastDropX = 0;
+  private lastDropZ = 0;
 
   // Reusable buffers for reading nav node heights from GPU height map
   private _navPixelBuf = new Float32Array(4);
@@ -136,16 +143,14 @@ export class MeshScene {
       uMapSize: { value: this.mapSize },
     };
 
-    // Cursor ripple uniforms shared by all mesh materials
-    const cursorUniforms = {
-      uCursorXZ: { value: new THREE.Vector2(0, 0) },
-      uCursorSpeed: { value: 0.0 },
-      uCursorActive: { value: 0.0 },
+    // Cursor wake uniforms shared by all mesh materials
+    const wakeUniforms = {
+      uDrops: { value: this.dropsUni },
     };
 
-    this.triMat = this.createMaterial(sharedUniforms, heightUniforms, cursorUniforms, TRI_ALPHA.min, TRI_ALPHA.range, 1.0, VERT_SRC);
-    this.edgeMat = this.createMaterial(sharedUniforms, heightUniforms, cursorUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0, EDGE_VERT_SRC, EDGE_FRAG_SRC);
-    this.pointMat = this.createMaterial(sharedUniforms, heightUniforms, cursorUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC);
+    this.triMat = this.createMaterial(sharedUniforms, heightUniforms, wakeUniforms, TRI_ALPHA.min, TRI_ALPHA.range, 1.0, VERT_SRC);
+    this.edgeMat = this.createMaterial(sharedUniforms, heightUniforms, wakeUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0, EDGE_VERT_SRC, EDGE_FRAG_SRC);
+    this.pointMat = this.createMaterial(sharedUniforms, heightUniforms, wakeUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC);
 
     this.buildMesh();
 
@@ -160,10 +165,8 @@ export class MeshScene {
       uMapMin: { value: THREE.Vector2 };
       uMapSize: { value: THREE.Vector2 };
     },
-    cursorUniforms: {
-      uCursorXZ: { value: THREE.Vector2 };
-      uCursorSpeed: { value: number };
-      uCursorActive: { value: number };
+    wakeUniforms: {
+      uDrops: { value: THREE.Vector4[] };
     },
     alphaMin: number,
     alphaRange: number,
@@ -182,9 +185,7 @@ export class MeshScene {
         uAlphaMin: { value: alphaMin },
         uAlphaRange: { value: alphaRange },
         uPointSize: { value: pointSize },
-        uCursorXZ: cursorUniforms.uCursorXZ,
-        uCursorSpeed: cursorUniforms.uCursorSpeed,
-        uCursorActive: cursorUniforms.uCursorActive,
+        uDrops: wakeUniforms.uDrops,
       },
       transparent: true,
       depthWrite: false,
@@ -377,8 +378,10 @@ export class MeshScene {
   }
 
   private animate(): void {
-    const t = this.clock.getElapsedTime();
+    // getDelta() must be called before getElapsedTime() — getElapsedTime()
+    // internally calls getDelta(), consuming the time step and leaving 0.
     const dt = this.clock.getDelta();
+    const t = this.clock.getElapsedTime();
 
     // FPS counter (dev-only)
     if (import.meta.env.DEV) {
@@ -390,7 +393,7 @@ export class MeshScene {
       }
     }
 
-    // Cursor ripple: compute world XZ and velocity
+    // Cursor wake: compute world XZ, velocity, and spawn drops
     if (this.cursorOnCanvas && this.mouseActive) {
       const [wx, wz] = this.screenToWorldXZ(this.mouseScreenX, this.mouseScreenY);
       this.prevCursorWorldX = this.cursorWorldX;
@@ -401,22 +404,34 @@ export class MeshScene {
       const ddx = this.cursorWorldX - this.prevCursorWorldX;
       const ddz = this.cursorWorldZ - this.prevCursorWorldZ;
       const rawSpeed = dt > 0 ? Math.sqrt(ddx * ddx + ddz * ddz) / dt : 0;
-      this.cursorSpeed += (rawSpeed - this.cursorSpeed) * 0.1;
+      this.cursorSpeed += (rawSpeed - this.cursorSpeed) * 0.15;
+
+      // Spawn a new drop when cursor has moved enough distance
+      const sdx = this.cursorWorldX - this.lastDropX;
+      const sdz = this.cursorWorldZ - this.lastDropZ;
+      if (sdx * sdx + sdz * sdz > 30 * 30) {
+        const amp = Math.min(this.cursorSpeed * 0.015, 2.5);
+        const base = this.dropIndex * 4;
+        this.drops[base] = this.cursorWorldX;
+        this.drops[base + 1] = this.cursorWorldZ;
+        this.drops[base + 2] = t;
+        this.drops[base + 3] = amp;
+        this.dropIndex = (this.dropIndex + 1) % 8;
+        this.lastDropX = this.cursorWorldX;
+        this.lastDropZ = this.cursorWorldZ;
+      }
     } else {
-      // Smoothly decay speed when cursor leaves
       this.cursorSpeed *= 0.92;
     }
 
-    // Update cursor uniforms (shared across all 3 mesh materials)
-    this.triMat.uniforms.uCursorXZ.value.set(this.cursorWorldX, this.cursorWorldZ);
-    this.triMat.uniforms.uCursorSpeed.value = this.cursorSpeed;
-    this.triMat.uniforms.uCursorActive.value = this.cursorOnCanvas ? 1.0 : 0.0;
-    this.edgeMat.uniforms.uCursorXZ.value.set(this.cursorWorldX, this.cursorWorldZ);
-    this.edgeMat.uniforms.uCursorSpeed.value = this.cursorSpeed;
-    this.edgeMat.uniforms.uCursorActive.value = this.cursorOnCanvas ? 1.0 : 0.0;
-    this.pointMat.uniforms.uCursorXZ.value.set(this.cursorWorldX, this.cursorWorldZ);
-    this.pointMat.uniforms.uCursorSpeed.value = this.cursorSpeed;
-    this.pointMat.uniforms.uCursorActive.value = this.cursorOnCanvas ? 1.0 : 0.0;
+    // Upload drops to shared uniform (all materials reference same array)
+    for (let i = 0; i < 8; i++) {
+      const base = i * 4;
+      this.dropsUni[i].set(
+        this.drops[base], this.drops[base + 1],
+        this.drops[base + 2], this.drops[base + 3],
+      );
+    }
 
     // All materials (including heightMat) share the same uTime uniform object
     this.triMat.uniforms.uTime.value = t;

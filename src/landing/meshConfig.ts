@@ -204,9 +204,7 @@ uniform float uPointSize;
 uniform sampler2D uHeightMap;
 uniform vec2 uMapMin;
 uniform vec2 uMapSize;
-uniform vec2 uCursorXZ;
-uniform float uCursorSpeed;
-uniform float uCursorActive;
+uniform vec4 uDrops[8]; // xy = worldXZ, z = spawnTime, w = amplitude
 varying float vAlpha;
 varying vec3 vColor;
 
@@ -222,13 +220,22 @@ void main() {
   float h = sampleHeight(basePos);
   vec3 displaced = vec3(position.x, h, position.z);
 
-  // Cursor ripple: radial waves emanating from cursor position
-  float cursorDist = length(basePos - uCursorXZ);
-  float rippleRadius = 300.0;
-  float rippleFalloff = exp(-cursorDist * cursorDist / (rippleRadius * rippleRadius));
-  float ripple = uCursorActive * min(uCursorSpeed * 0.3, 15.0) * rippleFalloff
-               * sin(cursorDist * 0.08 - uTime * 8.0);
-  displaced.y += ripple;
+  // Cursor wake: propagating ripples from cursor trail
+  float wakeSum = 0.0;
+  for (int i = 0; i < 8; i++) {
+    vec4 drop = uDrops[i];
+    if (drop.w <= 0.0) continue;
+    float age = uTime - drop.z;
+    if (age < 0.0 || age > 2.0) continue;
+    float dist = length(basePos - drop.xy);
+    float wavefront = age * 100.0;
+    float ringWidth = 25.0 + age * 15.0;
+    float ringDelta = dist - wavefront;
+    float envelope = exp(-ringDelta * ringDelta / (ringWidth * ringWidth));
+    float decay = max(1.0 - age * 0.5, 0.0);
+    wakeSum += drop.w * envelope * decay * sin(dist * 0.1 - age * 10.0);
+  }
+  displaced.y -= wakeSum;
 
   // Surface normal via finite differences (1 texel offset)
   vec2 texelSize = uMapSize / ${HEIGHTMAP_RESOLUTION}.0;
