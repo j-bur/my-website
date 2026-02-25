@@ -61,6 +61,8 @@ Each phase has a detailed spec in `.claude/docs/landing/PHASE_SPECS/`. Read the 
 
 - **CPU/GPU noise drift**: `heightField.ts` simplex noise uses JS doubles vs GLSL float precision. Sine waves match exactly but noise octaves may differ by ~0.1 units. Fine for nav node projection; would need revisiting if pixel-perfect CPU/GPU agreement is ever required.
 - **Non-deterministic nav node placement**: Mesh generation uses `Math.random()` for grid jitter, scatter, and clusters, so BFS placement picks different vertices each page load. Nav nodes appear in slightly different positions each time. Acceptable aesthetically (organic feel) but makes visual regression testing harder. If deterministic placement is ever needed, seed the RNG in `buildMesh()`.
+- **Domain warping amplifies CPU/GPU noise drift** (Phase 5): The warp step feeds noise output back as noise input coordinates, compounding JS-double vs GLSL-float precision differences. Nav node projection still works (only ~2-5 lookups/frame, small positional error), but pixel-perfect CPU/GPU agreement is now further out of reach.
+- **Gerstner crest sharpness is approximate** (Phase 5): Y-only power-curve shaping (`pow` with exponent 1.3–1.6) creates mild asymmetry. If crests don't look sharp enough visually, options: increase steep values (0.8–1.5), use harmonic shaping (`sin(x) + k*sin(2x)`), or store vec3 displacement in the height texture (bigger change).
 
 ---
 
