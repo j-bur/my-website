@@ -66,6 +66,8 @@ export class MeshScene {
   // Phase 7: staged reveal
   private revealComplete = false;
   private maxHopDist = 0;
+  private revealDeferred = false;
+  private revealStartTime = 0;
 
   // Phase 6a: cursor wake
   private cursorWorldX = 0;
@@ -556,29 +558,37 @@ export class MeshScene {
 
     // Phase 7: staged reveal — exponential threshold ramp
     if (!this.revealComplete) {
-      const { pointDuration, edgeTriDelay, edgeTriDuration, exponent } = REVEAL;
-      const expDenom = Math.exp(exponent) - 1;
-      const easeExpIn = (x: number) => (Math.exp(exponent * x) - 1) / expDenom;
+      if (this.revealDeferred) {
+        // Reveal not started yet — hide everything
+        this.pointMat.uniforms.uRevealThreshold.value = -99999;
+        this.edgeMat.uniforms.uRevealThreshold.value = -99999;
+        this.triMat.uniforms.uRevealThreshold.value = -99999;
+      } else {
+        const revealT = t - this.revealStartTime;
+        const { pointDuration, edgeTriDelay, edgeTriDuration, exponent } = REVEAL;
+        const expDenom = Math.exp(exponent) - 1;
+        const easeExpIn = (x: number) => (Math.exp(exponent * x) - 1) / expDenom;
 
-      // Points: start at t=0
-      const pointProgress = Math.min(t / pointDuration, 1.0);
-      const pointThreshold = this.maxHopDist * easeExpIn(pointProgress);
-      this.pointMat.uniforms.uRevealThreshold.value = pointThreshold;
+        // Points: start at revealT=0
+        const pointProgress = Math.min(revealT / pointDuration, 1.0);
+        const pointThreshold = this.maxHopDist * easeExpIn(pointProgress);
+        this.pointMat.uniforms.uRevealThreshold.value = pointThreshold;
 
-      // Edges + Triangles: start at t=edgeTriDelay
-      const etElapsed = Math.max(t - edgeTriDelay, 0);
-      const etProgress = Math.min(etElapsed / edgeTriDuration, 1.0);
-      const etThreshold = this.maxHopDist * easeExpIn(etProgress);
-      this.edgeMat.uniforms.uRevealThreshold.value = etThreshold;
-      this.triMat.uniforms.uRevealThreshold.value = etThreshold;
+        // Edges + Triangles: start at revealT=edgeTriDelay
+        const etElapsed = Math.max(revealT - edgeTriDelay, 0);
+        const etProgress = Math.min(etElapsed / edgeTriDuration, 1.0);
+        const etThreshold = this.maxHopDist * easeExpIn(etProgress);
+        this.edgeMat.uniforms.uRevealThreshold.value = etThreshold;
+        this.triMat.uniforms.uRevealThreshold.value = etThreshold;
 
-      // Check completion: points have finished their full duration
-      if (pointProgress >= 1.0 && etProgress >= 1.0) {
-        this.revealComplete = true;
-        // Lock to large sentinel so shader check is always 1.0 (no-op)
-        this.pointMat.uniforms.uRevealThreshold.value = 99999;
-        this.edgeMat.uniforms.uRevealThreshold.value = 99999;
-        this.triMat.uniforms.uRevealThreshold.value = 99999;
+        // Check completion: points have finished their full duration
+        if (pointProgress >= 1.0 && etProgress >= 1.0) {
+          this.revealComplete = true;
+          // Lock to large sentinel so shader check is always 1.0 (no-op)
+          this.pointMat.uniforms.uRevealThreshold.value = 99999;
+          this.edgeMat.uniforms.uRevealThreshold.value = 99999;
+          this.triMat.uniforms.uRevealThreshold.value = 99999;
+        }
       }
     }
 
@@ -742,6 +752,21 @@ export class MeshScene {
    */
   getHoveredNode(): PlacedNavNode | null {
     return this.hoveredNode;
+  }
+
+  /** Defer the reveal animation until startReveal() is called. Must be called before first frame. */
+  deferReveal(): void {
+    this.revealDeferred = true;
+    this.pointMat.uniforms.uRevealThreshold.value = -99999;
+    this.edgeMat.uniforms.uRevealThreshold.value = -99999;
+    this.triMat.uniforms.uRevealThreshold.value = -99999;
+  }
+
+  /** Start the reveal animation from this moment. */
+  startReveal(): void {
+    this.revealDeferred = false;
+    this.revealStartTime = this.clock.getElapsedTime();
+    this.revealComplete = false;
   }
 
   /** Whether the staged mesh reveal animation has completed. */

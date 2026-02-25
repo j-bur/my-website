@@ -19,6 +19,25 @@ export function LandingPage() {
     sceneRef.current = scene;
     scene.resize(container.clientWidth, container.clientHeight);
 
+    // Defer reveal animation if loading in portrait on mobile — play after rotating to landscape
+    let orientationCleanup: (() => void) | null = null;
+    const portraitMobileQuery = window.matchMedia('(orientation: portrait) and (max-width: 768px)');
+    if (portraitMobileQuery.matches) {
+      scene.deferReveal();
+      let revealTimer: ReturnType<typeof setTimeout> | null = null;
+      const onChange = (e: MediaQueryListEvent) => {
+        if (!e.matches) {
+          revealTimer = setTimeout(() => scene.startReveal(), 250);
+          portraitMobileQuery.removeEventListener('change', onChange);
+        }
+      };
+      portraitMobileQuery.addEventListener('change', onChange);
+      orientationCleanup = () => {
+        portraitMobileQuery.removeEventListener('change', onChange);
+        if (revealTimer !== null) clearTimeout(revealTimer);
+      };
+    }
+
     // Frame callback: update label positions + hover glow via direct DOM manipulation
     scene.setFrameCallback((projections) => {
       const hovered = scene.getHoveredNode();
@@ -143,6 +162,7 @@ export function LandingPage() {
       canvas.removeEventListener('touchmove', onTouchMove);
       canvas.removeEventListener('touchend', onTouchEnd);
       observer.disconnect();
+      orientationCleanup?.();
       scene.dispose();
       sceneRef.current = null;
     };
