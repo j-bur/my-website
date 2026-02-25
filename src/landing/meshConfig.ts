@@ -65,9 +65,9 @@ export const NAV_PLACEMENT = {
 
 // --- Staged reveal (Phase 7) ---
 export const REVEAL = {
-  pointDuration: 2.0,     // seconds for full point reveal
-  edgeTriDelay: 0.5,      // seconds before edges/triangles start
-  edgeTriDuration: 1.5,   // seconds for edge/tri reveal (ends at same time as points)
+  pointDuration: 4.0,     // seconds for full point reveal
+  edgeTriDelay: 1.0,      // seconds before edges/triangles start
+  edgeTriDuration: 3.0,   // seconds for edge/tri reveal (ends at same time as points)
   exponent: 3.0,          // exponential ramp factor (higher = slower start, faster finish)
   smoothWidth: 2.0,       // hop-distance width of the fade zone
 };
