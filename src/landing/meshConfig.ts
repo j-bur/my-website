@@ -270,9 +270,10 @@ void main() {
   vColor = vec3(1.0);
 `;
 
-// --- Standard vertex shader (tri + edge passes) ---
+// --- Standard vertex shader (tri pass) + lightning facet brightening ---
 export const VERT_SRC = /* glsl */ `
 attribute vec3 aColor;
+attribute float aEnergy;
 ${VERT_COMMON}
   vColor = aColor;
   // Gentler distance fade for colored faces — stays visible further into the mesh
@@ -280,6 +281,11 @@ ${VERT_COMMON}
   alpha = (0.04 + lighting * 0.8) * triFade * vertBright;
   gl_PointSize = uPointSize + alpha * 4.0;
   vAlpha = uAlphaMin + alpha * uAlphaRange;
+  if (aEnergy > 0.01) {
+    // Brighten and saturate facets near lightning
+    vColor = mix(vColor, vColor * 1.8, aEnergy);
+    vAlpha = max(vAlpha, aEnergy * 0.25);
+  }
 }
 `;
 
@@ -297,8 +303,8 @@ ${VERT_COMMON}
     vAlpha = uAlphaMin + alpha * uAlphaRange;
   }
   if (aEnergy > 0.01) {
-    gl_PointSize += aEnergy * 6.0;
-    vAlpha = max(vAlpha, aEnergy * 0.95);
+    gl_PointSize += aEnergy * 4.0;
+    vAlpha = max(vAlpha, aEnergy * 0.5);
   }
 }
 `;
@@ -316,8 +322,8 @@ ${VERT_COMMON}
     vAlpha = uAlphaMin + alpha * uAlphaRange;
   }
   if (aEnergy > 0.01) {
-    vColor = mix(vColor, vec3(0.6, 0.9, 1.0), aEnergy); // light blue-white lightning
-    vAlpha = max(vAlpha, aEnergy * 0.9);
+    vColor = mix(vColor, vec3(0.6, 0.9, 1.0), aEnergy * 0.6); // light blue-white lightning
+    vAlpha = max(vAlpha, aEnergy * 0.5);
   }
 }
 `;

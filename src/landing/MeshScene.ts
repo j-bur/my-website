@@ -60,6 +60,8 @@ export class MeshScene {
   private lightning: LightningEffect | null = null;
   private edgeEnergyAttr: THREE.BufferAttribute | null = null;
   private pointEnergyAttr: THREE.BufferAttribute | null = null;
+  private triEnergyAttr: THREE.BufferAttribute | null = null;
+  private triVertexIndices: Uint32Array | null = null; // original vertex indices for triangle buffer
 
   // Phase 6a: cursor wake
   private cursorWorldX = 0;
@@ -306,9 +308,23 @@ export class MeshScene {
         triColors[t * 9 + v * 3 + 2] = color[2];
       }
     }
+    // Store original vertex indices for mapping lightning energy to tri buffer
+    this.triVertexIndices = new Uint32Array(triCount * 3);
+    for (let t = 0; t < triCount; t++) {
+      this.triVertexIndices[t * 3] = triangles[t * 3];
+      this.triVertexIndices[t * 3 + 1] = triangles[t * 3 + 1];
+      this.triVertexIndices[t * 3 + 2] = triangles[t * 3 + 2];
+    }
+
     const triGeom = new THREE.BufferGeometry();
     triGeom.setAttribute('position', new THREE.BufferAttribute(triPositions, 3));
     triGeom.setAttribute('aColor', new THREE.BufferAttribute(triColors, 3));
+
+    // aEnergy attribute for lightning facet brightening (1 per triangle vertex)
+    const triEnergyData = new Float32Array(triCount * 3);
+    this.triEnergyAttr = new THREE.BufferAttribute(triEnergyData, 1);
+    triGeom.setAttribute('aEnergy', this.triEnergyAttr);
+
     this.triMesh = new THREE.Mesh(triGeom, this.triMat);
     this.scene.add(this.triMesh);
 
@@ -487,6 +503,16 @@ export class MeshScene {
         const vertSrc = this.lightning.getVertexEnergy();
         (this.pointEnergyAttr.array as Float32Array).set(vertSrc);
         this.pointEnergyAttr.needsUpdate = true;
+
+        // Map vertex energy to triangle buffer (non-indexed, duplicated vertices)
+        if (this.triEnergyAttr && this.triVertexIndices) {
+          const triData = this.triEnergyAttr.array as Float32Array;
+          const triIdx = this.triVertexIndices;
+          for (let i = 0; i < triIdx.length; i++) {
+            triData[i] = vertSrc[triIdx[i]];
+          }
+          this.triEnergyAttr.needsUpdate = true;
+        }
       }
     }
 

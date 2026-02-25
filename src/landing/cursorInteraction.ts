@@ -2,19 +2,25 @@ import type { MeshGraph } from './meshGraph';
 import { buildSpatialHash, findNearestVertex, type SpatialHash } from './meshGraph';
 
 /** BFS max depth for lightning propagation. */
-const MAX_HOPS = 6;
+const MAX_HOPS = 3;
 
 /** Per-frame multiplicative decay (energy *= DECAY each frame). */
 const DECAY = 0.92;
 
 /** Per-hop energy falloff: energy at hop h = base * HOP_FALLOFF^h. */
-const HOP_FALLOFF = 0.55;
+const HOP_FALLOFF = 0.5;
 
 /** Minimum cursor speed (world units/sec) to trigger lightning. */
 const SPEED_THRESHOLD = 50;
 
 /** Energy threshold below which we consider a vertex inactive. */
 const ENERGY_EPSILON = 0.01;
+
+/** Max interpolation steps per frame for fast cursor movement. */
+const MAX_INTERP_STEPS = 10;
+
+/** World-unit spacing between interpolated injection points. */
+const INTERP_SPACING = 80;
 
 /**
  * Graph-based lightning effect: BFS energy dispersal from the nearest
@@ -26,6 +32,10 @@ export class LightningEffect {
   private edgeEnergy: Float32Array;
   private graph: MeshGraph;
   private spatialHash: SpatialHash;
+  private prevX = 0;
+  private prevZ = 0;
+  private hasPrev = false;
+
   constructor(graph: MeshGraph) {
     this.graph = graph;
     this.energy = new Float32Array(graph.vertexCount);
@@ -58,17 +68,46 @@ export class LightningEffect {
 
     // Inject energy via BFS if cursor is active and fast enough
     if (cursorActive && cursorSpeed > SPEED_THRESHOLD) {
-      const nearest = findNearestVertex(
-        this.spatialHash,
-        this.graph.positions,
-        cursorX,
-        cursorZ,
-      );
-      if (nearest >= 0) {
-        const baseEnergy = Math.min(cursorSpeed * 0.005, 1.0);
-        this.bfsInject(nearest, baseEnergy);
-        anyActive = true;
+      const baseEnergy = Math.min(cursorSpeed * 0.003, 0.6);
+
+      if (this.hasPrev) {
+        const dx = cursorX - this.prevX;
+        const dz = cursorZ - this.prevZ;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+
+        if (dist > INTERP_SPACING) {
+          // Interpolate injection points along the cursor path
+          const steps = Math.min(Math.ceil(dist / INTERP_SPACING), MAX_INTERP_STEPS);
+          for (let s = 1; s <= steps; s++) {
+            const t = s / steps;
+            const ix = this.prevX + dx * t;
+            const iz = this.prevZ + dz * t;
+            const nearest = findNearestVertex(this.spatialHash, this.graph.positions, ix, iz);
+            if (nearest >= 0) {
+              this.bfsInject(nearest, baseEnergy);
+              anyActive = true;
+            }
+          }
+        } else {
+          const nearest = findNearestVertex(this.spatialHash, this.graph.positions, cursorX, cursorZ);
+          if (nearest >= 0) {
+            this.bfsInject(nearest, baseEnergy);
+            anyActive = true;
+          }
+        }
+      } else {
+        const nearest = findNearestVertex(this.spatialHash, this.graph.positions, cursorX, cursorZ);
+        if (nearest >= 0) {
+          this.bfsInject(nearest, baseEnergy);
+          anyActive = true;
+        }
       }
+
+      this.prevX = cursorX;
+      this.prevZ = cursorZ;
+      this.hasPrev = true;
+    } else {
+      this.hasPrev = false;
     }
 
     // Map vertex energy to edge energy

@@ -17,7 +17,7 @@
 | Phase 4: Performance | **Complete** | Displacement texture, two-pass render, dev FPS counter |
 | Phase 5: Wave Simulation | **Complete** | Gerstner waves, domain-warped FBM, time-varying drift |
 | Phase 6a: Cursor Ripple | **Complete** | Propagating drop ripples (64-slot ring buffer), adaptive spacing, screen-to-world raycast |
-| Phase 6b: Graph Lightning | **Complete** | Spatial hash, BFS lightning wavefront, aEnergy on edges + points |
+| Phase 6b: Graph Lightning | **Complete** | Spatial hash, BFS lightning wavefront, aEnergy on edges + points + tris, interpolated fast cursor |
 
 ---
 
@@ -30,13 +30,16 @@
      - `DECAY` (0.92): per-frame multiplicative energy decay
      - `HOP_FALLOFF` (0.55): energy multiplier per hop (base * 0.55^hop)
      - `SPEED_THRESHOLD` (50): minimum cursor speed to trigger lightning
-     - `cursorSpeed * 0.005`: base energy scaling; capped at 1.0
+     - `cursorSpeed * 0.003`: base energy scaling; capped at 0.6
+     - `INTERP_SPACING` (80): world-unit spacing between interpolated injections
+     - `MAX_INTERP_STEPS` (10): cap on interpolation points per frame
    - **Spatial hash** (`meshGraph.ts`):
      - Cell size 80 world units
      - 9-cell neighborhood search for nearest vertex
    - **Shaders** (`meshConfig.ts`):
-     - Edge `aEnergy`: mixes toward `vec3(0.6, 0.9, 1.0)` (light blue-white), alpha * 0.9
-     - Point `aEnergy`: adds `aEnergy * 6.0` to point size, alpha * 0.95
+     - Edge `aEnergy`: mixes toward `vec3(0.6, 0.9, 1.0)` at 60% blend, alpha * 0.5
+     - Point `aEnergy`: adds `aEnergy * 4.0` to point size, alpha * 0.5
+     - Tri `aEnergy`: brightens face color (1.8× mix), alpha * 0.25
 3. Phase 6a cursor wake tuning reference (if revisiting):
    - **Shader** (`meshConfig.ts` VERT_COMMON wake loop):
      - `uDrops[64]`: ring buffer size (matches `NUM_DROPS` in MeshScene.ts)
