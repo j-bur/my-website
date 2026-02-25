@@ -28,10 +28,19 @@ export const CAMERA_LOOK_AT_Z = -100;
 export const MESH_CURVATURE = 0.000005; // Y drop = curvature * dist²
 
 // --- Alpha ranges for the three render passes ---
-export const TRI_ALPHA = { min: 0.0, range: 0.12 };
-export const EDGE_ALPHA = { min: 0.01, range: 0.55 };
+export const TRI_ALPHA = { min: 0.0, range: 0.1 };
+export const EDGE_ALPHA = { min: 0.01, range: 0.12 };
 export const POINT_ALPHA = { min: 0.02, range: 0.95 };
 export const POINT_SIZE = 1.5;
+
+// --- Per-face palette: full Siphon colors (alpha constrains intensity) ---
+export const FACE_PALETTE: [number, number, number][] = [
+  [0.00, 0.83, 0.67],  // EP Positive  #00d4aa
+  [1.00, 0.27, 0.40],  // EP Negative  #ff4466
+  [0.48, 0.26, 0.88],  // Focus        #7a42e0
+  [0.82, 0.10, 0.82],  // Warp         #d119d1
+  [1.00, 0.73, 0.20],  // Capacitance  #ffbb33
+];
 
 // --- Navigation nodes ---
 export interface NavNodeDef {
@@ -196,6 +205,7 @@ uniform sampler2D uHeightMap;
 uniform vec2 uMapMin;
 uniform vec2 uMapSize;
 varying float vAlpha;
+varying vec3 vColor;
 
 float sampleHeight(vec2 worldXZ) {
   vec2 uv = (worldXZ - uMapMin) / uMapSize;
@@ -237,11 +247,19 @@ void main() {
 
   // Final alpha from lighting + distance + vertex variation
   float alpha = (0.04 + lighting * 0.8) * distFade * vertBright;
+
+  // Default face color (white); overridden by aColor in the triangle pass
+  vColor = vec3(1.0);
 `;
 
 // --- Standard vertex shader (tri + edge passes) ---
 export const VERT_SRC = /* glsl */ `
+attribute vec3 aColor;
 ${VERT_COMMON}
+  vColor = aColor;
+  // Gentler distance fade for colored faces — stays visible further into the mesh
+  float triFade = clamp(1500.0 / camDist, 0.45, 1.0);
+  alpha = (0.04 + lighting * 0.8) * triFade * vertBright;
   gl_PointSize = uPointSize + alpha * 4.0;
   vAlpha = uAlphaMin + alpha * uAlphaRange;
 }
@@ -265,7 +283,6 @@ ${VERT_COMMON}
 // --- Edge vertex shader: adds path highlight support ---
 export const EDGE_VERT_SRC = /* glsl */ `
 attribute float aHighlight;
-varying vec3 vColor;
 ${VERT_COMMON}
   if (aHighlight > 0.5) {
     vColor = vec3(0.0, 0.83, 0.67); // EP Positive (#00d4aa)
@@ -290,7 +307,8 @@ void main() {
 export const FRAG_SRC = /* glsl */ `
 precision mediump float;
 varying float vAlpha;
+varying vec3 vColor;
 void main() {
-  gl_FragColor = vec4(1.0, 1.0, 1.0, vAlpha);
+  gl_FragColor = vec4(vColor, vAlpha);
 }
 `;

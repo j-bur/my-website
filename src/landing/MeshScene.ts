@@ -10,6 +10,7 @@ import {
   EDGE_VERT_SRC, EDGE_FRAG_SRC,
   HEIGHT_VERT_SRC, HEIGHT_FRAG_SRC,
   NAV_NODES, HUB_NODE_INDEX,
+  FACE_PALETTE,
 } from './meshConfig';
 import { buildMeshGraph, edgeKey, type MeshGraph } from './meshGraph';
 import { placeNavNodes, projectNavNodes, type PlacedNavNode, type NavProjection } from './navNodes';
@@ -247,10 +248,31 @@ export class MeshScene {
     // --- Build graph from Delaunay triangulation ---
     this.graph = buildMeshGraph(pts2d, new Uint32Array(tri), MAX_EDGE_LENGTH);
 
-    // --- Triangle geometry (indexed, using filtered triangles) ---
+    // --- Triangle geometry (non-indexed, per-face palette colors) ---
+    const triangles = this.graph.triangles;
+    const triCount = triangles.length / 3;
+    const triPositions = new Float32Array(triCount * 9); // 3 verts * 3 components
+    const triColors = new Float32Array(triCount * 9);    // 3 verts * 3 RGB
+    for (let t = 0; t < triCount; t++) {
+      const i0 = triangles[t * 3], i1 = triangles[t * 3 + 1], i2 = triangles[t * 3 + 2];
+      // Copy vertex positions into the non-indexed buffer
+      for (let v = 0; v < 3; v++) {
+        const srcIdx = [i0, i1, i2][v];
+        triPositions[t * 9 + v * 3]     = positions[srcIdx * 3];
+        triPositions[t * 9 + v * 3 + 1] = positions[srcIdx * 3 + 1];
+        triPositions[t * 9 + v * 3 + 2] = positions[srcIdx * 3 + 2];
+      }
+      // Assign one random palette color to all 3 vertices (flat shading)
+      const color = FACE_PALETTE[Math.floor(Math.random() * FACE_PALETTE.length)];
+      for (let v = 0; v < 3; v++) {
+        triColors[t * 9 + v * 3]     = color[0];
+        triColors[t * 9 + v * 3 + 1] = color[1];
+        triColors[t * 9 + v * 3 + 2] = color[2];
+      }
+    }
     const triGeom = new THREE.BufferGeometry();
-    triGeom.setAttribute('position', posAttr);
-    triGeom.setIndex(new THREE.BufferAttribute(this.graph.triangles, 1));
+    triGeom.setAttribute('position', new THREE.BufferAttribute(triPositions, 3));
+    triGeom.setAttribute('aColor', new THREE.BufferAttribute(triColors, 3));
     this.triMesh = new THREE.Mesh(triGeom, this.triMat);
     this.scene.add(this.triMesh);
 
