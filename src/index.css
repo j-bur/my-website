@@ -303,6 +303,49 @@ body {
   text-shadow: 0 0 14px rgba(0, 212, 170, 0.7), 0 0 4px rgba(0, 212, 170, 0.4);
 }
 
+/* Touch: disable browser pan/zoom/scroll on the landing canvas */
+.landing-canvas {
+  touch-action: none;
+}
+
+/* Portrait orientation overlay — prompt mobile users to rotate */
+.portrait-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.92);
+  color: #fff;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  text-align: center;
+  padding: 2rem;
+}
+
+.portrait-overlay-icon {
+  animation: rotate-hint 2s ease-in-out infinite;
+}
+
+@keyframes rotate-hint {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+}
+
+.portrait-overlay-text {
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
+@media (orientation: portrait) and (max-width: 768px) {
+  .portrait-overlay {
+    display: flex;
+  }
+}
+
 /* Programmatic reduced motion (applied via settingsStore) */
 .reduce-motion * {
   transition-duration: 0ms !important;
