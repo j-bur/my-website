@@ -14,7 +14,7 @@ export function LandingPage() {
     if (!canvas) return;
 
     const container = canvas.parentElement!;
-    const scene = new MeshScene(canvas);
+    const scene = new MeshScene(canvas, container.clientWidth, container.clientHeight);
     sceneRef.current = scene;
     scene.resize(container.clientWidth, container.clientHeight);
 

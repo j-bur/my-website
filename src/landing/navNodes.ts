@@ -25,9 +25,10 @@ export interface NavProjection {
 export function placeNavNodes(
   graph: MeshGraph,
   navDefs: NavNodeDef[],
+  camera: THREE.PerspectiveCamera,
 ): PlacedNavNode[] {
   const { positions, vertexCount, adjacency } = graph;
-  const { minHops, maxHops, minAngularSpread } = NAV_PLACEMENT;
+  const { minHops, maxHops, minAngularSpread, screenMarginNDC } = NAV_PLACEMENT;
 
   // Find vertex nearest to world (0, 0) in XZ for the hub
   let hubVertex = 0;
@@ -76,7 +77,7 @@ export function placeNavNodes(
   const otherDefs = navDefs.filter((_, i) => i !== HUB_NODE_INDEX);
 
   for (const def of otherDefs) {
-    // Collect candidate vertices within hop range
+    // Collect candidate vertices within hop range and visible frustum
     const candidates: number[] = [];
     for (let i = 0; i < vertexCount; i++) {
       const hops = hopDist[i];
@@ -84,6 +85,10 @@ export function placeNavNodes(
       // Filter to upper mesh portion (negative Z = upper screen since camera looks from +Z toward -Z)
       const z = positions[i * 2 + 1];
       if (z >= 0) continue; // skip lower half
+      // Reject candidates that project outside the camera frustum (with margin)
+      _vec3.set(positions[i * 2], 0, z);
+      _vec3.project(camera);
+      if (Math.abs(_vec3.x) > screenMarginNDC) continue;
       candidates.push(i);
     }
 

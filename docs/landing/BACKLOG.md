@@ -50,6 +50,8 @@ When investigating an item, append **Notes** beneath it as sub-bullets.
 
 - **Cursor path interpolation lives in two places**: Phase 6a interpolates drop positions in `MeshScene.ts` (ring buffer spacing), Phase 6b interpolates BFS injection points in `cursorInteraction.ts` (INTERP_SPACING). Both solve "cursor jumped too far in one frame" for their respective effects. They can't easily share code (different data types and purposes) but a future refactor could extract a shared `interpolateCursorPath(prevX, prevZ, cursorX, cursorZ, spacing)` generator if more cursor effects are added.
 
+- [ ] **P3** | **M** | **VIS-02: Nav nodes not re-placed on viewport resize**: `placeNavNodes` runs once at construction with the initial viewport aspect ratio. If the window is resized significantly (e.g., narrow→wide or vice versa), nodes placed conservatively for the original frustum could end up off-screen or unnecessarily bunched. Fix would require re-running placement + pathfinding + updating highlight/isNavNode attributes on major aspect ratio changes.
+
 ---
 
 ## Feature Requests

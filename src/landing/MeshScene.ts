@@ -97,7 +97,7 @@ export class MeshScene {
   private frameCount = 0;
   private lastFpsTime = 0;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     // Renderer
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -108,8 +108,8 @@ export class MeshScene {
     this.renderer.setClearColor(0x000000, 1);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Camera
-    this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, 1, 10000);
+    // Camera (set correct aspect immediately so nav node placement has accurate frustum)
+    this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, width / height, 1, 10000);
     this.camera.position.set(0, CAMERA_HEIGHT, CAMERA_Z);
     this.camera.lookAt(0, 0, CAMERA_LOOK_AT_Z);
 
@@ -365,7 +365,10 @@ export class MeshScene {
     pointGeom.setAttribute('position', posAttr);
 
     // --- Place nav nodes — only the hub is visually distinct by default ---
-    this.placedNavNodes = placeNavNodes(this.graph, NAV_NODES);
+    // Ensure camera world matrix is up-to-date for frustum projection in placeNavNodes
+    // (no render frame has run yet, so matrixWorld hasn't been computed from position/quaternion)
+    this.camera.updateMatrixWorld(true);
+    this.placedNavNodes = placeNavNodes(this.graph, NAV_NODES, this.camera);
     const isNavNode = new Float32Array(nPts);
     isNavNode[this.placedNavNodes[HUB_NODE_INDEX].vertexIndex] = 1.0;
     this.isNavNodeAttr = new THREE.BufferAttribute(isNavNode, 1);

@@ -60,6 +60,7 @@ export const NAV_PLACEMENT = {
   minHops: 8,
   maxHops: 25,
   minAngularSpread: Math.PI / 3, // 60 degrees minimum between non-hub nodes
+  screenMarginNDC: 0.85, // reject candidates beyond ±this in NDC X (keeps nodes on-screen)
 };
 
 // --- GLSL Simplex Noise (Ashima Arts / Stefan Gustavson, MIT) ---
