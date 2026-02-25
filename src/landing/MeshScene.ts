@@ -55,6 +55,7 @@ export class MeshScene {
   private mouseActive = false;
   private hoveredNode: PlacedNavNode | null = null;
   private isNavNodeAttr: THREE.BufferAttribute | null = null;
+  private navNodeVisible: boolean[] = [];
 
   // Phase 6b: graph lightning
   private lightning: LightningEffect | null = null;
@@ -408,6 +409,9 @@ export class MeshScene {
     this.isNavNodeAttr = new THREE.BufferAttribute(isNavNode, 1);
     pointGeom.setAttribute('aIsNavNode', this.isNavNodeAttr);
 
+    // All nav nodes start visible; LandingPage can toggle via setNavNodeVisible()
+    this.navNodeVisible = this.placedNavNodes.map(() => true);
+
     // aEnergy attribute for lightning effect (1 per vertex)
     const pointEnergyData = new Float32Array(nPts);
     this.pointEnergyAttr = new THREE.BufferAttribute(pointEnergyData, 1);
@@ -629,7 +633,7 @@ export class MeshScene {
     this.renderer.render(this.scene, this.camera);
   }
 
-  /** Find the nearest nav node to the cursor within HOVER_DISTANCE_PX. */
+  /** Find the nearest nav node to the cursor, respecting per-node radius, priority, and visibility. */
   private updateHover(projections: NavProjection[]): void {
     if (!this.mouseActive) {
       if (this.hoveredNode) {
@@ -640,15 +644,30 @@ export class MeshScene {
     }
 
     let nearest: PlacedNavNode | null = null;
-    let nearestDistSq = HOVER_DISTANCE_PX * HOVER_DISTANCE_PX;
+    let nearestDistSq = Infinity;
+    let nearestPriority = -Infinity;
 
-    for (const proj of projections) {
+    for (let i = 0; i < projections.length; i++) {
+      if (!this.navNodeVisible[i]) continue;
+      const proj = projections[i];
+      const def = proj.node;
+      // Hub ('You') is not hoverable — it's a non-navigable anchor
+      if (i === HUB_NODE_INDEX) continue;
+
+      const radiusMul = def.hoverRadiusMultiplier ?? 1;
+      const maxDist = HOVER_DISTANCE_PX * radiusMul;
+      const priority = def.hoverPriority ?? 0;
+
       const dx = this.mouseScreenX - proj.screenX;
       const dy = this.mouseScreenY - proj.screenY;
       const distSq = dx * dx + dy * dy;
-      if (distSq < nearestDistSq) {
+      if (distSq > maxDist * maxDist) continue;
+
+      // Higher priority always wins; within same priority, nearest wins
+      if (priority > nearestPriority || (priority === nearestPriority && distSq < nearestDistSq)) {
         nearestDistSq = distSq;
-        nearest = proj.node;
+        nearestPriority = priority;
+        nearest = def;
       }
     }
 
@@ -656,10 +675,15 @@ export class MeshScene {
     if (nearest !== this.hoveredNode) {
       const hubVertexIndex = this.placedNavNodes[HUB_NODE_INDEX].vertexIndex;
 
-      // Un-highlight previous (unless it's the hub, which is always visible)
-      if (this.hoveredNode && this.hoveredNode.vertexIndex !== hubVertexIndex && this.isNavNodeAttr) {
-        (this.isNavNodeAttr.array as Float32Array)[this.hoveredNode.vertexIndex] = 0.0;
-        this.isNavNodeAttr.needsUpdate = true;
+      // Un-highlight previous hovered dot (keep hub + visible nav node dots)
+      if (this.hoveredNode && this.isNavNodeAttr) {
+        const prevIdx = this.placedNavNodes.indexOf(this.hoveredNode);
+        const isHubOrVisibleNav = this.hoveredNode.vertexIndex === hubVertexIndex
+          || (prevIdx >= 0 && this.navNodeVisible[prevIdx]);
+        if (!isHubOrVisibleNav) {
+          (this.isNavNodeAttr.array as Float32Array)[this.hoveredNode.vertexIndex] = 0.0;
+          this.isNavNodeAttr.needsUpdate = true;
+        }
       }
 
       // Highlight new hovered node's dot
@@ -730,9 +754,12 @@ export class MeshScene {
     this.mouseActive = false;
     this.cursorOnCanvas = false;
     if (this.hoveredNode) {
-      // Un-highlight the dot (unless hub)
+      // Un-highlight the dot (keep hub + visible nav node dots)
       const hubVertexIndex = this.placedNavNodes[HUB_NODE_INDEX].vertexIndex;
-      if (this.hoveredNode.vertexIndex !== hubVertexIndex && this.isNavNodeAttr) {
+      const prevIdx = this.placedNavNodes.indexOf(this.hoveredNode);
+      const isHubOrVisibleNav = this.hoveredNode.vertexIndex === hubVertexIndex
+        || (prevIdx >= 0 && this.navNodeVisible[prevIdx]);
+      if (!isHubOrVisibleNav && this.isNavNodeAttr) {
         (this.isNavNodeAttr.array as Float32Array)[this.hoveredNode.vertexIndex] = 0.0;
         this.isNavNodeAttr.needsUpdate = true;
       }
@@ -752,6 +779,25 @@ export class MeshScene {
    */
   getHoveredNode(): PlacedNavNode | null {
     return this.hoveredNode;
+  }
+
+  /** Show or hide a nav node by index. Hidden nodes skip hover detection and label rendering. */
+  setNavNodeVisible(index: number, visible: boolean): void {
+    if (index < 0 || index >= this.navNodeVisible.length) return;
+    this.navNodeVisible[index] = visible;
+
+    // Update the point dot: show/hide the pulsing dot for this node
+    if (this.isNavNodeAttr && this.placedNavNodes[index]) {
+      const vi = this.placedNavNodes[index].vertexIndex;
+      (this.isNavNodeAttr.array as Float32Array)[vi] = visible ? 1.0 : 0.0;
+      this.isNavNodeAttr.needsUpdate = true;
+    }
+
+    // If we just hid the currently hovered node, clear hover state
+    if (!visible && this.hoveredNode === this.placedNavNodes[index]) {
+      this.hoveredNode = null;
+      this.highlightPath(null);
+    }
   }
 
   /** Defer the reveal animation until startReveal() is called. Must be called before first frame. */

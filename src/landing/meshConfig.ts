@@ -52,14 +52,19 @@ export interface NavNodeDef {
   label: string;
   url: string;
   external: boolean;
+  /** Multiplier for hover detection radius (default 1). */
+  hoverRadiusMultiplier?: number;
+  /** Lower priority = loses to higher-priority nodes within range (default 0). */
+  hoverPriority?: number;
 }
 
 export const NAV_NODES: NavNodeDef[] = [
-  { label: 'FoundryVTT', url: 'https://foundry.jamesburns.cc', external: true },
+  { label: 'You', url: '', external: false },
+  { label: 'FoundryVTT', url: 'https://foundry.jamesburns.cc', external: true, hoverRadiusMultiplier: 2, hoverPriority: -1 },
   { label: 'Gauldurg', url: '/#/deck-builder', external: false },
 ];
 
-export const HUB_NODE_INDEX = 0; // FoundryVTT is always the hub
+export const HUB_NODE_INDEX = 0; // 'You' is the hub (non-navigable anchor)
 
 export const NAV_PLACEMENT = {
   minHops: 8,
