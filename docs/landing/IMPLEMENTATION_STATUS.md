@@ -16,28 +16,37 @@
 | Phase 3: Cursor Connection | **Complete** | Hover detection, path highlight on hover, click navigation, discoverable nav nodes |
 | Phase 4: Performance | **Complete** | Displacement texture, two-pass render, dev FPS counter |
 | Phase 5: Wave Simulation | **Complete** | Gerstner waves, domain-warped FBM, time-varying drift |
-| Phase 6a: Cursor Ripple | **Complete** | Shader radial ripple, cursor velocity tracking, screen-to-world raycast |
+| Phase 6a: Cursor Ripple | **Complete** | Propagating drop ripples (64-slot ring buffer), adaptive spacing, screen-to-world raycast |
 | Phase 6b: Graph Lightning | Not Started | — |
 
 ---
 
 ## Next Session
 
-1. **Visual check REQUIRED**: Serve on localhost and verify Phase 6a cursor ripple in browser:
-   - Move cursor over the mesh — radial ripples should emanate from cursor position
-   - Slow movement → subtle ripple; fast movement → dramatic ripple
-   - Ripples should fade with distance (~300 world units radius)
-   - When cursor leaves the canvas, ripple should smoothly decay (not abrupt cutoff)
+1. **Visual check REQUIRED**: Serve on localhost and verify Phase 6a cursor wake in browser:
+   - Move cursor over the mesh — propagating ripples should trail behind the cursor
+   - Ripples should expand outward over ~5 seconds before fading
+   - Fast cursor movement should leave a continuous trail (adaptive spacing widens at speed)
+   - When cursor leaves the canvas, existing ripples continue propagating (smooth fade)
    - FPS should remain 30+ (check dev console)
    - Nav node hover/path/click still works
-2. If ripple tuning needed, adjust parameters in `VERT_COMMON` (meshConfig.ts):
-   - `rippleRadius` (300.0): controls how far ripples extend
-   - `uCursorSpeed * 0.3`: controls speed-to-amplitude scaling
-   - `min(..., 15.0)`: caps maximum ripple amplitude
-   - `cursorDist * 0.08`: controls ripple wavelength (lower = wider waves)
-   - `uTime * 8.0`: controls ripple animation speed
-   - Velocity smoothing `0.1` in MeshScene.ts: controls responsiveness vs jitter
-   - Speed decay `0.92` in MeshScene.ts: controls how quickly ripple fades on mouse leave
+2. If ripple tuning needed, adjust parameters:
+   - **Shader** (`meshConfig.ts` VERT_COMMON wake loop):
+     - `uDrops[64]`: ring buffer size (matches `NUM_DROPS` in MeshScene.ts)
+     - `age > 5.0`: drop lifetime in seconds
+     - `age * 100.0`: wavefront propagation speed (world units/sec)
+     - `25.0 + age * 10.0`: ring width (initial + growth rate)
+     - `1.0 - age * 0.2`: decay rate (reaches 0 at lifetime end)
+     - `dist * 0.1`: ripple spatial frequency (lower = wider waves)
+     - `age * 10.0`: ripple temporal frequency
+   - **CPU** (`MeshScene.ts`):
+     - `NUM_DROPS` (64): ring buffer capacity
+     - `MIN_DROP_SPACING` (20) / `MAX_DROP_SPACING` (100): adaptive spacing range
+     - `cursorSpeed * 0.025`: speed-to-spacing scaling
+     - `MAX_DROPS_PER_FRAME` (8): interpolation cap per frame
+     - `cursorSpeed * 0.02`: amplitude scaling; `5.0`: amplitude cap
+     - Velocity smoothing `0.15`: responsiveness vs jitter
+     - Speed decay `0.92`: how quickly ripple fades on mouse leave
 3. When satisfied, begin **Phase 6b: Graph Lightning**
 4. Read `.claude/docs/landing/PHASE_SPECS/phase-6b-graph-lightning.md`
 
@@ -80,4 +89,4 @@ Each phase has a detailed spec in `.claude/docs/landing/PHASE_SPECS/`. Read the 
 | 2026-02-24 | Phase 3 | Added cursor interaction to MeshScene: mouse screen tracking with `setMouseScreenPos()`/`clearMouse()`, hover detection via screen-pixel distance (150px threshold), `getHoveredNode()` public API. Rewrote LandingPage.tsx: mousemove/mouseleave/click event handlers on canvas, `useNavigate` for internal links (strips `/#` prefix for hash router), pointer cursor on hover, `nav-label-hovered` CSS class toggled in frame callback. Added `.nav-label-hovered` CSS with EP Positive teal text-shadow glow. Removed cursor-to-node line (perspective mismatch). Non-hub nav nodes hidden by default — `aIsNavNode` only marks hub; dot + label revealed on hover for discoverable navigation. |
 | 2026-02-24 | Phase 4 | Displacement texture optimization. Extracted `heightAt` from vertex shaders into a height field fragment shader (`HEIGHT_FRAG_SRC`) that renders to a 512×512 `FloatType` `WebGLRenderTarget`. All mesh vertex shaders (`VERT_COMMON`) now sample displacement from texture via `sampleHeight()` instead of computing noise inline — eliminates redundant `heightAt()` per vertex. Added `HEIGHT_VERT_SRC` (fullscreen quad passthrough), `HEIGHT_AT_GLSL` (extracted heightAt function), `HEIGHTMAP_RESOLUTION` constant. MeshScene: two-pass render loop (height texture → scene), orthographic camera + fullscreen quad for height pass, mesh bounds computed from point cloud with 2% padding, shared `uHeightMap`/`uMapMin`/`uMapSize` uniforms across all materials. Dev-only FPS counter via `import.meta.env.DEV`. Normal finite differences use 1-texel offset (`uMapSize / 512.0`). Dispose updated for height resources. |
 | 2026-02-24 | Phase 5 | Wave simulation rewrite. Replaced 6 fixed sine waves with `gerstnerY()` — power-curve shaping (`pow((sin+1)/2, 1+steep)*2-1`) creates sharp crests and broad troughs without XZ displacement. Added time-varying direction drift (`t*0.02` rotation on alternating waves, ~5 min full rotation) and amplitude modulation (`ampMod1`/`ampMod2` at different rates). Replaced 3 simple noise octaves with domain-warped FBM: 2 noise evaluations warp the input coordinates by ±80 world units before the 3 FBM octaves, creating organic non-repeating turbulence. Updated CPU mirror in `heightField.ts` with identical `gerstnerY()` + drift + warping logic. Files modified: `meshConfig.ts` (HEIGHT_AT_GLSL), `heightField.ts`. No new files created. |
-| 2026-02-24 | Phase 6a | Cursor ripple effect. Added `uCursorXZ`, `uCursorSpeed`, `uCursorActive` uniforms to all mesh materials. Added radial ripple displacement in `VERT_COMMON` (Gaussian falloff, speed-scaled amplitude, outward-traveling sine pattern). Added `screenToWorldXZ()` raycast (screen→Y=0 plane intersection) and per-frame velocity tracking with smoothing in MeshScene. Added `setCursorActive()` public API. Added `mouseenter` event handler in LandingPage. Speed decays smoothly (×0.92/frame) when cursor leaves canvas. Files modified: `meshConfig.ts`, `MeshScene.ts`, `LandingPage.tsx`. No new files created. |
+| 2026-02-24 | Phase 6a | Cursor wake effect. Propagating drop ripple system: 64-slot ring buffer of cursor trail positions uploaded as `uDrops[64]` uniform. Each drop spawns expanding concentric ripples (Gaussian-enveloped sine, 5-second lifetime, 100 u/s wavefront speed). Adaptive drop spacing (20–100 world units) scales with cursor velocity so the buffer holds 2–6+ seconds of trail. Path interpolation fills gaps during fast cursor movement. Added `screenToWorldXZ()` raycast (screen→Y=0 plane intersection) and per-frame velocity tracking with smoothing in MeshScene. Added `setCursorActive()` public API. Added `mouseenter` event handler in LandingPage. Existing ripples continue propagating when cursor leaves canvas. Files modified: `meshConfig.ts`, `MeshScene.ts`, `LandingPage.tsx`. No new files created. |

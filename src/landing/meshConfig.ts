@@ -226,13 +226,13 @@ void main() {
     vec4 drop = uDrops[i];
     if (drop.w <= 0.0) continue;
     float age = uTime - drop.z;
-    if (age < 0.0 || age > 5.0) continue;
+    if (age < 0.0 || age > 1.5) continue;
     float dist = length(basePos - drop.xy);
     float wavefront = age * 100.0;
     float ringWidth = 25.0 + age * 10.0;
     float ringDelta = dist - wavefront;
     float envelope = exp(-ringDelta * ringDelta / (ringWidth * ringWidth));
-    float decay = max(1.0 - age * 0.2, 0.0);
+    float decay = max(1.0 - age * 0.95, 0.0);
     wakeSum += drop.w * envelope * decay * sin(dist * 0.1 - age * 10.0);
   }
   displaced.y -= wakeSum;
