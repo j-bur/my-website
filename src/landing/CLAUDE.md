@@ -40,7 +40,7 @@ src/landing/
   MeshScene.ts           # Pure Three.js scene: renderer, camera, mesh, render loop, dispose
   meshConfig.ts          # Constants, nav node definitions, GLSL shader sources
   delaunator.d.ts        # TypeScript declarations for delaunator package
-  meshGraph.ts           # Graph data structure + adjacency builder (Phase 0)
+  meshGraph.ts           # Graph data structure + adjacency builder (Phase 0) + spatial hash (Phase 6b)
   heightField.ts         # CPU-side height function mirroring GPU shader (Phase 0)
   navNodes.ts            # Nav node placement (BFS) + screen projection (Phase 1)
   pathfinding.ts         # BFS shortest path + edge key conversion (Phase 2)

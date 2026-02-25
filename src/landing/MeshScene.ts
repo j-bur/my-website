@@ -15,6 +15,7 @@ import {
 import { buildMeshGraph, edgeKey, type MeshGraph } from './meshGraph';
 import { placeNavNodes, projectNavNodes, type PlacedNavNode, type NavProjection } from './navNodes';
 import { findPath, pathToEdgeKeys } from './pathfinding';
+import { LightningEffect } from './cursorInteraction';
 
 /** Threshold in screen pixels for cursor-to-node hover detection. */
 const HOVER_DISTANCE_PX = 150;
@@ -54,6 +55,11 @@ export class MeshScene {
   private mouseActive = false;
   private hoveredNode: PlacedNavNode | null = null;
   private isNavNodeAttr: THREE.BufferAttribute | null = null;
+
+  // Phase 6b: graph lightning
+  private lightning: LightningEffect | null = null;
+  private edgeEnergyAttr: THREE.BufferAttribute | null = null;
+  private pointEnergyAttr: THREE.BufferAttribute | null = null;
 
   // Phase 6a: cursor wake
   private cursorWorldX = 0;
@@ -330,6 +336,11 @@ export class MeshScene {
     this.highlightAttr = new THREE.BufferAttribute(highlightData, 1);
     edgeGeom.setAttribute('aHighlight', this.highlightAttr);
 
+    // aEnergy attribute for lightning effect (2 vertices per edge)
+    const edgeEnergyData = new Float32Array(edgeCount * 2);
+    this.edgeEnergyAttr = new THREE.BufferAttribute(edgeEnergyData, 1);
+    edgeGeom.setAttribute('aEnergy', this.edgeEnergyAttr);
+
     this.edgeLines = new THREE.LineSegments(edgeGeom, this.edgeMat);
     this.scene.add(this.edgeLines);
 
@@ -343,6 +354,11 @@ export class MeshScene {
     isNavNode[this.placedNavNodes[HUB_NODE_INDEX].vertexIndex] = 1.0;
     this.isNavNodeAttr = new THREE.BufferAttribute(isNavNode, 1);
     pointGeom.setAttribute('aIsNavNode', this.isNavNodeAttr);
+
+    // aEnergy attribute for lightning effect (1 per vertex)
+    const pointEnergyData = new Float32Array(nPts);
+    this.pointEnergyAttr = new THREE.BufferAttribute(pointEnergyData, 1);
+    pointGeom.setAttribute('aEnergy', this.pointEnergyAttr);
 
     this.pointCloud = new THREE.Points(pointGeom, this.pointMat);
     this.scene.add(this.pointCloud);
@@ -358,6 +374,9 @@ export class MeshScene {
         );
       }
     }
+
+    // --- Phase 6b: lightning effect ---
+    this.lightning = new LightningEffect(this.graph);
   }
 
   /** Convert screen pixel position to world XZ by intersecting with Y=0 plane. */
@@ -450,6 +469,25 @@ export class MeshScene {
         this.drops[base], this.drops[base + 1],
         this.drops[base + 2], this.drops[base + 3],
       );
+    }
+
+    // Phase 6b: graph lightning update
+    if (this.lightning && this.edgeEnergyAttr && this.pointEnergyAttr) {
+      const lightningActive = this.lightning.update(
+        this.cursorWorldX,
+        this.cursorWorldZ,
+        this.cursorSpeed,
+        this.cursorOnCanvas && this.mouseActive,
+      );
+      if (lightningActive) {
+        const edgeSrc = this.lightning.getEdgeEnergy();
+        (this.edgeEnergyAttr.array as Float32Array).set(edgeSrc);
+        this.edgeEnergyAttr.needsUpdate = true;
+
+        const vertSrc = this.lightning.getVertexEnergy();
+        (this.pointEnergyAttr.array as Float32Array).set(vertSrc);
+        this.pointEnergyAttr.needsUpdate = true;
+      }
     }
 
     // All materials (including heightMat) share the same uTime uniform object

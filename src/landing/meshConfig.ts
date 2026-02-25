@@ -283,9 +283,10 @@ ${VERT_COMMON}
 }
 `;
 
-// --- Point vertex shader: adds nav node highlighting ---
+// --- Point vertex shader: adds nav node highlighting + lightning energy ---
 export const POINT_VERT_SRC = /* glsl */ `
 attribute float aIsNavNode;
+attribute float aEnergy;
 ${VERT_COMMON}
   if (aIsNavNode > 0.5) {
     float pulse = 0.85 + 0.15 * sin(uTime * 2.0);
@@ -295,12 +296,17 @@ ${VERT_COMMON}
     gl_PointSize = uPointSize + alpha * 4.0;
     vAlpha = uAlphaMin + alpha * uAlphaRange;
   }
+  if (aEnergy > 0.01) {
+    gl_PointSize += aEnergy * 6.0;
+    vAlpha = max(vAlpha, aEnergy * 0.95);
+  }
 }
 `;
 
-// --- Edge vertex shader: adds path highlight support ---
+// --- Edge vertex shader: adds path highlight + lightning energy ---
 export const EDGE_VERT_SRC = /* glsl */ `
 attribute float aHighlight;
+attribute float aEnergy;
 ${VERT_COMMON}
   if (aHighlight > 0.5) {
     vColor = vec3(0.0, 0.83, 0.67); // EP Positive (#00d4aa)
@@ -308,6 +314,10 @@ ${VERT_COMMON}
   } else {
     vColor = vec3(1.0);
     vAlpha = uAlphaMin + alpha * uAlphaRange;
+  }
+  if (aEnergy > 0.01) {
+    vColor = mix(vColor, vec3(0.6, 0.9, 1.0), aEnergy); // light blue-white lightning
+    vAlpha = max(vAlpha, aEnergy * 0.9);
   }
 }
 `;
