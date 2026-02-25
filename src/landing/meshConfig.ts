@@ -33,6 +33,11 @@ export const EDGE_ALPHA = { min: 0.01, range: 0.12 };
 export const POINT_ALPHA = { min: 0.02, range: 0.95 };
 export const POINT_SIZE = 1.5;
 
+// --- World-space boundary fade (dissolves mesh edges so it feels infinite) ---
+// Fraction of half-extent from each edge where fade reaches full opacity.
+// 0.35 means the outer 35% of each axis gradually fades to transparent.
+export const BOUNDARY_FADE = 0.35;
+
 // --- Per-face palette: full Siphon colors (alpha constrains intensity) ---
 export const FACE_PALETTE: [number, number, number][] = [
   [0.00, 0.83, 0.67],  // EP Positive  #00d4aa
@@ -281,6 +286,13 @@ void main() {
   // Default face color (white); overridden by aColor in the triangle pass
   vColor = vec3(1.0);
 
+  // World-space boundary fade: dissolve mesh edges so it feels infinite
+  // Uses max of per-axis distance (rounded-square falloff) so corners aren't doubly faded
+  vec2 normPos = (basePos - uMapMin) / uMapSize;
+  vec2 fromCenter = abs(normPos - 0.5) * 2.0; // 0 at center, 1 at edge
+  float edgeDist = max(fromCenter.x, fromCenter.y);
+  float boundaryFade = 1.0 - smoothstep(1.0 - ${BOUNDARY_FADE.toFixed(2)} * 2.0, 1.0, edgeDist);
+
   // Phase 7: staged reveal — per-vertex fade based on BFS hop distance
   float revealFade = smoothstep(aHopDist - ${REVEAL.smoothWidth.toFixed(1)}, aHopDist, uRevealThreshold);
 `;
@@ -301,7 +313,7 @@ ${VERT_COMMON}
     vColor = mix(vColor, vColor * 1.8, aEnergy);
     vAlpha = max(vAlpha, aEnergy * 0.25);
   }
-  vAlpha *= revealFade;
+  vAlpha *= revealFade * boundaryFade;
 }
 `;
 
@@ -322,7 +334,7 @@ ${VERT_COMMON}
     gl_PointSize += aEnergy * 4.0;
     vAlpha = max(vAlpha, aEnergy * 0.5);
   }
-  vAlpha *= revealFade;
+  vAlpha *= revealFade * boundaryFade;
 }
 `;
 
@@ -342,7 +354,7 @@ ${VERT_COMMON}
     vColor = mix(vColor, vec3(0.6, 0.9, 1.0), aEnergy * 0.6); // light blue-white lightning
     vAlpha = max(vAlpha, aEnergy * 0.5);
   }
-  vAlpha *= revealFade;
+  vAlpha *= revealFade * boundaryFade;
 }
 `;
 
