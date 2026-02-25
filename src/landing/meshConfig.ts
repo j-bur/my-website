@@ -4,7 +4,7 @@
 export const COLS = 44;
 export const ROWS = 32;
 export const JITTER = 0.85;
-export const OVERSCAN = 32;
+export const OVERSCAN = 60;
 export const OVERSCAN_FAR = 100;
 export const SCATTER_COUNT = 1050;
 export const CLUSTER_COUNT = 1000;
@@ -25,7 +25,7 @@ export const CAMERA_Z = 700;
 export const CAMERA_LOOK_AT_Z = -100;
 
 // --- Horizon curvature (parabolic drop-off, like Earth's surface) ---
-export const MESH_CURVATURE = 0.000025; // Y drop = curvature * dist²
+export const MESH_CURVATURE = 0.000005; // Y drop = curvature * dist²
 
 // --- Alpha ranges for the three render passes ---
 export const TRI_ALPHA = { min: 0.0, range: 0.12 };
