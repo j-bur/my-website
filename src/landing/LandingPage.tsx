@@ -7,6 +7,9 @@ import { useTunnelStatus } from './useTunnelStatus';
 /** Index of FoundryVTT in NAV_NODES (tunnel-dependent visibility). */
 const FOUNDRY_NODE_INDEX = NAV_NODES.findIndex((n) => n.url === 'https://foundry.jamesburns.cc');
 
+/** Index of Gauldurg in NAV_NODES (temporarily hidden). */
+const GAULDURG_NODE_INDEX = NAV_NODES.findIndex((n) => n.label === 'Gauldurg');
+
 export function LandingPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const labelRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -34,6 +37,11 @@ export function LandingPage() {
     // FoundryVTT starts hidden until the tunnel probe succeeds
     if (FOUNDRY_NODE_INDEX >= 0) {
       scene.setNavNodeVisible(FOUNDRY_NODE_INDEX, false);
+    }
+
+    // Gauldurg temporarily hidden from landing page
+    if (GAULDURG_NODE_INDEX >= 0) {
+      scene.setNavNodeVisible(GAULDURG_NODE_INDEX, false);
     }
 
     // Defer reveal animation if loading in portrait on mobile — play after rotating to landscape
