@@ -26,9 +26,9 @@
 1. All planned phases (0–6b) are complete
 2. Phase 6b tuning reference (if revisiting):
    - **LightningEffect** (`cursorInteraction.ts`):
-     - `MAX_HOPS` (6): BFS depth limit
+     - `MAX_HOPS` (3): BFS depth limit
      - `DECAY` (0.92): per-frame multiplicative energy decay
-     - `HOP_FALLOFF` (0.55): energy multiplier per hop (base * 0.55^hop)
+     - `HOP_FALLOFF` (0.5): energy multiplier per hop (base * 0.5^hop)
      - `SPEED_THRESHOLD` (50): minimum cursor speed to trigger lightning
      - `cursorSpeed * 0.003`: base energy scaling; capped at 0.6
      - `INTERP_SPACING` (80): world-unit spacing between interpolated injections
