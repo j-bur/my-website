@@ -2,7 +2,7 @@
 
 Animated wireframe mesh landing page for jamesburns.cc. Full-viewport Three.js scene with interactive navigation nodes.
 
-**Current State**: v1 implemented. Phases 0–6b planned for interactive nav nodes, path rendering, performance optimization, wave improvements, and cursor effects. Check `docs/landing/IMPLEMENTATION_STATUS.md` for the current phase and next steps.
+**Current State**: All planned phases (0–6b) complete. Interactive nav nodes, path rendering, displacement texture, Gerstner wave simulation, cursor ripple, and graph lightning all implemented. Check `docs/landing/IMPLEMENTATION_STATUS.md` for details and tuning references.
 
 ---
 
@@ -63,6 +63,8 @@ No `simplex-noise` — noise is computed in GLSL on the GPU. CPU-side noise (in 
 - **Displacement texture** (Phase 4, implemented) — height field rendered to a 512×512 `FloatType` texture once per frame via `HEIGHT_FRAG_SRC`, sampled by all vertex shaders via `sampleHeight()`, eliminating redundant noise computation. Mesh bounds computed from point cloud with 2% padding.
 - **Nav nodes are mesh vertices** — positioned via BFS from a hub node, not CSS overlays.
 - **Three.js handles projection** — PerspectiveCamera replaces the mockup's custom landscape camera math.
+- **Cursor ripple** (Phase 6a) — drop positions stored in a 64-slot ring buffer, uploaded as `uDrops[64]` uniform. Ripple simulation runs entirely in `VERT_COMMON` (GPU). MeshScene handles screen→world raycast, velocity tracking, adaptive drop spacing, and path interpolation for fast cursor movement.
+- **Graph lightning** (Phase 6b) — CPU-side BFS energy dispersal from nearest vertex to cursor, via `LightningEffect` in `cursorInteraction.ts`. Per-vertex energy uploaded as `aEnergy` buffer attribute on all three geometry passes (edges, points, triangles). Spatial hash in `meshGraph.ts` for O(1) nearest-vertex lookup. Cursor path interpolation for fast movement (separate from Phase 6a's interpolation — see `docs/landing/BACKLOG.md` Architecture Notes).
 - **ResizeObserver** for responsive canvas sizing.
 - **No path aliases**: All imports use relative paths.
 
