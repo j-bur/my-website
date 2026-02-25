@@ -204,6 +204,9 @@ uniform float uPointSize;
 uniform sampler2D uHeightMap;
 uniform vec2 uMapMin;
 uniform vec2 uMapSize;
+uniform vec2 uCursorXZ;
+uniform float uCursorSpeed;
+uniform float uCursorActive;
 varying float vAlpha;
 varying vec3 vColor;
 
@@ -218,6 +221,14 @@ void main() {
   // Displace Y by height field (sampled from displacement texture)
   float h = sampleHeight(basePos);
   vec3 displaced = vec3(position.x, h, position.z);
+
+  // Cursor ripple: radial waves emanating from cursor position
+  float cursorDist = length(basePos - uCursorXZ);
+  float rippleRadius = 300.0;
+  float rippleFalloff = exp(-cursorDist * cursorDist / (rippleRadius * rippleRadius));
+  float ripple = uCursorActive * min(uCursorSpeed * 0.3, 15.0) * rippleFalloff
+               * sin(cursorDist * 0.08 - uTime * 8.0);
+  displaced.y += ripple;
 
   // Surface normal via finite differences (1 texel offset)
   vec2 texelSize = uMapSize / ${HEIGHTMAP_RESOLUTION}.0;

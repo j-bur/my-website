@@ -55,6 +55,16 @@ export class MeshScene {
   private hoveredNode: PlacedNavNode | null = null;
   private isNavNodeAttr: THREE.BufferAttribute | null = null;
 
+  // Phase 6a: cursor ripple
+  private cursorWorldX = 0;
+  private cursorWorldZ = 0;
+  private prevCursorWorldX = 0;
+  private prevCursorWorldZ = 0;
+  private cursorSpeed = 0;
+  private cursorOnCanvas = false;
+  private _rayOrigin = new THREE.Vector3();
+  private _rayDir = new THREE.Vector3();
+
   // Reusable buffers for reading nav node heights from GPU height map
   private _navPixelBuf = new Float32Array(4);
 
@@ -126,9 +136,16 @@ export class MeshScene {
       uMapSize: { value: this.mapSize },
     };
 
-    this.triMat = this.createMaterial(sharedUniforms, heightUniforms, TRI_ALPHA.min, TRI_ALPHA.range, 1.0, VERT_SRC);
-    this.edgeMat = this.createMaterial(sharedUniforms, heightUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0, EDGE_VERT_SRC, EDGE_FRAG_SRC);
-    this.pointMat = this.createMaterial(sharedUniforms, heightUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC);
+    // Cursor ripple uniforms shared by all mesh materials
+    const cursorUniforms = {
+      uCursorXZ: { value: new THREE.Vector2(0, 0) },
+      uCursorSpeed: { value: 0.0 },
+      uCursorActive: { value: 0.0 },
+    };
+
+    this.triMat = this.createMaterial(sharedUniforms, heightUniforms, cursorUniforms, TRI_ALPHA.min, TRI_ALPHA.range, 1.0, VERT_SRC);
+    this.edgeMat = this.createMaterial(sharedUniforms, heightUniforms, cursorUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0, EDGE_VERT_SRC, EDGE_FRAG_SRC);
+    this.pointMat = this.createMaterial(sharedUniforms, heightUniforms, cursorUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC);
 
     this.buildMesh();
 
@@ -142,6 +159,11 @@ export class MeshScene {
       uHeightMap: { value: THREE.Texture };
       uMapMin: { value: THREE.Vector2 };
       uMapSize: { value: THREE.Vector2 };
+    },
+    cursorUniforms: {
+      uCursorXZ: { value: THREE.Vector2 };
+      uCursorSpeed: { value: number };
+      uCursorActive: { value: number };
     },
     alphaMin: number,
     alphaRange: number,
@@ -160,6 +182,9 @@ export class MeshScene {
         uAlphaMin: { value: alphaMin },
         uAlphaRange: { value: alphaRange },
         uPointSize: { value: pointSize },
+        uCursorXZ: cursorUniforms.uCursorXZ,
+        uCursorSpeed: cursorUniforms.uCursorSpeed,
+        uCursorActive: cursorUniforms.uCursorActive,
       },
       transparent: true,
       depthWrite: false,
@@ -330,8 +355,30 @@ export class MeshScene {
     }
   }
 
+  /** Convert screen pixel position to world XZ by intersecting with Y=0 plane. */
+  private screenToWorldXZ(screenX: number, screenY: number): [number, number] {
+    if (this.canvasWidth === 0 || this.canvasHeight === 0) return [0, 0];
+
+    // Screen to NDC
+    const ndcX = (screenX / this.canvasWidth) * 2 - 1;
+    const ndcY = -(screenY / this.canvasHeight) * 2 + 1;
+
+    // Unproject near point to get ray direction
+    this._rayOrigin.set(ndcX, ndcY, 0).unproject(this.camera);
+    this._rayDir.set(ndcX, ndcY, 1).unproject(this.camera).sub(this._rayOrigin).normalize();
+
+    // Intersect with Y=0 plane
+    if (Math.abs(this._rayDir.y) < 1e-6) return [0, 0];
+    const t = -this._rayOrigin.y / this._rayDir.y;
+    return [
+      this._rayOrigin.x + this._rayDir.x * t,
+      this._rayOrigin.z + this._rayDir.z * t,
+    ];
+  }
+
   private animate(): void {
     const t = this.clock.getElapsedTime();
+    const dt = this.clock.getDelta();
 
     // FPS counter (dev-only)
     if (import.meta.env.DEV) {
@@ -342,6 +389,34 @@ export class MeshScene {
         this.lastFpsTime = t;
       }
     }
+
+    // Cursor ripple: compute world XZ and velocity
+    if (this.cursorOnCanvas && this.mouseActive) {
+      const [wx, wz] = this.screenToWorldXZ(this.mouseScreenX, this.mouseScreenY);
+      this.prevCursorWorldX = this.cursorWorldX;
+      this.prevCursorWorldZ = this.cursorWorldZ;
+      this.cursorWorldX = wx;
+      this.cursorWorldZ = wz;
+
+      const ddx = this.cursorWorldX - this.prevCursorWorldX;
+      const ddz = this.cursorWorldZ - this.prevCursorWorldZ;
+      const rawSpeed = dt > 0 ? Math.sqrt(ddx * ddx + ddz * ddz) / dt : 0;
+      this.cursorSpeed += (rawSpeed - this.cursorSpeed) * 0.1;
+    } else {
+      // Smoothly decay speed when cursor leaves
+      this.cursorSpeed *= 0.92;
+    }
+
+    // Update cursor uniforms (shared across all 3 mesh materials)
+    this.triMat.uniforms.uCursorXZ.value.set(this.cursorWorldX, this.cursorWorldZ);
+    this.triMat.uniforms.uCursorSpeed.value = this.cursorSpeed;
+    this.triMat.uniforms.uCursorActive.value = this.cursorOnCanvas ? 1.0 : 0.0;
+    this.edgeMat.uniforms.uCursorXZ.value.set(this.cursorWorldX, this.cursorWorldZ);
+    this.edgeMat.uniforms.uCursorSpeed.value = this.cursorSpeed;
+    this.edgeMat.uniforms.uCursorActive.value = this.cursorOnCanvas ? 1.0 : 0.0;
+    this.pointMat.uniforms.uCursorXZ.value.set(this.cursorWorldX, this.cursorWorldZ);
+    this.pointMat.uniforms.uCursorSpeed.value = this.cursorSpeed;
+    this.pointMat.uniforms.uCursorActive.value = this.cursorOnCanvas ? 1.0 : 0.0;
 
     // All materials (including heightMat) share the same uTime uniform object
     this.triMat.uniforms.uTime.value = t;
@@ -476,11 +551,13 @@ export class MeshScene {
     this.mouseScreenX = screenX;
     this.mouseScreenY = screenY;
     this.mouseActive = true;
+    this.cursorOnCanvas = true;
   }
 
   /** Clear mouse state (e.g. on mouseleave). */
   clearMouse(): void {
     this.mouseActive = false;
+    this.cursorOnCanvas = false;
     if (this.hoveredNode) {
       // Un-highlight the dot (unless hub)
       const hubVertexIndex = this.placedNavNodes[HUB_NODE_INDEX].vertexIndex;
@@ -491,6 +568,11 @@ export class MeshScene {
       this.hoveredNode = null;
       this.highlightPath(null);
     }
+  }
+
+  /** Set whether the cursor is currently over the canvas (for ripple effect). */
+  setCursorActive(active: boolean): void {
+    this.cursorOnCanvas = active;
   }
 
   /**

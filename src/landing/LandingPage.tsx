@@ -42,6 +42,9 @@ export function LandingPage() {
     });
 
     // Mouse tracking
+    const onMouseEnter = () => {
+      scene.setCursorActive(true);
+    };
     const onMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       scene.setMouseScreenPos(e.clientX - rect.left, e.clientY - rect.top);
@@ -64,6 +67,7 @@ export function LandingPage() {
       }
     };
 
+    canvas.addEventListener('mouseenter', onMouseEnter);
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mouseleave', onMouseLeave);
     canvas.addEventListener('click', onClick);
@@ -75,6 +79,7 @@ export function LandingPage() {
     observer.observe(container);
 
     return () => {
+      canvas.removeEventListener('mouseenter', onMouseEnter);
       canvas.removeEventListener('mousemove', onMouseMove);
       canvas.removeEventListener('mouseleave', onMouseLeave);
       canvas.removeEventListener('click', onClick);
