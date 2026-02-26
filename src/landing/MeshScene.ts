@@ -9,10 +9,11 @@ import {
   VERT_SRC, POINT_VERT_SRC, FRAG_SRC,
   EDGE_VERT_SRC, EDGE_FRAG_SRC, POINT_FRAG_SRC,
   HEIGHT_VERT_SRC, HEIGHT_FRAG_SRC,
-  FRACTAL_VERT_SRC, FRACTAL_FRAG_SRC, FRACTAL_RESOLUTION,
+  FRACTAL_VERT_SRC, FRACTAL_RESOLUTION,
   NAV_NODES, HUB_NODE_INDEX,
   FACE_PALETTE, REVEAL,
 } from './meshConfig';
+import { SHADERS, buildFractalFragShader, type ShaderDef } from './shaderRegistry';
 import { buildMeshGraph, edgeKey, type MeshGraph } from './meshGraph';
 import { placeNavNodes, projectNavNodes, type PlacedNavNode, type NavProjection } from './navNodes';
 import { findPath, pathToEdgeKeys } from './pathfinding';
@@ -109,6 +110,7 @@ export class MeshScene {
   private fractalTarget: THREE.WebGLRenderTarget;
   private fractalScene: THREE.Scene;
   private fractalMat: THREE.ShaderMaterial;
+  private fractalShaderIndex = 0;
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     // Renderer
@@ -174,8 +176,11 @@ export class MeshScene {
     };
 
     // Fractal color texture (offscreen render, sampled by mesh fragment shaders)
+    // Resolution and display config come from the active shader in the registry
+    const initShader = SHADERS[this.fractalShaderIndex];
+    const initRes = initShader.display?.fractalResolution ?? FRACTAL_RESOLUTION;
     this.fractalTarget = new THREE.WebGLRenderTarget(
-      FRACTAL_RESOLUTION, FRACTAL_RESOLUTION, {
+      initRes, initRes, {
         minFilter: THREE.LinearFilter,
         magFilter: THREE.LinearFilter,
       },
@@ -183,7 +188,7 @@ export class MeshScene {
     this.fractalScene = new THREE.Scene();
     this.fractalMat = new THREE.ShaderMaterial({
       vertexShader: FRACTAL_VERT_SRC,
-      fragmentShader: FRACTAL_FRAG_SRC,
+      fragmentShader: buildFractalFragShader(initShader, initRes),
       uniforms: {
         uTime: sharedUniforms.uTime,
       },
@@ -197,6 +202,9 @@ export class MeshScene {
     this.pointMat = this.createMaterial(sharedUniforms, heightUniforms, wakeUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC, POINT_FRAG_SRC);
 
     this.buildMesh();
+
+    // Apply initial shader's display config (alpha ranges, blending mode, etc.)
+    this.applyShaderDisplay(initShader);
 
     // Start render loop
     this.renderer.setAnimationLoop(() => this.animate());
@@ -849,6 +857,44 @@ export class MeshScene {
   /** Whether the staged mesh reveal animation has completed. */
   isRevealComplete(): boolean {
     return this.revealComplete;
+  }
+
+  /** Apply a shader's display config: alpha ranges, blending mode, resolution. */
+  private applyShaderDisplay(shader: ShaderDef): void {
+    const d = shader.display ?? {};
+
+    // Fractal render target resolution
+    const res = d.fractalResolution ?? FRACTAL_RESOLUTION;
+    if (this.fractalTarget.width !== res || this.fractalTarget.height !== res) {
+      this.fractalTarget.setSize(res, res);
+    }
+
+    // Triangle material
+    this.triMat.uniforms.uAlphaMin.value = d.triAlpha?.min ?? TRI_ALPHA.min;
+    this.triMat.uniforms.uAlphaRange.value = d.triAlpha?.range ?? TRI_ALPHA.range;
+    this.triMat.blending = d.triBlending === 'additive'
+      ? THREE.AdditiveBlending
+      : THREE.NormalBlending;
+
+    // Edge material
+    this.edgeMat.uniforms.uAlphaMin.value = d.edgeAlpha?.min ?? EDGE_ALPHA.min;
+    this.edgeMat.uniforms.uAlphaRange.value = d.edgeAlpha?.range ?? EDGE_ALPHA.range;
+
+    // Point material
+    this.pointMat.uniforms.uAlphaMin.value = d.pointAlpha?.min ?? POINT_ALPHA.min;
+    this.pointMat.uniforms.uAlphaRange.value = d.pointAlpha?.range ?? POINT_ALPHA.range;
+    this.pointMat.uniforms.uPointSize.value = d.pointSize ?? POINT_SIZE;
+  }
+
+  /** Cycle to the next fractal shader in the registry. Returns the new shader's name. */
+  cycleFractalShader(): string {
+    this.fractalShaderIndex = (this.fractalShaderIndex + 1) % SHADERS.length;
+    const shader = SHADERS[this.fractalShaderIndex];
+    const res = shader.display?.fractalResolution ?? FRACTAL_RESOLUTION;
+    this.fractalMat.fragmentShader = buildFractalFragShader(shader, res);
+    this.fractalMat.needsUpdate = true;
+    this.applyShaderDisplay(shader);
+    return shader.name;
   }
 
   /** Update renderer and camera on container resize */

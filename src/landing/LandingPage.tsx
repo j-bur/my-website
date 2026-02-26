@@ -158,6 +158,14 @@ export function LandingPage() {
       touchStartRef.current = null;
     };
 
+    // Dev-mode: press ] to cycle fractal shaders
+    const onKeyDown = import.meta.env.DEV ? (e: KeyboardEvent) => {
+      if (e.key === ']') {
+        const name = scene.cycleFractalShader();
+        console.log(`Fractal shader: ${name}`);
+      }
+    } : null;
+
     canvas.addEventListener('mouseenter', onMouseEnter);
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mouseleave', onMouseLeave);
@@ -165,6 +173,7 @@ export function LandingPage() {
     canvas.addEventListener('touchstart', onTouchStart, { passive: false });
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
     canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+    if (onKeyDown) window.addEventListener('keydown', onKeyDown);
 
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
@@ -180,6 +189,7 @@ export function LandingPage() {
       canvas.removeEventListener('touchstart', onTouchStart);
       canvas.removeEventListener('touchmove', onTouchMove);
       canvas.removeEventListener('touchend', onTouchEnd);
+      if (onKeyDown) window.removeEventListener('keydown', onKeyDown);
       observer.disconnect();
       orientationCleanup?.();
       scene.dispose();
