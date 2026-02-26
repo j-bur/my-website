@@ -7,8 +7,9 @@ import {
   CAMERA_FOV, CAMERA_HEIGHT, CAMERA_Z, CAMERA_LOOK_AT_Z,
   TRI_ALPHA, EDGE_ALPHA, POINT_ALPHA, POINT_SIZE,
   VERT_SRC, POINT_VERT_SRC, FRAG_SRC,
-  EDGE_VERT_SRC, EDGE_FRAG_SRC,
+  EDGE_VERT_SRC, EDGE_FRAG_SRC, POINT_FRAG_SRC,
   HEIGHT_VERT_SRC, HEIGHT_FRAG_SRC,
+  FRACTAL_VERT_SRC, FRACTAL_FRAG_SRC, FRACTAL_RESOLUTION,
   NAV_NODES, HUB_NODE_INDEX,
   FACE_PALETTE, REVEAL,
 } from './meshConfig';
@@ -104,6 +105,11 @@ export class MeshScene {
   private frameCount = 0;
   private lastFpsTime = 0;
 
+  // Fractal color texture
+  private fractalTarget: THREE.WebGLRenderTarget;
+  private fractalScene: THREE.Scene;
+  private fractalMat: THREE.ShaderMaterial;
+
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     // Renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -167,9 +173,28 @@ export class MeshScene {
       uDrops: { value: this.dropsUni },
     };
 
+    // Fractal color texture (offscreen render, sampled by mesh fragment shaders)
+    this.fractalTarget = new THREE.WebGLRenderTarget(
+      FRACTAL_RESOLUTION, FRACTAL_RESOLUTION, {
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+      },
+    );
+    this.fractalScene = new THREE.Scene();
+    this.fractalMat = new THREE.ShaderMaterial({
+      vertexShader: FRACTAL_VERT_SRC,
+      fragmentShader: FRACTAL_FRAG_SRC,
+      uniforms: {
+        uTime: sharedUniforms.uTime,
+      },
+      depthWrite: false,
+      depthTest: false,
+    });
+    this.fractalScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.fractalMat));
+
     this.triMat = this.createMaterial(sharedUniforms, heightUniforms, wakeUniforms, TRI_ALPHA.min, TRI_ALPHA.range, 1.0, VERT_SRC);
     this.edgeMat = this.createMaterial(sharedUniforms, heightUniforms, wakeUniforms, EDGE_ALPHA.min, EDGE_ALPHA.range, 1.0, EDGE_VERT_SRC, EDGE_FRAG_SRC);
-    this.pointMat = this.createMaterial(sharedUniforms, heightUniforms, wakeUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC);
+    this.pointMat = this.createMaterial(sharedUniforms, heightUniforms, wakeUniforms, POINT_ALPHA.min, POINT_ALPHA.range, POINT_SIZE, POINT_VERT_SRC, POINT_FRAG_SRC);
 
     this.buildMesh();
 
@@ -205,6 +230,7 @@ export class MeshScene {
         uAlphaRange: { value: alphaRange },
         uPointSize: { value: pointSize },
         uDrops: wakeUniforms.uDrops,
+        uFractalMap: { value: this.fractalTarget.texture },
         uRevealThreshold: { value: 0.0 },
       },
       transparent: true,
@@ -599,6 +625,11 @@ export class MeshScene {
     // Pass 1: render height field to displacement texture
     this.renderer.setRenderTarget(this.heightTarget);
     this.renderer.render(this.heightScene, this.heightCamera);
+
+    // Pass 2: render fractal to color texture
+    this.renderer.setRenderTarget(this.fractalTarget);
+    this.renderer.render(this.fractalScene, this.heightCamera);
+
     this.renderer.setRenderTarget(null);
 
     // Pass 2: render mesh (all 3 materials sample from displacement texture)
@@ -844,8 +875,13 @@ export class MeshScene {
     this.heightTarget.dispose();
     this.heightMat.dispose();
 
+    // Fractal color texture
+    this.fractalTarget.dispose();
+    this.fractalMat.dispose();
+
     this.scene.clear();
     this.heightScene.clear();
+    this.fractalScene.clear();
     this.renderer.dispose();
   }
 }

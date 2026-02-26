@@ -14,6 +14,7 @@ export const MAX_EDGE_LENGTH = 150; // Cull convex hull edges longer than this
 export const MESH_WIDTH = 2000;
 export const MESH_DEPTH = 1200;
 export const HEIGHTMAP_RESOLUTION = 512;
+export const FRACTAL_RESOLUTION = 512 / 4;
 
 // --- Camera ---
 export const TILT_DEG = 35;
@@ -28,7 +29,7 @@ export const CAMERA_LOOK_AT_Z = -100;
 export const MESH_CURVATURE = 0.000005; // Y drop = curvature * dist²
 
 // --- Alpha ranges for the three render passes ---
-export const TRI_ALPHA = { min: 0.0, range: 0.1 };
+export const TRI_ALPHA = { min: 0.0, range: 0.6 };
 export const EDGE_ALPHA = { min: 0.01, range: 0.12 };
 export const POINT_ALPHA = { min: 0.02, range: 0.95 };
 export const POINT_SIZE = 1.5;
@@ -229,6 +230,7 @@ uniform float uRevealThreshold;
 attribute float aHopDist;
 varying float vAlpha;
 varying vec3 vColor;
+varying vec2 vWorldUV;
 
 float sampleHeight(vec2 worldXZ) {
   vec2 uv = (worldXZ - uMapMin) / uMapSize;
@@ -237,6 +239,7 @@ float sampleHeight(vec2 worldXZ) {
 
 void main() {
   vec2 basePos = position.xz;
+  vWorldUV = (basePos - uMapMin) / uMapSize;
 
   // Displace Y by height field (sampled from displacement texture)
   float h = sampleHeight(basePos);
@@ -363,7 +366,7 @@ ${VERT_COMMON}
 }
 `;
 
-// --- Edge fragment shader: uses vColor varying ---
+// --- Edge fragment shader: uses vColor (white, highlight, or lightning) ---
 export const EDGE_FRAG_SRC = /* glsl */ `
 precision mediump float;
 varying float vAlpha;
@@ -373,11 +376,146 @@ void main() {
 }
 `;
 
-export const FRAG_SRC = /* glsl */ `
+// --- Point fragment shader: uses vColor (white or nav node) ---
+export const POINT_FRAG_SRC = /* glsl */ `
 precision mediump float;
 varying float vAlpha;
 varying vec3 vColor;
 void main() {
   gl_FragColor = vec4(vColor, vAlpha);
+}
+`;
+
+// --- Triangle fragment shader: samples fractal texture for fill color ---
+export const FRAG_SRC = /* glsl */ `
+precision mediump float;
+uniform sampler2D uFractalMap;
+varying float vAlpha;
+varying vec3 vColor;
+varying vec2 vWorldUV;
+void main() {
+  vec3 fractal = texture2D(uFractalMap, vWorldUV).rgb;
+  gl_FragColor = vec4(fractal, vAlpha);
+}
+`;
+
+// --- Fractal color texture (kaleidoscopic IFS, rendered to offscreen target) ---
+
+export const FRACTAL_VERT_SRC = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+export const FRACTAL_FRAG_SRC = /* glsl */ `
+precision highp float;
+uniform float uTime;
+varying vec2 vUv;
+
+#define NUM_LAYERS 8.5
+
+mat2 Rot(float a) {
+  float c = cos(a), s = sin(a);
+  return mat2(c, -s, s, c);
+}
+
+float Star(vec2 uv, float flare) {
+  float d = length(uv);
+  float m = 0.02 / d;
+
+  float rays = max(0.0, 1.0 - abs(uv.x * uv.y * 1000.0));
+  m += rays * flare;
+  uv *= Rot(3.1415 / 4.0);
+  rays = max(0.0, 1.0 - abs(uv.x * uv.y * 1000.0));
+  m += rays * 0.3 * flare;
+
+  m *= smoothstep(1.0, 0.2, d);
+  return m;
+}
+
+float Hash21(vec2 p) {
+  p = fract(p * vec2(123.34, 456.21));
+  p += dot(p, p + 45.32);
+  return fract(p.x * p.y);
+}
+
+// App color palette: teal, purple, magenta, red, gold
+vec3 starPalette(float t) {
+  t = fract(t) * 5.0;
+  vec3 c = vec3(0.00, 0.83, 0.67); // EP Positive (teal)
+  c = mix(c, vec3(0.48, 0.26, 0.88), clamp(t, 0.0, 1.0));       // → Focus (purple)
+  c = mix(c, vec3(0.82, 0.10, 0.82), clamp(t - 1.0, 0.0, 1.0)); // → Warp (magenta)
+  c = mix(c, vec3(1.00, 0.27, 0.40), clamp(t - 2.0, 0.0, 1.0)); // → EP Negative (red)
+  c = mix(c, vec3(1.00, 0.73, 0.20), clamp(t - 3.0, 0.0, 1.0)); // → Capacitance (gold)
+  c = mix(c, vec3(0.00, 0.83, 0.67), clamp(t - 4.0, 0.0, 1.0)); // → wrap to teal
+  return c;
+}
+
+vec3 StarLayer(vec2 uv) {
+  vec3 col = vec3(0.0);
+  vec2 gv = fract(uv) - 0.5;
+  vec2 id = floor(uv);
+
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 offs = vec2(x, y);
+      float n = Hash21(id + offs);
+      float size = fract(n * 345.32);
+      vec2 p = vec2(n, fract(n * 34.0));
+
+      float star = Star(gv - offs - p + 0.5, smoothstep(0.8, 1.0, size) * 0.6);
+
+      // Each star picks a color from the app palette based on its hash
+      vec3 color = starPalette(n);
+
+      star *= sin(uTime * 2.5 + n * 6.2831) * 0.4 + 1.0;
+      col += star * size * color;
+    }
+  }
+  return col;
+}
+
+vec2 N(float angle) {
+  return vec2(sin(angle), cos(angle));
+}
+
+void main() {
+  // Map vUv (0–1) to centered coordinates like ShaderToy's fragCoord
+  vec2 uv = vUv - 0.5;
+  float t = uTime * 0.0004;
+
+  uv.x = abs(uv.x);
+  uv.y += tan((5.0 / 6.0) * 3.1415) * 0.5;
+
+  vec2 n = N((5.0 / 6.0) * 3.1415);
+  float d = dot(uv - vec2(0.5, 0.0), n);
+  uv -= n * max(0.0, d) * 2.0;
+
+  n = N((2.0 / 3.0) * 3.1415);
+  uv.x += 1.5 / 1.25;
+  for (int i = 0; i < 5; i++) {
+    uv *= 1.25;
+    uv.x -= 1.5;
+    uv.x = abs(uv.x);
+    uv.x -= 0.5;
+    uv -= n * min(0.0, dot(uv, n)) * 2.0;
+  }
+
+  uv *= Rot(t);
+  vec3 col = vec3(0.0);
+
+  for (float i = 0.0; i < 1.0; i += 1.0 / NUM_LAYERS) {
+    float depth = fract(i + t);
+    float scale = mix(20.0, 0.5, depth);
+    float fade = depth * smoothstep(1.0, 0.9, depth);
+    col += StarLayer(uv * scale + i * 453.2) * fade;
+  }
+
+  // Boost brightness so colors survive the mesh's low triangle alpha
+  col *= 1.5;
+
+  gl_FragColor = vec4(col, 1.0);
 }
 `;

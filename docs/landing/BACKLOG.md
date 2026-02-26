@@ -57,3 +57,5 @@ When investigating an item, append **Notes** beneath it as sub-bullets.
 ## Feature Requests
 
 _(Phase-planned features are tracked in IMPLEMENTATION_STATUS.md, not here. This section is for ideas outside the current phase plan.)_
+
+- [ ] **P3** | **L** | **FEAT-01: Fractal background as full landing page replacement (Option B)**: Instead of rendering the kaleidoscopic fractal behind the wireframe mesh (Option A, currently being prototyped), the fractal could become the entire landing page visual — replacing the Delaunay mesh entirely. Nav nodes would overlay as HTML elements positioned in screen space (no 3D projection needed). This is a much bigger departure from the current design but could be explored if the fractal aesthetic proves compelling enough to stand on its own.
