@@ -13,6 +13,9 @@ interface SelectedDeckProps {
 
 export function SelectedDeck({ onWarpTriggered, selectedAllyId, onAllyBestowed }: SelectedDeckProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
+  const [revealedCardId, setRevealedCardId] = useState<string | null>(null);
+  const revealTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const selectedCardIds = useSiphonStore((s) => s.selectedCardIds);
   const handCardIds = useSiphonStore((s) => s.handCardIds);
   const bestowToSelf = useSiphonStore((s) => s.bestowToSelf);
@@ -111,11 +114,28 @@ export function SelectedDeck({ onWarpTriggered, selectedAllyId, onAllyBestowed }
             const isUnplayable = isWhileSelected || isSpecialCostBlocked;
             const isDraggable = !isUnplayable;
             const dragData = { type: 'card' as const, featureId: cardId, source: 'deck' as const };
+            const isHovered = hoveredCardId === cardId;
+            const isRevealed = revealedCardId === cardId;
             return (
-              <div key={cardId} className="relative">
+              <div
+                key={cardId}
+                className="relative"
+                onMouseEnter={() => {
+                  setHoveredCardId(cardId);
+                  clearTimeout(revealTimerRef.current);
+                  revealTimerRef.current = setTimeout(() => setRevealedCardId(cardId), 200);
+                }}
+                onMouseLeave={() => {
+                  setHoveredCardId(null);
+                  clearTimeout(revealTimerRef.current);
+                  setRevealedCardId(null);
+                }}
+              >
                 <SiphonCard
                   feature={feature}
-                  compact
+                  compact={!isHovered}
+                  isRaised={isHovered}
+                  showDetails={isRevealed}
                   isUnplayable={isUnplayable}
                   onClick={isUnplayable ? undefined : () => handleCardClick(cardId)}
                   draggable={isDraggable}

@@ -8,6 +8,7 @@ interface SiphonCardProps {
   isRaised?: boolean;
   isUnplayable?: boolean;
   compact?: boolean;
+  showDetails?: boolean;
   allyName?: string;
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
@@ -21,12 +22,14 @@ export function SiphonCard({
   isRaised = false,
   isUnplayable = false,
   compact = false,
+  showDetails,
   allyName,
   draggable: isDraggable,
   onDragStart,
   onDragEnd,
 }: SiphonCardProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const details = showDetails ?? !compact;
   const costDisplay =
     typeof feature.cost === 'number' ? `${feature.cost} EP` : `${feature.cost}`;
 
@@ -77,7 +80,7 @@ export function SiphonCard({
           <span className="text-text-muted">Focus</span>
           <span className="text-focus font-medium">{feature.focusDice}</span>
         </div>
-        {!compact && (
+        {details && (
           <>
             <div className="flex justify-between">
               <span className="text-text-muted">Duration</span>
@@ -91,13 +94,15 @@ export function SiphonCard({
         )}
       </div>
 
-      {/* Description (only when not compact) */}
-      {!compact && (
+      {/* Description */}
+      {details ? (
         <div className="px-3 py-2 border-t border-card-border flex-1">
           <p className="text-xs leading-snug text-text-secondary line-clamp-5">
             {feature.description}
           </p>
         </div>
+      ) : (
+        <div className="flex-1" />
       )}
 
       {/* Warp badge */}

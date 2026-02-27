@@ -1,6 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useSettingsStore } from '../../store';
 
+interface SurgeRollResult {
+  d100: number;
+  d20: number;
+}
+
 interface WildSurgeDeckProps {
   pendingWarps?: number;
   onDismissWarp?: () => void;
@@ -8,7 +13,7 @@ interface WildSurgeDeckProps {
 
 export function WildSurgeDeck({ pendingWarps = 0, onDismissWarp }: WildSurgeDeckProps) {
   const wildSurgeDiceMode = useSettingsStore((s) => s.diceMode.wildSurge);
-  const [result, setResult] = useState<number | null>(null);
+  const [result, setResult] = useState<SurgeRollResult | null>(null);
   const [copied, setCopied] = useState(false);
 
   const macroText = '/r 1d100';
@@ -26,8 +31,9 @@ export function WildSurgeDeck({ pendingWarps = 0, onDismissWarp }: WildSurgeDeck
   }, [macroText, onDismissWarp]);
 
   const handleRoll = useCallback(() => {
-    const roll = Math.floor(Math.random() * 100) + 1;
-    setResult(roll);
+    const d100 = Math.floor(Math.random() * 100) + 1;
+    const d20 = Math.floor(Math.random() * 20) + 1;
+    setResult({ d100, d20 });
     onDismissWarp?.();
   }, [onDismissWarp]);
 
@@ -74,8 +80,15 @@ export function WildSurgeDeck({ pendingWarps = 0, onDismissWarp }: WildSurgeDeck
       )}
 
       {result !== null && (
-        <div className="mt-2 text-center">
-          <span className="text-2xl font-bold text-warp">{result}</span>
+        <div className="mt-3 flex items-end justify-around">
+          <div className="flex flex-col items-center">
+            <span className="text-[10px] uppercase tracking-widest text-text-muted mb-0.5">Effect</span>
+            <span className="text-2xl font-bold tabular-nums text-warp">{result.d100}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-[10px] uppercase tracking-widest text-text-muted mb-0.5">Severity</span>
+            <span className="text-3xl font-bold tabular-nums text-warp">{result.d20}</span>
+          </div>
         </div>
       )}
     </div>

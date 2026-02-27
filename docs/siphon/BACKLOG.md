@@ -20,7 +20,8 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 
 ### Warp & Surge
 
-- [ ] **P1** | **S** | **BUG-02: Wild Echo Surge only shows Effect number**: The roll result display shows the Effect number but not the Severity.
+- [x] **P1** | **S** | **BUG-02: Wild Echo Surge only shows Effect number**: The roll result display shows the Effect number but not the Severity.
+  - **Resolved**: Now rolls and displays both d100 and d20 as prominent numbers. d20 (severity die) displayed larger than d100. No table lookup — just raw dice results for the player to reference.
 
 ### Ally Bestow System
 
@@ -36,7 +37,8 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 
 ### Other
 
-- [ ] **P1** | **S** | **BUG-07: Echo Manifold deck not clickable**: Cannot click the Echo Manifold deck to swap the active Phase.
+- [x] **P1** | **S** | **BUG-07: Echo Manifold deck not clickable**: Cannot click the Echo Manifold deck to swap the active Phase.
+  - **Resolved**: Click expands a phase selection panel showing the 2 non-current phases. Clicking a phase highlights it and shows a confirmation area with resource cost options (Free switch / Hit Dice / No cost override). Confirm/Cancel buttons. Escape or click-outside dismisses.
 
 - [ ] **P2** | **M** | **BUG-08: Triggered features auto-activate on bestow without feedback**: When moving certain cards to hand, they automatically Activate. The UI provides no indication that bestowing these cards will trigger activation.
 
@@ -54,7 +56,8 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 
 - [ ] **P1** | **M** | **UX-03: Cards with long descriptions get cut off**: No way to read the rest of a truncated card in combat view. Consider tooltip, expand-on-hover, or a detail popover.
 
-- [ ] **P1** | **S** | **UX-04: Selected deck cards show no description**: After clicking the Selected deck, the expanded cards don't show descriptions — no way to know what they do.
+- [x] **P1** | **S** | **UX-04: Selected deck cards show no description**: After clicking the Selected deck, the expanded cards don't show descriptions — no way to know what they do.
+  - **Resolved**: Cards expand on hover (like Hand cards) with delayed content reveal — card width transitions first, then description/stats appear after the animation completes (200ms delay via `showDetails` prop on SiphonCard). Prevents text reflow during the size transition.
 
 - [ ] **P2** | **M** | **UX-05: Siphon Abilities not viewable in combat**: No way to see what Siphon Phase Abilities do. Consider hover-to-expand on the header, or always show descriptions since there's unused space on the left sidebar.
 

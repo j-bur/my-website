@@ -1,7 +1,7 @@
 # Implementation Status
 
-**Last Updated**: 2026-02-22
-**Current Phase**: Phase 8D Complete (Phase 8 Complete)
+**Last Updated**: 2026-02-26
+**Current Phase**: Phase 8D Complete (Phase 8 Complete) + Backlog fixes
 
 ---
 
@@ -32,12 +32,26 @@
 
 ---
 
+## Backlog Fixes (2026-02-26)
+
+| Item | Status | Summary |
+|------|--------|---------|
+| BUG-07 | ✅ Resolved | Echo Manifold deck clickable — shows 2 non-current phases, highlight on click, resource cost selector (Free/Hit Dice/No cost), confirm/cancel |
+| BUG-02 | ✅ Resolved | Wild Echo Surge shows d100 + d20 as prominent numbers (d20 larger). No table lookup — raw dice only |
+| UX-04 | ✅ Resolved | Selected deck cards expand on hover with delayed content reveal (200ms) to prevent text reflow during width transition |
+
+**Files modified**: `EchoManifoldDeck.tsx`, `WildSurgeDeck.tsx`, `SelectedDeck.tsx`, `SiphonCard.tsx` (added `showDetails` prop)
+**Tests**: 464 passing (no new tests added — all existing 464 tests continue to pass)
+
+---
+
 ## Next Session
 
 1. **Phase 7C: Visual Effects** — Warp visual, chromatic aberration, high focus warning (deferred from Phase 7)
 2. Or begin Phase 9 planning if applicable
-3. All 458 tests passing across 33 test files
+3. All 464 tests passing across 33 test files
 4. Phase 8 is fully complete (8A-8D)
+5. Review remaining P1 backlog items: BUG-03 (non-bestowable card guard), BUG-04 (ally drag bestow), UX-02 (dismiss gesture), UX-03 (long card descriptions)
 
 > **Note**: Phase 7C (Visual Effects) was originally next but deferred until after Phase 8. Phase 8 is now complete, so Phase 7C effects (warp visual, chromatic aberration, high focus warning) can proceed.
 > **Note**: Combat → Deck Builder navigation restored via Grimoire (right sidebar bottom, CSS book/tome). Deck Builder → Combat via "Enter Combat" button.
