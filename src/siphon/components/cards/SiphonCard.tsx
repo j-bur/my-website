@@ -41,7 +41,7 @@ export function SiphonCard({
         ${isRaised ? 'border-siphon-accent shadow-lg shadow-siphon-accent/20 -translate-y-2 z-10' : 'border-card-border'}
         ${isUnplayable ? 'opacity-40 saturate-50' : ''}
         ${isDragging ? 'opacity-50' : ''}
-        ${compact ? 'w-[160px] min-h-[224px]' : 'w-[200px] min-h-[280px]'}
+        ${compact ? 'w-[160px] min-h-[224px]' : `w-[200px] ${isRaised ? 'h-[280px]' : 'min-h-[280px]'}`}
         ${isDraggable && !isUnplayable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
         bg-card-bg hover:border-siphon-accent/60
       `}
@@ -96,8 +96,8 @@ export function SiphonCard({
 
       {/* Description */}
       {details ? (
-        <div className="px-3 py-2 border-t border-card-border flex-1">
-          <p className="text-xs leading-snug text-text-secondary line-clamp-5">
+        <div className={`px-3 py-2 border-t border-card-border flex-1 ${isRaised ? 'overflow-y-auto min-h-0' : ''}`}>
+          <p className={`text-xs leading-snug text-text-secondary ${isRaised ? '' : 'line-clamp-5'}`}>
             {feature.description}
           </p>
         </div>

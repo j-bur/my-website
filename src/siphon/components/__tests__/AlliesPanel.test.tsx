@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { AlliesPanel } from '../combat-hud/AlliesPanel';
 import { useSiphonStore } from '../../store';
+import { setActiveDragData } from '../../types/dragData';
 
 function resetStore() {
   useSiphonStore.setState({
@@ -25,6 +26,7 @@ describe('AlliesPanel', () => {
 
   afterEach(() => {
     cleanup();
+    setActiveDragData(null);
   });
 
   it('renders empty allies panel with add button', () => {
@@ -339,5 +341,64 @@ describe('AlliesPanel', () => {
 
     const state = useSiphonStore.getState();
     expect(state.allyBestowments).toHaveLength(0);
+  });
+
+  // --- Drag-over visual feedback ---
+
+  it('shows valid highlight when dragging bestowable deck card over ally', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['subtle-luck'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    setActiveDragData({ type: 'card', featureId: 'subtle-luck', source: 'deck' });
+
+    render(<AlliesPanel selectedAllyId={null} onSelectAlly={vi.fn()} />);
+
+    const chip = screen.getByRole('button', { name: 'Briar' });
+    fireEvent.dragOver(chip, {
+      dataTransfer: { types: ['text/x-card-type'] },
+    });
+
+    expect(chip.className).toContain('ring-ep-positive');
+    expect(chip.className).not.toContain('ring-ep-negative');
+  });
+
+  it('shows invalid highlight when dragging special-cost deck card over ally', () => {
+    useSiphonStore.setState({
+      selectedCardIds: ['recursion'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    setActiveDragData({ type: 'card', featureId: 'recursion', source: 'deck' });
+
+    render(<AlliesPanel selectedAllyId={null} onSelectAlly={vi.fn()} />);
+
+    const chip = screen.getByRole('button', { name: 'Briar' });
+    fireEvent.dragOver(chip, {
+      dataTransfer: { types: ['text/x-card-type'] },
+    });
+
+    expect(chip.className).toContain('ring-ep-negative');
+    expect(chip.className).not.toContain('ring-ep-positive');
+  });
+
+  it('shows invalid highlight when dragging hand card over ally', () => {
+    useSiphonStore.setState({
+      handCardIds: ['subtle-luck'],
+      allies: [{ id: 'a1', name: 'Briar' }],
+    });
+
+    setActiveDragData({ type: 'card', featureId: 'subtle-luck', source: 'hand' });
+
+    render(<AlliesPanel selectedAllyId={null} onSelectAlly={vi.fn()} />);
+
+    const chip = screen.getByRole('button', { name: 'Briar' });
+    fireEvent.dragOver(chip, {
+      dataTransfer: { types: ['text/x-card-type'] },
+    });
+
+    expect(chip.className).toContain('ring-ep-negative');
+    expect(chip.className).not.toContain('ring-ep-positive');
   });
 });

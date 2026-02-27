@@ -23,17 +23,23 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 - [x] **P1** | **S** | **BUG-02: Wild Echo Surge only shows Effect number**: The roll result display shows the Effect number but not the Severity.
   - **Resolved**: Now rolls and displays both d100 and d20 as prominent numbers. d20 (severity die) displayed larger than d100. No table lookup — just raw dice results for the player to reference.
 
+- [] **P3** | **M** | **UX-?: Roll History**: Add a log of all rolls between the Siphon Features deck and the Rest Buttons (not persisted after refresh for simplicity) showing the source and result of each roll
+
 ### Ally Bestow System
 
-- [ ] **P1** | **M** | **BUG-03: Can bestow non-bestowable cards to allies**: Cards like Reject Fate or That Which Isn't can be dragged to allies. These have special activation conditions and shouldn't be bestowable.
+- [x] **P1** | **M** | **BUG-03: Can bestow non-bestowable cards to allies**: Cards like Reject Fate or That Which Isn't can be dragged to allies. These have special activation conditions and shouldn't be bestowable.
+  - **Resolved**: Store-level validation via `isSpecialCost` was already in place. The real bug was misleading visual feedback — ally chips showed green drag-over highlight for ALL card drags (valid or not). Now `handleChipDragOver` validates using `getActiveDragData()`: valid bestows show green ring, invalid drags (hand cards or special-cost) show red ring + `dropEffect: 'none'` cursor. Ambient glow only appears for valid bestow drags. 3 new tests added.
 
-- [ ] **P1** | **M** | **BUG-04: Dragging card onto ally does nothing**: When dragging a card onto an ally chip, nothing visibly happens — no feedback, no bestow action.
+- [x] **P1** | **M** | **BUG-04: Dragging card onto ally does nothing**: When dragging a card onto an ally chip, nothing visibly happens — no feedback, no bestow action.
+  - **Resolved**: Same fix as BUG-03. Drag-over feedback now differentiates valid (green) vs invalid (red) drops. Hand card drags show red ring + not-allowed cursor, making it clear the drop won't work. Design intent is correct (bestow is from Selected Deck only) — the issue was silent failure with no visual indication.
 
 ### Drag & Drop
 
-- [ ] **P2** | **S** | **BUG-05: Drag-to-activate preview flicker**: Dragging a card from hand onto the Active Effects panel directly over where the ghost preview would appear causes the panel to flicker between rendering/not rendering the preview row.
+- [x] **P2** | **S** | **BUG-05: Drag-to-activate preview flicker**: Dragging a card from hand onto the Active Effects panel directly over where the ghost preview would appear causes the panel to flicker between rendering/not rendering the preview row.
+  - **Resolved**: `handleDragLeave` now checks `e.relatedTarget` containment — only clears `isDragTarget` when pointer truly leaves the panel, not when entering a child element. Ghost preview also has `pointer-events-none` as defense-in-depth.
 
-- [ ] **P2** | **S** | **BUG-06: ActiveEffectsPanel dismiss scrollbar**: Dragging an effect row to the right causes a scrollbar to appear that gets wider the more the mouse moves right.
+- [x] **P2** | **S** | **BUG-06: ActiveEffectsPanel dismiss scrollbar**: Dragging an effect row to the right causes a scrollbar to appear that gets wider the more the mouse moves right.
+  - **Resolved**: Added `overflow-x-hidden` to the inner scrollable container. Translated effect rows are now clipped horizontally.
 
 ### Other
 
@@ -54,7 +60,8 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 
 ### Card Readability
 
-- [ ] **P1** | **M** | **UX-03: Cards with long descriptions get cut off**: No way to read the rest of a truncated card in combat view. Consider tooltip, expand-on-hover, or a detail popover.
+- [x] **P1** | **M** | **UX-03: Cards with long descriptions get cut off**: No way to read the rest of a truncated card in combat view. Consider tooltip, expand-on-hover, or a detail popover.
+  - **Resolved**: When a card is hovered (`isRaised`), card height is locked at 280px (`h-[280px]` instead of `min-h-[280px]`), `line-clamp-5` is removed, and the description container gets `overflow-y-auto min-h-0` — full text is scrollable within the fixed card height. Non-hovered cards retain 5-line truncation. Works in both HandArea and SelectedDeck.
 
 - [x] **P1** | **S** | **UX-04: Selected deck cards show no description**: After clicking the Selected deck, the expanded cards don't show descriptions — no way to know what they do.
   - **Resolved**: Cards expand on hover (like Hand cards) with delayed content reveal — card width transitions first, then description/stats appear after the animation completes (200ms delay via `showDetails` prop on SiphonCard). Prevents text reflow during the size transition.

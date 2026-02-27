@@ -45,13 +45,28 @@
 
 ---
 
+## Backlog Fixes (2026-02-26, Session 2)
+
+| Item | Status | Summary |
+|------|--------|---------|
+| BUG-06 | ✅ Resolved | Added `overflow-x-hidden` to ActiveEffectsPanel inner container — dismiss gesture no longer creates horizontal scrollbar |
+| BUG-05 | ✅ Resolved | Fixed ghost preview flicker: `handleDragLeave` checks `e.relatedTarget` containment + `pointer-events-none` on ghost row |
+| UX-03 | ✅ Resolved | Card descriptions show fully on hover (`isRaised`): card height locked at 280px, `line-clamp-5` removed, description container scrollable via `overflow-y-auto min-h-0` |
+| BUG-03 | ✅ Resolved | Ally drag-over validates via `getActiveDragData()` — invalid drags show red ring + `dropEffect: 'none'` cursor |
+| BUG-04 | ✅ Resolved | Same fix as BUG-03 — hand card drags now show red ring on ally chips instead of misleading green highlight |
+
+**Files modified**: `ActiveEffectsPanel.tsx`, `SiphonCard.tsx`, `AlliesPanel.tsx`, `AlliesPanel.test.tsx`
+**Tests**: 467 passing (3 new drag validation tests in AlliesPanel)
+
+---
+
 ## Next Session
 
 1. **Phase 7C: Visual Effects** — Warp visual, chromatic aberration, high focus warning (deferred from Phase 7)
 2. Or begin Phase 9 planning if applicable
-3. All 464 tests passing across 33 test files
-4. Phase 8 is fully complete (8A-8D)
-5. Review remaining P1 backlog items: BUG-03 (non-bestowable card guard), BUG-04 (ally drag bestow), UX-02 (dismiss gesture), UX-03 (long card descriptions)
+3. All 467 tests passing across 33 test files
+4. Phase 8 is fully complete (8A-8D); all P1 bugs resolved except UX-02 (dismiss gesture)
+5. Review remaining P2 backlog items: UX-02 (dismiss gesture, only remaining P1), BUG-08, UX-01, UX-05, UX-06, UX-07, UX-08, UX-11, UX-12, UX-14
 
 > **Note**: Phase 7C (Visual Effects) was originally next but deferred until after Phase 8. Phase 8 is now complete, so Phase 7C effects (warp visual, chromatic aberration, high focus warning) can proceed.
 > **Note**: Combat → Deck Builder navigation restored via Grimoire (right sidebar bottom, CSS book/tome). Deck Builder → Combat via "Enter Combat" button.

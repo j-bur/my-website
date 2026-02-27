@@ -3,7 +3,7 @@
 **The Siphon Interface** — D&D 5E companion web app for the Siphon Wielder homebrew feature.
 **Aesthetic**: Dark, atmospheric card game. No bright colors. Cards have no illustrations — typography and iconography only.
 
-**Current State**: Phase 8 complete (all sub-phases 8A-8D). All 4 stores, CombatHUD with 3-column sidebar layout (260px/1fr/260px), cards 200x280px, inline activation via drag-to-ActiveEffects (no modal), Grimoire in right sidebar navigates to Deck Builder. Check `docs/siphon/IMPLEMENTATION_STATUS.md` for the current phase and next steps.
+**Current State**: Phase 8 complete (all sub-phases 8A-8D) + backlog fixes (BUG-02, BUG-07, UX-04). All 4 stores, CombatHUD with 3-column sidebar layout (260px/1fr/260px), cards 200x280px, inline activation via drag-to-ActiveEffects (no modal), Grimoire in right sidebar navigates to Deck Builder. Echo Manifold deck is clickable for phase switching. Wild Surge rolls both d100 (Effect) and d20 (Severity). Selected deck cards expand on hover with delayed content reveal. Check `docs/siphon/IMPLEMENTATION_STATUS.md` for next steps.
 
 ---
 

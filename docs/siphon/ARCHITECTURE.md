@@ -36,7 +36,7 @@ src/
     ├── CLAUDE.md                    # Siphon-specific AI instructions
     ├── components/
     │   ├── cards/
-    │   │   └── SiphonCard.tsx         # Reusable card component for features
+    │   │   └── SiphonCard.tsx         # Reusable card component (compact/showDetails/isRaised)
     │   ├── deck-builder/                # Deck Builder view
     │   │   ├── DeckBuilder.tsx          # Main view (CharacterHeader + CollectionGrid + SelectedPanel)
     │   │   ├── CharacterHeader.tsx      # Level/MaxHP/PB/EP inputs
@@ -51,8 +51,8 @@ src/
     │   │   └── index.ts                   # Barrel export
     │   ├── combat-hud/
     │   │   ├── CombatHUD.tsx          # CSS Grid layout container
-    │   │   ├── EchoManifoldDeck.tsx   # Phase card + mote pips (top-left)
-    │   │   ├── WildSurgeDeck.tsx      # Surge deck placeholder (top-right)
+    │   │   ├── EchoManifoldDeck.tsx   # Phase card + mote pips + phase switching panel (top-left)
+    │   │   ├── WildSurgeDeck.tsx      # d100 Effect + d20 Severity roller (top-right)
     │   │   ├── PhaseAbilities.tsx     # Current phase's 3 abilities
     │   │   ├── ActiveEffectsPanel.tsx # Active effects + drop target + dismiss gesture (center)
     │   │   ├── ResourceDisplay.tsx    # Right column wrapper

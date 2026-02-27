@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSiphonStore, useSettingsStore } from '../../store';
-import { getCardDragData, isCardDrag } from '../../types/dragData';
+import { getCardDragData, isCardDrag, getActiveDragData } from '../../types/dragData';
 import { useCardDragDetection } from '../../hooks/useCardDragDetection';
 import { FEATURE_MAP } from '../../data/featureConstants';
 
@@ -23,8 +23,16 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
   const [newAllyName, setNewAllyName] = useState('');
   const [renamingAllyId, setRenamingAllyId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
-  const [chipDragOver, setChipDragOver] = useState<string | null>(null);
+  const [chipDragOver, setChipDragOver] = useState<{ allyId: string; isValid: boolean } | null>(null);
   const isCardBeingDragged = useCardDragDetection(() => setChipDragOver(null));
+
+  // Check if the current drag is a valid bestow-to-ally operation
+  const activeDragForHighlight = isCardBeingDragged ? getActiveDragData() : null;
+  const isDragBestowable = (() => {
+    if (!activeDragForHighlight || activeDragForHighlight.source !== 'deck') return false;
+    const feature = FEATURE_MAP.get(activeDragForHighlight.featureId);
+    return !!feature && !feature.isSpecialCost;
+  })();
 
   const addInputRef = useRef<HTMLInputElement>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
@@ -127,10 +135,18 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
   };
 
   const handleChipDragOver = (e: React.DragEvent, allyId: string) => {
-    if (isCardDrag(e.dataTransfer)) {
-      e.preventDefault();
-      setChipDragOver(allyId);
-    }
+    if (!isCardDrag(e.dataTransfer)) return;
+
+    const activeDrag = getActiveDragData();
+    const isValid = (() => {
+      if (!activeDrag || activeDrag.source !== 'deck') return false;
+      const feature = FEATURE_MAP.get(activeDrag.featureId);
+      return !!feature && !feature.isSpecialCost;
+    })();
+
+    e.preventDefault();
+    e.dataTransfer.dropEffect = isValid ? 'move' : 'none';
+    setChipDragOver({ allyId, isValid });
   };
 
   const handleChipDragLeave = () => {
@@ -164,8 +180,10 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
         const count = bestowmentCounts.get(ally.id) ?? 0;
         const isSelected = selectedAllyId === ally.id;
         const isRenaming = renamingAllyId === ally.id;
-        const isDraggedOver = chipDragOver === ally.id;
-        const showAmbientHighlight = highlightDropTargets && isCardBeingDragged && !isDraggedOver;
+        const isDraggedOver = chipDragOver?.allyId === ally.id;
+        const isDragValid = isDraggedOver && chipDragOver.isValid;
+        const isDragInvalid = isDraggedOver && !chipDragOver.isValid;
+        const showAmbientHighlight = highlightDropTargets && isDragBestowable && !isDraggedOver;
 
         return (
           <div
@@ -177,7 +195,8 @@ export function AlliesPanel({ selectedAllyId, onSelectAlly, onHoverAlly }: Allie
                 ? 'bg-ep-positive/20 border border-ep-positive/60 text-ep-positive'
                 : 'bg-siphon-surface/40 border border-siphon-border/40 text-text-primary hover:border-siphon-border/80'
               }
-              ${isDraggedOver ? 'ring-2 ring-ep-positive/60 scale-105' : ''}
+              ${isDragValid ? 'ring-2 ring-ep-positive/60 scale-105' : ''}
+              ${isDragInvalid ? 'ring-2 ring-ep-negative/40' : ''}
               ${showAmbientHighlight ? 'ring-1 ring-ep-positive/20' : ''}
             `}
             role="button"

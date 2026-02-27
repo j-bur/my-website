@@ -151,7 +151,7 @@ function GhostPreviewRow({ feature, onVariesCostChange, variesCost }: GhostPrevi
 
   return (
     <div
-      className="flex flex-col gap-1 px-2 py-1.5 rounded border border-dashed border-siphon-accent/40 bg-siphon-accent/5 text-xs ghost-glow"
+      className="flex flex-col gap-1 px-2 py-1.5 rounded border border-dashed border-siphon-accent/40 bg-siphon-accent/5 text-xs ghost-glow pointer-events-none"
       data-testid="ghost-preview-row"
     >
       <div className="flex items-center gap-2">
@@ -316,8 +316,11 @@ export function ActiveEffectsPanel({ onWarpTriggered }: ActiveEffectsPanelProps)
     }
   };
 
-  const handleDragLeave = () => {
-    setIsDragTarget(false);
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear when truly leaving the panel, not entering a child element
+    if (!panelRef.current?.contains(e.relatedTarget as Node)) {
+      setIsDragTarget(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -385,7 +388,7 @@ export function ActiveEffectsPanel({ onWarpTriggered }: ActiveEffectsPanelProps)
           (drag cards here to activate)
         </div>
       ) : (
-        <div className="flex flex-col gap-1 flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-1 flex-1 overflow-y-auto overflow-x-hidden">
           {activeEffects.map((effect) => (
             <EffectRow
               key={effect.id}
