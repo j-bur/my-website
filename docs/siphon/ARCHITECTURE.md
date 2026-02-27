@@ -51,13 +51,13 @@ src/
     │   │   └── index.ts                   # Barrel export
     │   ├── combat-hud/
     │   │   ├── CombatHUD.tsx          # CSS Grid layout container
-    │   │   ├── EchoManifoldDeck.tsx   # Phase card + mote pips + phase switching panel (top-left)
+    │   │   ├── EchoManifoldDeck.tsx   # Phase card + labeled mote pips + phase switching panel (top-left)
     │   │   ├── WildSurgeDeck.tsx      # d100 Effect + d20 Severity roller (top-right)
-    │   │   ├── PhaseAbilities.tsx     # Current phase's 3 abilities
-    │   │   ├── ActiveEffectsPanel.tsx # Active effects + drop target + dismiss gesture (center)
+    │   │   ├── PhaseAbilities.tsx     # Current phase's 3 abilities (hover-to-expand with detail)
+    │   │   ├── ActiveEffectsPanel.tsx # Active effects + drop target + velocity-based dismiss gesture (center)
     │   │   ├── ResourceDisplay.tsx    # Right column wrapper
     │   │   ├── EchoPointsBar.tsx      # EP bar (center-zero bidirectional)
-    │   │   ├── FocusCounter.tsx       # Focus value with glow
+    │   │   ├── FocusCounter.tsx       # Focus value with threshold color ramp
     │   │   ├── HitDiceDisplay.tsx     # Hit dice current/max
     │   │   ├── SiphonCapacitanceTracker.tsx # Capacitance pips + in-game timer
     │   │   ├── SelectedDeck.tsx       # Deck with expand/collapse (bottom-left)
@@ -83,6 +83,18 @@ src/
     │   ├── dragData.ts                  # CardDragData type + setCardDragData/getCardDragData/isCardDrag helpers
     │   └── index.ts                     # Barrel export
     ├── utils/                         # Helper functions
+    │   ├── focusCalculator.ts          # Focus gain, threshold color ramp, long rest reduction
+    │   ├── dismissGesture.ts           # Pure shouldDismiss() for swipe/flick gesture detection
+    │   ├── costCalculator.ts           # EP cost calculation with modifiers
+    │   ├── activateFeature.ts          # Feature activation orchestration
+    │   ├── diceRoller.ts               # Dice rolling (3D and macro modes)
+    │   ├── macroGenerator.ts           # FoundryVTT macro string generation
+    │   ├── surgeRoller.ts              # Wild Echo Surge roll logic
+    │   ├── durationParser.ts           # Effect duration parsing
+    │   ├── echoPointUtils.ts           # EP utility calculations
+    │   ├── whileSelectedCalculator.ts  # While Selected effect processing (long rest)
+    │   ├── dataExport.ts               # State export/import/reset
+    │   └── index.ts                    # Barrel export
     └── store/                         # Zustand state stores
         ├── characterStore.ts          # Character stats, HP, hit dice
         ├── siphonStore.ts             # EP, Focus, card zones, allies, effects
@@ -198,8 +210,8 @@ App (neutral layout wrapper with <Outlet />)
 │       └── DataManagement (Export, Import, Reset Session, Clear All)
 ├── CombatHUD (/combat, 3-column CSS Grid: 260px 1fr 260px)
 │   ├── Left Sidebar (flex column, rows 1-2)
-│   │   ├── EchoManifoldDeck — phase card + mote pips
-│   │   └── PhaseAbilities — compact info bars (name + activation badge)
+│   │   ├── EchoManifoldDeck — phase card + labeled mote pips + counter
+│   │   └── PhaseAbilities — hover-to-expand bars (name + cost + activation badge → detail)
 │   ├── SelectedDeck (grid: deck, row 3 col 1, aligned with hand)
 │   │   └── SiphonCard (×N, when expanded)
 │   ├── Center Column
@@ -283,7 +295,7 @@ Defined in `src/index.css`:
 - `.chromatic-aberration` — Color distortion when EP negative
 - `.warp-active` — Warp visual effect
 - `.focus-pulse` — Pulse animation for Focus changes
-- `.weavers-watch` — Subtle effect at high Focus (50+)
+- `.weavers-watch` — Subtle box-shadow effect at high Focus (50+), not currently applied to any component
 
 ---
 

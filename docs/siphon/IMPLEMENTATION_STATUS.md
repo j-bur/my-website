@@ -1,7 +1,7 @@
 # Implementation Status
 
 **Last Updated**: 2026-02-26
-**Current Phase**: Phase 8D Complete (Phase 8 Complete) + Backlog fixes
+**Current Phase**: Phase 8D Complete (Phase 8 Complete) + Backlog fixes (3 sessions)
 
 ---
 
@@ -60,13 +60,28 @@
 
 ---
 
+## Backlog Fixes (2026-02-26, Session 3)
+
+| Item | Status | Summary |
+|------|--------|---------|
+| UX-12 | ✅ Resolved | Focus counter color ramp by threshold: normal (#7a42e0) → elevated (#ffbb33, 15+) → warning (#ff6600, 30+) → critical (#ff4466, 50+). Implemented via `getFocusThreshold()` in `focusCalculator.ts`. Weavers-watch background glow removed from FocusCounter. |
+| UX-05 | ✅ Resolved | Phase abilities hover-to-expand: extracted `AbilityBar` component with compact header (name + mote cost + activation badge) always visible, detail section (description, limitation, overdrive) expands on hover via `maxHeight` transition. Parent-managed `expandedId` with 150ms collapse delay prevents layout shift jank. |
+| UX-02 | ✅ Resolved | Swipe-to-dismiss rewritten: replaced bounds-based dismiss with fixed 120px threshold + ring-buffer velocity flick detection (3 samples, 0.8 px/ms). Progressive opacity feedback (1.0→0.4). Drag handle base opacity 0.30. Pure `shouldDismiss()` function extracted to `dismissGesture.ts` for testability. |
+| UX-10 | ✅ Resolved | Motes row reformatted: "MOTES" label on left, pip buttons in center, numeric `{motes}/{MAX_MOTES}` counter on right with `ml-auto`. |
+
+**Files modified**: `EchoManifoldDeck.tsx`, `FocusCounter.tsx`, `PhaseAbilities.tsx`, `ActiveEffectsPanel.tsx`, `focusCalculator.ts`, `index.css`, `BACKLOG.md`
+**Files created**: `dismissGesture.ts`
+**Tests**: 481 passing across 33 test files (14 new: 5 focusCalculator + 4 PhaseAbilities + 5 shouldDismiss)
+
+---
+
 ## Next Session
 
 1. **Phase 7C: Visual Effects** — Warp visual, chromatic aberration, high focus warning (deferred from Phase 7)
 2. Or begin Phase 9 planning if applicable
-3. All 467 tests passing across 33 test files
-4. Phase 8 is fully complete (8A-8D); all P1 bugs resolved except UX-02 (dismiss gesture)
-5. Review remaining P2 backlog items: UX-02 (dismiss gesture, only remaining P1), BUG-08, UX-01, UX-05, UX-06, UX-07, UX-08, UX-11, UX-12, UX-14
+3. All 481 tests passing across 33 test files
+4. Phase 8 is fully complete (8A-8D); all P1 bugs resolved; UX-02/UX-05/UX-10/UX-12 resolved
+5. Review remaining P2 backlog items: BUG-08, UX-01, UX-06, UX-07, UX-08, UX-11, UX-14
 
 > **Note**: Phase 7C (Visual Effects) was originally next but deferred until after Phase 8. Phase 8 is now complete, so Phase 7C effects (warp visual, chromatic aberration, high focus warning) can proceed.
 > **Note**: Combat → Deck Builder navigation restored via Grimoire (right sidebar bottom, CSS book/tome). Deck Builder → Combat via "Enter Combat" button.
