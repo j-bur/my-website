@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, act } from '@testing-library/react';
+import { render, screen, cleanup, act, fireEvent } from '@testing-library/react';
 import { PhaseAbilities } from '../combat-hud/PhaseAbilities';
 import { useManifoldStore } from '../../store';
 
@@ -76,5 +76,41 @@ describe('PhaseAbilities', () => {
     render(<PhaseAbilities />);
 
     expect(screen.getByRole('list', { name: 'Phase abilities' })).toBeInTheDocument();
+  });
+
+  it('shows description on hover', () => {
+    render(<PhaseAbilities />);
+
+    const items = screen.getAllByRole('listitem');
+    fireEvent.mouseEnter(items[0]);
+
+    expect(screen.getByText(/one ally within the next minute/i)).toBeInTheDocument();
+  });
+
+  it('shows limitation on hover', () => {
+    render(<PhaseAbilities />);
+
+    const items = screen.getAllByRole('listitem');
+    fireEvent.mouseEnter(items[0]);
+
+    const detail = screen.getByTestId('ability-detail-echo-conduit');
+    expect(detail.textContent).toContain('Limit');
+    expect(detail.textContent).toMatch(/the action may only be used/i);
+  });
+
+  it('detail section is collapsed when not hovered', () => {
+    render(<PhaseAbilities />);
+
+    const detail = screen.getByTestId('ability-detail-echo-conduit');
+    expect(detail.style.maxHeight).toBe('0px');
+  });
+
+  it('does not use title attribute for description', () => {
+    render(<PhaseAbilities />);
+
+    const items = screen.getAllByRole('listitem');
+    items.forEach((item) => {
+      expect(item).not.toHaveAttribute('title');
+    });
   });
 });

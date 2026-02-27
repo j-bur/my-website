@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { ActiveEffectsPanel } from '../combat-hud/ActiveEffectsPanel';
+import { shouldDismiss } from '../../utils/dismissGesture';
 import { useSiphonStore, useSettingsStore, useCharacterStore } from '../../store';
 import { setActiveDragData } from '../../types/dragData';
 import type { SelfActiveEffect } from '../../types';
@@ -115,21 +116,15 @@ describe('ActiveEffectsPanel', () => {
     expect(row.className).toContain('cursor-grab');
   });
 
-  it('dismisses effect when dragged outside panel and released', () => {
+  it('dismisses effect when dragged past threshold (120px)', () => {
     useSiphonStore.setState({ activeEffects: [makeEffect()] });
     render(<ActiveEffectsPanel />);
-
-    const panel = screen.getByRole('region', { name: /active effects/i });
-    vi.spyOn(panel, 'getBoundingClientRect').mockReturnValue({
-      left: 100, right: 500, top: 0, bottom: 200, width: 400, height: 200, x: 100, y: 0,
-      toJSON: () => ({}),
-    });
 
     const row = screen.getByTestId('effect-row-test-1');
     row.setPointerCapture = vi.fn();
 
     fireEvent.pointerDown(row, { clientX: 300, button: 0 });
-    fireEvent.pointerMove(row, { clientX: 600 });
+    fireEvent.pointerMove(row, { clientX: 450 }); // 150px — past 120px threshold
     fireEvent.pointerUp(row);
 
     act(() => {
@@ -139,21 +134,15 @@ describe('ActiveEffectsPanel', () => {
     expect(useSiphonStore.getState().activeEffects).toHaveLength(0);
   });
 
-  it('snaps back when released inside panel (cancel)', () => {
+  it('snaps back when released under threshold', () => {
     useSiphonStore.setState({ activeEffects: [makeEffect()] });
     render(<ActiveEffectsPanel />);
-
-    const panel = screen.getByRole('region', { name: /active effects/i });
-    vi.spyOn(panel, 'getBoundingClientRect').mockReturnValue({
-      left: 100, right: 500, top: 0, bottom: 200, width: 400, height: 200, x: 100, y: 0,
-      toJSON: () => ({}),
-    });
 
     const row = screen.getByTestId('effect-row-test-1');
     row.setPointerCapture = vi.fn();
 
     fireEvent.pointerDown(row, { clientX: 300, button: 0 });
-    fireEvent.pointerMove(row, { clientX: 350 });
+    fireEvent.pointerMove(row, { clientX: 350 }); // 50px — under 120px threshold
     fireEvent.pointerUp(row);
 
     expect(useSiphonStore.getState().activeEffects).toHaveLength(1);
@@ -359,5 +348,30 @@ describe('ActiveEffectsPanel', () => {
     // EP should be unchanged
     expect(useSiphonStore.getState().currentEP).toBe(10);
     expect(screen.queryByTestId('varies-activation-form')).not.toBeInTheDocument();
+  });
+});
+
+describe('shouldDismiss', () => {
+  it('returns true when distance exceeds threshold (120px)', () => {
+    expect(shouldDismiss(150, 0)).toBe(true);
+    expect(shouldDismiss(-130, 0)).toBe(true);
+  });
+
+  it('returns false when distance is under threshold with no velocity', () => {
+    expect(shouldDismiss(50, 0)).toBe(false);
+    expect(shouldDismiss(119, 0)).toBe(false);
+  });
+
+  it('returns true for flick: fast velocity past minimum distance (60px)', () => {
+    expect(shouldDismiss(70, 1.0)).toBe(true);
+    expect(shouldDismiss(-80, -0.9)).toBe(true);
+  });
+
+  it('returns false for fast velocity under minimum flick distance', () => {
+    expect(shouldDismiss(40, 1.5)).toBe(false);
+  });
+
+  it('returns false for sufficient distance but slow velocity (under both thresholds)', () => {
+    expect(shouldDismiss(70, 0.3)).toBe(false);
   });
 });

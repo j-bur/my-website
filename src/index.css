@@ -116,15 +116,15 @@ body {
 /* Weavers watching effect (high Focus) - very subtle */
 @keyframes weavers-watch {
   0%, 100% {
-    opacity: 0;
+    box-shadow: inset 0 0 30px rgba(255, 0, 255, 0);
   }
   50% {
-    opacity: 0.05;
+    box-shadow: inset 0 0 30px rgba(255, 0, 255, 0.08);
   }
 }
 
 .weavers-watch {
-  box-shadow: inset 0 0 30px rgba(255, 0, 255, 0.05);
+  animation: weavers-watch 3s ease-in-out infinite;
 }
 
 /* Card enters hand — slide from left with fade */
@@ -359,7 +359,8 @@ body {
 .reduce-motion .drop-zone-glow,
 .reduce-motion .ghost-glow,
 .reduce-motion .warp-flash,
-.reduce-motion .warp-pulse {
+.reduce-motion .warp-pulse,
+.reduce-motion .weavers-watch {
   animation: none !important;
 }
 
@@ -374,6 +375,7 @@ body {
   .ghost-glow,
   .warp-flash,
   .warp-pulse,
+  .weavers-watch,
   .glitch-hover:hover,
   .chromatic-aberration:hover,
   .warp-active:hover {

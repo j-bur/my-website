@@ -6,26 +6,31 @@ import { useCardDragDetection } from '../../hooks/useCardDragDetection';
 import { FEATURE_MAP } from '../../data/featureConstants';
 import { activateFeature, computeActivationPreview } from '../../utils/activateFeature';
 import { isVariableCost } from '../../utils/costCalculator';
+import { shouldDismiss, DISMISS_THRESHOLD_PX } from '../../utils/dismissGesture';
 import type { SelfActiveEffect, SiphonFeature } from '../../types';
 
 interface ActiveEffectsPanelProps {
   onWarpTriggered?: () => void;
 }
 
+interface PointerSample {
+  x: number;
+  t: number;
+}
+
 interface EffectRowProps {
   effect: SelfActiveEffect;
-  panelRef: React.RefObject<HTMLDivElement | null>;
   isNew?: boolean;
 }
 
-function EffectRow({ effect, panelRef, isNew }: EffectRowProps) {
+function EffectRow({ effect, isNew }: EffectRowProps) {
   const removeActiveEffect = useSiphonStore((s) => s.removeActiveEffect);
   const skipAnimations = useReducedMotion();
 
   const [dragState, setDragState] = useState<'idle' | 'grabbed' | 'dragging' | 'dismissing'>('idle');
   const [offsetX, setOffsetX] = useState(0);
-  const [isOutside, setIsOutside] = useState(false);
   const startXRef = useRef(0);
+  const samplesRef = useRef<PointerSample[]>([]);
 
   // Handle dismiss animation completion
   useEffect(() => {
@@ -42,6 +47,7 @@ function EffectRow({ effect, panelRef, isNew }: EffectRowProps) {
     if (e.button !== 0) return; // Only left click
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     startXRef.current = e.clientX;
+    samplesRef.current = [{ x: e.clientX, t: e.timeStamp }];
     setDragState('grabbed');
     setOffsetX(0);
   };
@@ -53,26 +59,44 @@ function EffectRow({ effect, panelRef, isNew }: EffectRowProps) {
     setDragState('dragging');
     setOffsetX(dx);
 
-    // Check if pointer is outside panel bounds
-    if (panelRef.current) {
-      const panelRect = panelRef.current.getBoundingClientRect();
-      const outside = e.clientX < panelRect.left || e.clientX > panelRect.right;
-      setIsOutside(outside);
-    }
+    // Ring buffer of last 3 samples for velocity
+    const samples = samplesRef.current;
+    samples.push({ x: e.clientX, t: e.timeStamp });
+    if (samples.length > 3) samples.shift();
   };
 
   const handlePointerUp = () => {
-    if (isOutside && dragState === 'dragging') {
-      // Dismiss: snap back then animate out
+    if (dragState !== 'dragging') {
+      setDragState('idle');
+      setOffsetX(0);
+      return;
+    }
+
+    // Compute release velocity from recent samples
+    const samples = samplesRef.current;
+    let velocity = 0;
+    if (samples.length >= 2) {
+      const oldest = samples[0];
+      const newest = samples[samples.length - 1];
+      const dt = newest.t - oldest.t;
+      if (dt > 0) velocity = (newest.x - oldest.x) / dt;
+    }
+
+    if (shouldDismiss(offsetX, velocity)) {
       setDragState('dismissing');
       setOffsetX(0);
     } else {
-      // Cancel: snap back
       setDragState('idle');
       setOffsetX(0);
-      setIsOutside(false);
     }
+    samplesRef.current = [];
   };
+
+  // Progressive opacity: 1.0 at rest → 0.4 at threshold
+  const dragProgress = dragState === 'dragging'
+    ? Math.min(1, Math.abs(offsetX) / DISMISS_THRESHOLD_PX)
+    : 0;
+  const dragOpacity = 1 - dragProgress * 0.6;
 
   return (
     <div
@@ -80,12 +104,12 @@ function EffectRow({ effect, panelRef, isNew }: EffectRowProps) {
         group flex items-center gap-2 px-2 py-1 rounded bg-siphon-bg/50 text-xs
         ${dragState === 'idle' ? 'cursor-grab hover:bg-siphon-bg/70' : ''}
         ${dragState === 'grabbed' || dragState === 'dragging' ? 'cursor-grabbing shadow-lg scale-[1.02]' : ''}
-        ${isOutside && dragState === 'dragging' ? 'opacity-40 saturate-50' : ''}
         ${dragState === 'dismissing' ? 'effect-dismiss' : ''}
         ${isNew && effect.warpActive ? 'warp-flash' : ''}
       `}
       style={{
         transform: dragState === 'dragging' ? `translateX(${offsetX}px)` : undefined,
+        opacity: dragState === 'dragging' ? dragOpacity : undefined,
         transition: dragState === 'dragging' ? 'none' : undefined,
       }}
       onPointerDown={handlePointerDown}
@@ -125,10 +149,10 @@ function EffectRow({ effect, panelRef, isNew }: EffectRowProps) {
         </span>
       )}
 
-      {/* Drag handle — appears on hover */}
+      {/* Drag handle */}
       <span
-        className={`shrink-0 text-text-muted/40 select-none ${
-          dragState === 'idle' ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
+        className={`shrink-0 text-text-secondary select-none ${
+          dragState === 'idle' ? 'opacity-30 group-hover:opacity-80' : 'opacity-100'
         } transition-opacity`}
         aria-hidden="true"
       >
@@ -393,7 +417,6 @@ export function ActiveEffectsPanel({ onWarpTriggered }: ActiveEffectsPanelProps)
             <EffectRow
               key={effect.id}
               effect={effect}
-              panelRef={panelRef}
               isNew={newEffectIds.has(effect.id)}
             />
           ))}

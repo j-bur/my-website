@@ -196,7 +196,8 @@ export function EchoManifoldDeck() {
       )}
 
       {/* Motes row */}
-      <div className="flex gap-1 px-1" role="group" aria-label={`Motes: ${motes} of ${MAX_MOTES}`}>
+      <div className="flex items-center gap-1.5 px-1" role="group" aria-label={`Motes: ${motes} of ${MAX_MOTES}`}>
+        <span className="text-[10px] text-text-muted uppercase tracking-wider shrink-0">Motes</span>
         {Array.from({ length: MAX_MOTES }, (_, i) => {
           const isFilled = i < motes;
           const animClass = animatingPips.get(i);
@@ -220,6 +221,7 @@ export function EchoManifoldDeck() {
             />
           );
         })}
+        <span className="text-xs text-text-muted tabular-nums shrink-0 ml-auto">{motes}/{MAX_MOTES}</span>
       </div>
     </div>
   );

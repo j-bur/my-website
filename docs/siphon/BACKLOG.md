@@ -56,7 +56,8 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 
 - [ ] **P2** | **L** | **UX-01: Active Effects panel is too wide**: The panel takes up most of the screen width. Consider: showing more info per row, breaking into a grid layout, or narrowing it. The center column is `1fr` between two `260px` sidebars.
 
-- [ ] **P1** | **M** | **UX-02: Effect dismiss gesture is too hard**: Dragging an effect out of the full-width panel requires too much mouse travel to dismiss. The drag handle (⋮⋮) is also very hard to see.
+- [x] **P1** | **M** | **UX-02: Effect dismiss gesture is too hard**: Dragging an effect out of the full-width panel requires too much mouse travel to dismiss. The drag handle (⋮⋮) is also very hard to see.
+  - **Resolved**: Replaced bounds-based dismiss with fixed 120px threshold + flick detection (velocity-based via ring buffer of recent pointer samples). Progressive opacity feedback during drag. Drag handle now visible at base opacity (0.30) instead of hidden. `shouldDismiss` extracted as pure function for testability.
 
 ### Card Readability
 
@@ -66,7 +67,8 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 - [x] **P1** | **S** | **UX-04: Selected deck cards show no description**: After clicking the Selected deck, the expanded cards don't show descriptions — no way to know what they do.
   - **Resolved**: Cards expand on hover (like Hand cards) with delayed content reveal — card width transitions first, then description/stats appear after the animation completes (200ms delay via `showDetails` prop on SiphonCard). Prevents text reflow during the size transition.
 
-- [ ] **P2** | **M** | **UX-05: Siphon Abilities not viewable in combat**: No way to see what Siphon Phase Abilities do. Consider hover-to-expand on the header, or always show descriptions since there's unused space on the left sidebar.
+- [x] **P2** | **M** | **UX-05: Siphon Abilities not viewable in combat**: No way to see what Siphon Phase Abilities do. Consider hover-to-expand on the header, or always show descriptions since there's unused space on the left sidebar.
+  - **Resolved**: AbilityBar component with hover-to-expand. Compact header always visible; detail section reveals description, limitation (red "Limit" prefix), and overdrive note via maxHeight transition. Title attribute removed (redundant).
 
 ### Superconduction
 
@@ -80,7 +82,8 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 
 - [ ] **P3** | **S** | **UX-09: Drop target highlight shows source zone**: The droppable-area highlight glows on the zone the card came from, which is misleading.
 
-- [ ] **P3** | **S** | **UX-10: Echo Manifold motes need numeric label**: Show the mote count as a number in addition to the visual pip indicator.
+- [x] **P3** | **S** | **UX-10: Echo Manifold motes need numeric label**: Show the mote count as a number in addition to the visual pip indicator.
+  - **Resolved**: Added `{motes}/{MAX_MOTES}` text label with `tabular-nums` at the start of the motes row.
 
 ---
 
@@ -92,8 +95,8 @@ Related items are grouped. When investigating an item, append **Notes** beneath 
 
 ## UX Improvements — General
 
-- [~] **P2** | **S** | **UX-12: Focus threshold flavor text should be removed**: Do not display flavor text like "The Weavers are watching..." for Focus thresholds. Instead, change the Focus value color as it hits each threshold. *(TODO: determine color scheme for thresholds.)*
-  - **Note**: Flavor text removed in `17592bd`. Stale test removed in `228ea42`. Color thresholds not yet implemented.
+- [x] **P2** | **S** | **UX-12: Focus threshold flavor text should be removed**: Do not display flavor text like "The Weavers are watching..." for Focus thresholds. Instead, change the Focus value color as it hits each threshold.
+  - **Resolved**: Color thresholds implemented via `getFocusThreshold()` in focusCalculator.ts. Ramp: normal (#7a42e0 focus) → elevated (#ffbb33 capacitance) → warning (#ff6600) → critical (#ff4466 ep-negative). Critical level applies `weavers-watch` animation. Glow color tracks threshold. Flavor text previously removed in `17592bd`.
 
 - [ ] **P3** | **S** | **UX-13: "Clear session data" is unclear**: The Settings option doesn't explain what it deletes, and doesn't actually delete everything it should.
 
